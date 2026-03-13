@@ -35,4 +35,101 @@ void main() {
     // Dopo il tap, l'icona dovrebbe cambiare a light_mode
     expect(find.byIcon(Icons.light_mode), findsOneWidget);
   });
+
+  // Verifica navigazione dalla Home alla schermata di input libero
+  testWidgets('Il bottone "Crea nuovo prompt" naviga alla schermata di input',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const PromptMasterApp());
+
+    // Tocca il bottone "Crea nuovo prompt"
+    await tester.tap(find.text('Crea nuovo prompt'));
+    await tester.pumpAndSettle();
+
+    // Verifica che siamo nella schermata di input libero
+    expect(find.text('Cosa vuoi ottenere?'), findsOneWidget);
+    expect(find.text('Analizza e prosegui'), findsOneWidget);
+  });
+
+  // Verifica che la schermata di input mostra gli esempi rapidi
+  testWidgets('La schermata input mostra i chip di esempio',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const PromptMasterApp());
+
+    // Naviga alla schermata di input
+    await tester.tap(find.text('Crea nuovo prompt'));
+    await tester.pumpAndSettle();
+
+    // Verifica che gli esempi rapidi siano visibili
+    expect(find.text('Esempi rapidi:'), findsOneWidget);
+    expect(find.text('Scrivi un\'email professionale'), findsOneWidget);
+    expect(find.text('Aiutami con codice Python'), findsOneWidget);
+  });
+
+  // Verifica il flusso: input → analisi → conferma categoria
+  testWidgets('L\'invio della frase porta alla schermata di conferma categoria',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const PromptMasterApp());
+
+    // Naviga alla schermata di input
+    await tester.tap(find.text('Crea nuovo prompt'));
+    await tester.pumpAndSettle();
+
+    // Scrivi una frase nel campo di input
+    await tester.enterText(
+      find.byType(TextField),
+      'Voglio scrivere un post LinkedIn sul mio nuovo prodotto',
+    );
+    await tester.pumpAndSettle();
+
+    // Il bottone "Analizza e prosegui" dovrebbe essere attivo
+    final bottoneInvia = find.text('Analizza e prosegui');
+    expect(bottoneInvia, findsOneWidget);
+
+    // Tocca il bottone di invio
+    await tester.tap(bottoneInvia);
+
+    // Attendi l'animazione di caricamento e la navigazione
+    await tester.pumpAndSettle(const Duration(seconds: 2));
+
+    // Verifica che siamo nella schermata di conferma categoria
+    expect(find.text('Conferma categoria'), findsOneWidget);
+    expect(find.text('Ecco cosa ho capito'), findsOneWidget);
+    expect(find.text('Scrittura'), findsOneWidget);
+  });
+
+  // Verifica navigazione dalla conferma alle domande
+  testWidgets('Il bottone "Prosegui" porta alla schermata delle domande',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(const PromptMasterApp());
+
+    // Naviga alla schermata di input
+    await tester.tap(find.text('Crea nuovo prompt'));
+    await tester.pumpAndSettle();
+
+    // Inserisci una frase e invia
+    await tester.enterText(
+      find.byType(TextField),
+      'Aiutami con codice Python per una funzione di ordinamento',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Analizza e prosegui'));
+    await tester.pumpAndSettle(const Duration(seconds: 2));
+
+    // Tocca "Prosegui" nella schermata di conferma
+    await tester.tap(find.text('Prosegui'));
+    await tester.pumpAndSettle();
+
+    // Verifica che siamo nella schermata delle domande
+    // Dovrebbe mostrare la prima domanda per la categoria Coding
+    expect(
+        find.text('In quale linguaggio di programmazione stai lavorando?'),
+        findsOneWidget);
+
+    // Verifica che la barra di avanzamento sia presente
+    expect(find.text('Domanda 1 di 5'), findsOneWidget);
+
+    // Verifica che i bottoni opzione siano presenti
+    expect(find.text('Python'), findsOneWidget);
+    expect(find.text('JavaScript'), findsOneWidget);
+  });
 }

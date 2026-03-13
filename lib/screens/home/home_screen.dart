@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:prompt_master/config/app_routes.dart';
 import 'package:prompt_master/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -76,12 +77,8 @@ class HomeScreen extends StatelessWidget {
                   descrizione: 'Crea un prompt da zero con l\'aiuto dell\'AI',
                   colore: colorScheme.primary,
                   onPressed: () {
-                    // TODO: Navigare alla schermata di creazione prompt
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funzionalità in arrivo!'),
-                      ),
-                    );
+                    // Naviga alla schermata di input libero
+                    Navigator.of(context).pushNamed(AppRoutes.inputLibero);
                   },
                 ),
                 const SizedBox(height: 16),
