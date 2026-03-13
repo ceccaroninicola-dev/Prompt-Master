@@ -1,0 +1,383 @@
+import 'package:flutter/material.dart';
+import 'package:prompt_master/models/categoria_rilevata.dart';
+import 'package:prompt_master/models/domanda.dart';
+import 'package:prompt_master/models/sessione_prompt.dart';
+
+/// Provider per la gestione della sessione di creazione prompt.
+/// Gestisce il flusso completo: frase iniziale → categoria → domande → risposte.
+/// Per ora usa dati fittizi; in futuro sarà collegato all'AI.
+class SessioneProvider extends ChangeNotifier {
+  /// Sessione corrente di creazione prompt
+  SessionePrompt _sessione = const SessionePrompt(fraseIniziale: '');
+
+  /// Indica se l'analisi della frase è in corso (simulazione caricamento)
+  bool _staAnalizzando = false;
+
+  // -- Getter --
+
+  SessionePrompt get sessione => _sessione;
+  bool get staAnalizzando => _staAnalizzando;
+
+  /// Restituisce la domanda corrente, o null se non ci sono domande
+  Domanda? get domandaCorrente {
+    if (_sessione.domande.isEmpty ||
+        _sessione.domandaCorrente >= _sessione.domande.length) {
+      return null;
+    }
+    return _sessione.domande[_sessione.domandaCorrente];
+  }
+
+  /// Verifica se siamo all'ultima domanda
+  bool get isUltimaDomanda {
+    return _sessione.domandaCorrente >= _sessione.domande.length - 1;
+  }
+
+  /// Verifica se si può tornare alla domanda precedente
+  bool get puoTornareIndietro => _sessione.domandaCorrente > 0;
+
+  // -- Azioni --
+
+  /// Avvia una nuova sessione con la frase libera dell'utente.
+  /// Simula l'analisi AI e rileva la categoria.
+  Future<void> avviaSessione(String fraseLibera) async {
+    _sessione = SessionePrompt(fraseIniziale: fraseLibera);
+    _staAnalizzando = true;
+    notifyListeners();
+
+    // Simula il tempo di analisi dell'AI (in futuro sarà una vera chiamata API)
+    await Future.delayed(const Duration(milliseconds: 1200));
+
+    // Rileva la categoria in base alla frase (dati fittizi)
+    final categoria = _rilevaCategoria(fraseLibera);
+
+    // Genera le domande adattive in base alla categoria
+    final domande = _generaDomandeFittizie(categoria.nome);
+
+    _sessione = _sessione.copyWith(
+      categoria: categoria,
+      domande: domande,
+      percentualeCompletamento: 0.0,
+    );
+    _staAnalizzando = false;
+    notifyListeners();
+  }
+
+  /// Conferma la categoria rilevata e passa alle domande
+  void confermCategoria() {
+    _sessione = _sessione.copyWith(
+      percentualeCompletamento: 0.05,
+    );
+    notifyListeners();
+  }
+
+  /// Salva la risposta alla domanda corrente e passa alla successiva
+  void rispondiDomanda(String risposta) {
+    final nuoveRisposte = Map<String, String>.from(_sessione.risposte);
+    final domanda = domandaCorrente;
+    if (domanda == null) return;
+
+    nuoveRisposte[domanda.id] = risposta;
+
+    // Calcola la nuova percentuale di completamento
+    final nuovoIndice = _sessione.domandaCorrente + 1;
+    final percentuale = nuovoIndice / _sessione.domande.length;
+
+    _sessione = _sessione.copyWith(
+      risposte: nuoveRisposte,
+      domandaCorrente: nuovoIndice,
+      percentualeCompletamento: percentuale.clamp(0.0, 1.0),
+    );
+    notifyListeners();
+  }
+
+  /// Torna alla domanda precedente
+  void domandaPrecedente() {
+    if (!puoTornareIndietro) return;
+
+    _sessione = _sessione.copyWith(
+      domandaCorrente: _sessione.domandaCorrente - 1,
+      // Ricalcola la percentuale
+      percentualeCompletamento:
+          ((_sessione.domandaCorrente - 1) / _sessione.domande.length)
+              .clamp(0.0, 1.0),
+    );
+    notifyListeners();
+  }
+
+  /// Resetta la sessione per iniziarne una nuova
+  void resetSessione() {
+    _sessione = const SessionePrompt(fraseIniziale: '');
+    _staAnalizzando = false;
+    notifyListeners();
+  }
+
+  // -- Metodi privati per i dati fittizi --
+
+  /// Simula il rilevamento della categoria dalla frase dell'utente.
+  /// In futuro questo sarà fatto dall'AI.
+  CategoriaRilevata _rilevaCategoria(String frase) {
+    final fraseLower = frase.toLowerCase();
+
+    // Rilevamento semplice basato su parole chiave (dati fittizi)
+    if (fraseLower.contains('codice') ||
+        fraseLower.contains('programm') ||
+        fraseLower.contains('funzione') ||
+        fraseLower.contains('bug') ||
+        fraseLower.contains('api') ||
+        fraseLower.contains('code') ||
+        fraseLower.contains('python') ||
+        fraseLower.contains('javascript')) {
+      return CategoriaRilevata(
+        nome: 'Coding',
+        icona: 'code',
+        riepilogo:
+            'Vuoi creare un prompt per assistenza nella programmazione.',
+        sottocategoria: 'Sviluppo Software',
+        elementiChiave: _estraiElementiChiave(frase),
+      );
+    }
+
+    if (fraseLower.contains('immagine') ||
+        fraseLower.contains('foto') ||
+        fraseLower.contains('disegn') ||
+        fraseLower.contains('illustr') ||
+        fraseLower.contains('visual')) {
+      return CategoriaRilevata(
+        nome: 'Immagini',
+        icona: 'image',
+        riepilogo:
+            'Vuoi creare un prompt per generare immagini o contenuti visivi.',
+        sottocategoria: 'Generazione Immagini',
+        elementiChiave: _estraiElementiChiave(frase),
+      );
+    }
+
+    if (fraseLower.contains('post') ||
+        fraseLower.contains('linkedin') ||
+        fraseLower.contains('social') ||
+        fraseLower.contains('instagram') ||
+        fraseLower.contains('twitter') ||
+        fraseLower.contains('marketing')) {
+      return CategoriaRilevata(
+        nome: 'Scrittura',
+        icona: 'edit_note',
+        riepilogo:
+            'Vuoi creare un prompt per scrivere contenuti per i social media.',
+        sottocategoria: 'Social Media / Marketing',
+        elementiChiave: _estraiElementiChiave(frase),
+      );
+    }
+
+    if (fraseLower.contains('email') ||
+        fraseLower.contains('mail') ||
+        fraseLower.contains('lettera') ||
+        fraseLower.contains('messaggio')) {
+      return CategoriaRilevata(
+        nome: 'Scrittura',
+        icona: 'edit_note',
+        riepilogo:
+            'Vuoi creare un prompt per scrivere email o comunicazioni.',
+        sottocategoria: 'Comunicazione',
+        elementiChiave: _estraiElementiChiave(frase),
+      );
+    }
+
+    // Categoria generica di fallback
+    return CategoriaRilevata(
+      nome: 'Scrittura',
+      icona: 'edit_note',
+      riepilogo:
+          'Vuoi creare un prompt per generare testo o contenuti scritti.',
+      sottocategoria: 'Generale',
+      elementiChiave: _estraiElementiChiave(frase),
+    );
+  }
+
+  /// Estrae parole chiave dalla frase dell'utente (simulazione semplificata)
+  List<String> _estraiElementiChiave(String frase) {
+    // Rimuovi parole comuni e restituisci le parole significative
+    final paroleComuni = {
+      'voglio', 'vorrei', 'creare', 'fare', 'un', 'una', 'il', 'la', 'lo',
+      'le', 'gli', 'di', 'a', 'da', 'in', 'con', 'su', 'per', 'tra', 'fra',
+      'che', 'come', 'mi', 'ho', 'bisogno', 'aiutami', 'scrivi', 'genera',
+      'crea', 'fammi', 'puoi', 'potresti', 'e', 'o', 'ma', 'non', 'del',
+      'dei', 'delle', 'della', 'dello', 'al', 'alla', 'alle',
+    };
+
+    return frase
+        .toLowerCase()
+        .split(RegExp(r'\s+'))
+        .where((parola) =>
+            parola.length > 2 && !paroleComuni.contains(parola))
+        .take(5)
+        .toList();
+  }
+
+  /// Genera domande fittizie in base alla categoria rilevata.
+  /// In futuro queste saranno generate dall'AI in tempo reale.
+  List<Domanda> _generaDomandeFittizie(String categoria) {
+    switch (categoria) {
+      case 'Coding':
+        return const [
+          Domanda(
+            id: 'linguaggio',
+            testo: 'In quale linguaggio di programmazione stai lavorando?',
+            tipoInput: TipoInput.bottoniOpzioni,
+            opzioni: ['Python', 'JavaScript', 'Dart/Flutter', 'Java', 'Altro'],
+            valoreDefault: 'Python',
+          ),
+          Domanda(
+            id: 'tipo_aiuto',
+            testo: 'Che tipo di aiuto ti serve?',
+            tipoInput: TipoInput.bottoniOpzioni,
+            opzioni: [
+              'Scrivere codice nuovo',
+              'Correggere un bug',
+              'Ottimizzare codice esistente',
+              'Spiegare come funziona',
+            ],
+          ),
+          Domanda(
+            id: 'contesto',
+            testo: 'Descrivi brevemente il contesto del tuo progetto.',
+            tipoInput: TipoInput.testoLibero,
+            placeholder:
+                'Es. Sto costruendo un\'app web con React per gestire...',
+          ),
+          Domanda(
+            id: 'livello_dettaglio',
+            testo: 'Quanto dettagliata vuoi la risposta?',
+            tipoInput: TipoInput.bottoniOpzioni,
+            opzioni: [
+              'Solo il codice',
+              'Codice con commenti',
+              'Spiegazione passo passo',
+              'Tutorial completo',
+            ],
+            valoreDefault: 'Codice con commenti',
+          ),
+          Domanda(
+            id: 'requisiti_extra',
+            testo:
+                'Ci sono requisiti specifici da rispettare? Seleziona tutti quelli applicabili.',
+            tipoInput: TipoInput.chipMultipli,
+            opzioni: [
+              'Performance',
+              'Sicurezza',
+              'Test unitari',
+              'Documentazione',
+              'Compatibilità',
+              'Semplicità',
+            ],
+          ),
+        ];
+
+      case 'Immagini':
+        return const [
+          Domanda(
+            id: 'stile',
+            testo: 'Quale stile visivo preferisci?',
+            tipoInput: TipoInput.bottoniOpzioni,
+            opzioni: [
+              'Fotorealistico',
+              'Illustrazione digitale',
+              'Cartoon / Anime',
+              'Arte astratta',
+              'Minimalista',
+            ],
+          ),
+          Domanda(
+            id: 'soggetto',
+            testo: 'Descrivi il soggetto principale dell\'immagine.',
+            tipoInput: TipoInput.testoLibero,
+            placeholder: 'Es. Un gatto che legge un libro in una libreria...',
+          ),
+          Domanda(
+            id: 'atmosfera',
+            testo: 'Che atmosfera vuoi comunicare?',
+            tipoInput: TipoInput.chipMultipli,
+            opzioni: [
+              'Luminosa',
+              'Cupa',
+              'Romantica',
+              'Futuristica',
+              'Nostalgica',
+              'Energetica',
+            ],
+          ),
+          Domanda(
+            id: 'colori',
+            testo: 'Hai preferenze sui colori dominanti?',
+            tipoInput: TipoInput.bottoniOpzioni,
+            opzioni: [
+              'Colori caldi',
+              'Colori freddi',
+              'Bianco e nero',
+              'Pastello',
+              'Nessuna preferenza',
+            ],
+            valoreDefault: 'Nessuna preferenza',
+          ),
+        ];
+
+      // Categoria default: Scrittura
+      default:
+        return const [
+          Domanda(
+            id: 'tipo_contenuto',
+            testo: 'Che tipo di contenuto vuoi creare?',
+            tipoInput: TipoInput.bottoniOpzioni,
+            opzioni: [
+              'Post social media',
+              'Email professionale',
+              'Articolo / Blog',
+              'Testo creativo',
+              'Altro',
+            ],
+          ),
+          Domanda(
+            id: 'tono',
+            testo: 'Quale tono vuoi usare?',
+            tipoInput: TipoInput.bottoniOpzioni,
+            opzioni: [
+              'Formale',
+              'Informale',
+              'Ironico / Spiritoso',
+              'Ispirazionale',
+              'Tecnico',
+            ],
+            valoreDefault: 'Informale',
+          ),
+          Domanda(
+            id: 'pubblico',
+            testo:
+                'A chi è rivolto il contenuto? Seleziona uno o più gruppi.',
+            tipoInput: TipoInput.chipMultipli,
+            opzioni: [
+              'Professionisti',
+              'Studenti',
+              'Pubblico generico',
+              'Manager',
+              'Creativi',
+              'Sviluppatori',
+            ],
+          ),
+          Domanda(
+            id: 'lunghezza',
+            testo: 'Quanto lungo deve essere il risultato?',
+            tipoInput: TipoInput.bottoniOpzioni,
+            opzioni: ['Breve (1-2 paragrafi)', 'Medio (3-5 paragrafi)', 'Lungo (articolo completo)'],
+            valoreDefault: 'Medio (3-5 paragrafi)',
+          ),
+          Domanda(
+            id: 'dettagli_extra',
+            testo:
+                'Ci sono dettagli specifici che vuoi includere nel contenuto?',
+            tipoInput: TipoInput.testoLibero,
+            placeholder:
+                'Es. Menziona il lancio del prodotto, includi una call-to-action...',
+          ),
+        ];
+    }
+  }
+}
