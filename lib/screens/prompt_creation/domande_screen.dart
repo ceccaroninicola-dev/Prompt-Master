@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:prompt_master/config/app_routes.dart';
 import 'package:prompt_master/models/domanda.dart';
 import 'package:prompt_master/providers/sessione_provider.dart';
+import 'package:prompt_master/providers/prompt_generato_provider.dart';
 import 'package:prompt_master/widgets/barra_avanzamento.dart';
 
 /// Schermata delle domande adattive — terza fase del flusso.
@@ -106,60 +108,30 @@ class _DomandeScreenState extends State<DomandeScreen> {
     }
   }
 
-  /// Mostra il messaggio di completamento
+  /// Naviga alla schermata post-generazione dopo il completamento
   void _mostraCompletamento() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Domande completate!'),
-        content: const Text(
-          'Hai risposto a tutte le domande. '
-          'La generazione del prompt sarà implementata nella prossima fase.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              Navigator.of(context).popUntil((route) => route.isFirst);
-              context.read<SessioneProvider>().resetSessione();
-            },
-            child: const Text('Torna alla Home'),
-          ),
-        ],
-      ),
-    );
+    _navigaAPostGenerazione();
   }
 
   /// Genera il prompt immediatamente (bottone "Genera ora")
   void _generaOra() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final sessione = context.read<SessioneProvider>().sessione;
-        return AlertDialog(
-          title: const Text('Genera prompt'),
-          content: Text(
-            'Il prompt verrà generato con le ${sessione.risposte.length} '
-            'risposte fornite finora.\n\n'
-            'La generazione sarà implementata nella prossima fase.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Annulla'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).popUntil((route) => route.isFirst);
-                context.read<SessioneProvider>().resetSessione();
-              },
-              child: const Text('Torna alla Home'),
-            ),
-          ],
-        );
-      },
+    _navigaAPostGenerazione();
+  }
+
+  /// Avvia la generazione del prompt e naviga alla schermata post-generazione
+  void _navigaAPostGenerazione() {
+    final sessione = context.read<SessioneProvider>().sessione;
+    final promptProvider = context.read<PromptGeneratoProvider>();
+
+    // Avvia la generazione del prompt fittizio
+    promptProvider.generaPrompt(
+      fraseIniziale: sessione.fraseIniziale,
+      categoria: sessione.categoria?.nome ?? 'Scrittura',
+      risposte: sessione.risposte,
     );
+
+    // Naviga alla schermata post-generazione
+    Navigator.of(context).pushNamed(AppRoutes.postGenerazione);
   }
 
   @override
@@ -169,10 +141,10 @@ class _DomandeScreenState extends State<DomandeScreen> {
     final sessione = provider.sessione;
     final domanda = provider.domandaCorrente;
 
-    // Se non ci sono domande, mostra il completamento
+    // Se tutte le domande sono completate, naviga alla post-generazione
     if (domanda == null && sessione.domande.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _mostraCompletamento();
+        if (mounted) _navigaAPostGenerazione();
       });
       return Scaffold(
         body: Center(

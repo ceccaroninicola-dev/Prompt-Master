@@ -4,6 +4,7 @@ import 'package:prompt_master/config/app_theme.dart';
 import 'package:prompt_master/config/app_routes.dart';
 import 'package:prompt_master/providers/theme_provider.dart';
 import 'package:prompt_master/providers/sessione_provider.dart';
+import 'package:prompt_master/providers/prompt_generato_provider.dart';
 
 /// Entry point dell'applicazione Prompt Master.
 /// Configura i provider globali e avvia l'app.
@@ -24,6 +25,7 @@ class PromptMasterApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
         ChangeNotifierProvider(create: (_) => SessioneProvider()),
+        ChangeNotifierProvider(create: (_) => PromptGeneratoProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
