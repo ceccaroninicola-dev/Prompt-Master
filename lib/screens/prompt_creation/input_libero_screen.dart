@@ -4,8 +4,7 @@ import 'package:prompt_master/config/app_routes.dart';
 import 'package:prompt_master/providers/sessione_provider.dart';
 
 /// Schermata di input libero — prima fase del flusso di creazione prompt.
-/// L'utente scrive o detta una frase libera che descrive cosa vuole ottenere.
-/// Dopo l'invio, l'app analizza la frase e naviga alla schermata di conferma categoria.
+/// Design minimal stile Apple: superfici pulite, teal come accento, ombre sottili.
 class InputLiberoScreen extends StatefulWidget {
   const InputLiberoScreen({super.key});
 
@@ -60,7 +59,6 @@ class _InputLiberoScreenState extends State<InputLiberoScreen> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    // Osserva lo stato di caricamento dal provider
     final staAnalizzando = context.watch<SessioneProvider>().staAnalizzando;
 
     return Scaffold(
@@ -73,14 +71,13 @@ class _InputLiberoScreenState extends State<InputLiberoScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Titolo e istruzioni
+              // Titolo
               Text(
                 'Cosa vuoi ottenere?',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 8),
+              // Istruzioni
               Text(
                 'Descrivi con parole tue cosa vorresti che l\'AI facesse per te. '
                 'Più dettagli dai, migliore sarà il prompt generato.',
@@ -90,13 +87,13 @@ class _InputLiberoScreenState extends State<InputLiberoScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Campo di testo principale per la frase libera
+              // Campo di testo principale
               Expanded(
                 child: TextField(
                   controller: _testoController,
                   focusNode: _focusNode,
-                  maxLines: null, // Permette testo su più righe
-                  expands: true, // Occupa tutto lo spazio disponibile
+                  maxLines: null,
+                  expands: true,
                   textAlignVertical: TextAlignVertical.top,
                   enabled: !staAnalizzando,
                   decoration: InputDecoration(
@@ -104,14 +101,18 @@ class _InputLiberoScreenState extends State<InputLiberoScreen> {
                         'Es. "Voglio scrivere un post LinkedIn per lanciare '
                         'il mio nuovo prodotto SaaS per piccole imprese"',
                     hintMaxLines: 3,
+                    hintStyle: TextStyle(
+                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                      fontSize: 15,
+                    ),
                     filled: true,
                     fillColor: colorScheme.surfaceContainerLow,
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide.none,
                     ),
                     focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide(
                         color: colorScheme.primary,
                         width: 2,
@@ -124,13 +125,11 @@ class _InputLiberoScreenState extends State<InputLiberoScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Suggerimenti rapidi per ispirare l'utente
+              // Suggerimenti rapidi
               if (!staAnalizzando) ...[
                 Text(
                   'Esempi rapidi:',
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                      ),
+                  style: Theme.of(context).textTheme.labelMedium,
                 ),
                 const SizedBox(height: 8),
                 Wrap(
@@ -162,15 +161,8 @@ class _InputLiberoScreenState extends State<InputLiberoScreen> {
                     ? _buildIndicatoreCaricamento(colorScheme)
                     : ElevatedButton.icon(
                         onPressed: _testoValido ? _inviaFrase : null,
-                        icon: const Icon(Icons.send_rounded),
+                        icon: const Icon(Icons.arrow_forward_rounded, size: 20),
                         label: const Text('Analizza e prosegui'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: colorScheme.onPrimary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                        ),
                       ),
               ),
             ],
@@ -180,15 +172,22 @@ class _InputLiberoScreenState extends State<InputLiberoScreen> {
     );
   }
 
-  /// Costruisce un chip cliccabile con un esempio rapido.
-  /// Al tap, inserisce il testo dell'esempio nel campo di input.
+  /// Chip cliccabile con esempio rapido — stile minimal teal
   Widget _chipEsempio(String testo, IconData icona) {
+    final colorScheme = Theme.of(context).colorScheme;
     return ActionChip(
-      avatar: Icon(icona, size: 18),
-      label: Text(testo, style: const TextStyle(fontSize: 12)),
+      avatar: Icon(icona, size: 16, color: colorScheme.primary),
+      label: Text(
+        testo,
+        style: TextStyle(fontSize: 13, color: colorScheme.onSurface),
+      ),
+      backgroundColor: colorScheme.surfaceContainerLow,
+      side: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10),
+      ),
       onPressed: () {
         _testoController.text = testo;
-        // Sposta il cursore alla fine del testo
         _testoController.selection = TextSelection.fromPosition(
           TextPosition(offset: testo.length),
         );
@@ -196,21 +195,21 @@ class _InputLiberoScreenState extends State<InputLiberoScreen> {
     );
   }
 
-  /// Costruisce l'indicatore di caricamento durante l'analisi AI
+  /// Indicatore di caricamento durante l'analisi AI
   Widget _buildIndicatoreCaricamento(ColorScheme colorScheme) {
     return Container(
       decoration: BoxDecoration(
-        color: colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(16),
+        color: colorScheme.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           SizedBox(
-            width: 20,
-            height: 20,
+            width: 18,
+            height: 18,
             child: CircularProgressIndicator(
-              strokeWidth: 2.5,
+              strokeWidth: 2,
               color: colorScheme.primary,
             ),
           ),
@@ -218,8 +217,9 @@ class _InputLiberoScreenState extends State<InputLiberoScreen> {
           Text(
             'Analizzo la tua richiesta...',
             style: TextStyle(
-              color: colorScheme.onPrimaryContainer,
-              fontWeight: FontWeight.w500,
+              color: colorScheme.primary,
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
             ),
           ),
         ],
