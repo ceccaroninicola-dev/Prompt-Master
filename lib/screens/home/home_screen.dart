@@ -4,30 +4,27 @@ import 'package:prompt_master/providers/theme_provider.dart';
 import 'package:provider/provider.dart';
 
 /// Schermata principale (Home) dell'app Prompt Master.
-/// Mostra il titolo dell'app e i bottoni per le azioni principali:
-/// - Crea nuovo prompt
-/// - Libreria
-/// - Cronologia
-/// Include anche un toggle per il tema chiaro/scuro.
+/// Design minimal ispirato ad Apple: superfici pulite, ombre sottili, teal come accento.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Otteniamo il provider del tema per gestire il toggle
     final themeProvider = Provider.of<ThemeProvider>(context);
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Prompt Master'),
         actions: [
-          // Bottone per alternare tra tema chiaro e scuro
+          // Toggle tema chiaro/scuro
           IconButton(
             icon: Icon(
               themeProvider.modalitaTema == ThemeMode.dark
-                  ? Icons.light_mode
-                  : Icons.dark_mode,
+                  ? Icons.light_mode_outlined
+                  : Icons.dark_mode_outlined,
+              color: colorScheme.onSurfaceVariant,
             ),
             tooltip: 'Cambia tema',
             onPressed: () => themeProvider.cambiaTema(),
@@ -41,57 +38,64 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Icona decorativa dell'app
-                Icon(
-                  Icons.auto_awesome,
-                  size: 80,
-                  color: colorScheme.primary,
+                // Icona dell'app con sfondo teal morbido
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.auto_awesome,
+                    size: 48,
+                    color: colorScheme.primary,
+                  ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
 
                 // Titolo principale
                 Text(
                   'Prompt Master',
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.primary,
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurface,
                       ),
                 ),
                 const SizedBox(height: 8),
 
-                // Sottotitolo descrittivo
+                // Sottotitolo
                 Text(
                   'Il tuo assistente per creare prompt perfetti',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 48),
 
-                // Bottone "Crea nuovo prompt"
-                _buildBottoneHome(
+                // Card "Crea nuovo prompt"
+                _buildCardAzione(
                   context: context,
                   icona: Icons.add_circle_outline,
                   etichetta: 'Crea nuovo prompt',
                   descrizione: 'Crea un prompt da zero con l\'aiuto dell\'AI',
-                  colore: colorScheme.primary,
+                  isDark: isDark,
+                  colorScheme: colorScheme,
                   onPressed: () {
-                    // Naviga alla schermata di input libero
                     Navigator.of(context).pushNamed(AppRoutes.inputLibero);
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
-                // Bottone "Libreria"
-                _buildBottoneHome(
+                // Card "Libreria"
+                _buildCardAzione(
                   context: context,
                   icona: Icons.library_books_outlined,
                   etichetta: 'Libreria',
                   descrizione: 'Sfoglia i tuoi prompt salvati',
-                  colore: colorScheme.secondary,
+                  isDark: isDark,
+                  colorScheme: colorScheme,
                   onPressed: () {
-                    // TODO: Navigare alla schermata libreria
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Funzionalità in arrivo!'),
@@ -99,17 +103,17 @@ class HomeScreen extends StatelessWidget {
                     );
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
 
-                // Bottone "Cronologia"
-                _buildBottoneHome(
+                // Card "Cronologia"
+                _buildCardAzione(
                   context: context,
                   icona: Icons.history,
                   etichetta: 'Cronologia',
                   descrizione: 'Rivedi i prompt usati di recente',
-                  colore: colorScheme.tertiary,
+                  isDark: isDark,
+                  colorScheme: colorScheme,
                   onPressed: () {
-                    // TODO: Navigare alla schermata cronologia
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
                         content: Text('Funzionalità in arrivo!'),
@@ -125,23 +129,32 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  /// Costruisce un bottone stilizzato per la schermata Home.
-  /// Ogni bottone ha un'icona, un'etichetta, una descrizione e un colore.
-  Widget _buildBottoneHome({
+  /// Card azione stile Apple — ombra sottile, padding generoso, angoli morbidi
+  Widget _buildCardAzione({
     required BuildContext context,
     required IconData icona,
     required String etichetta,
     required String descrizione,
-    required Color colore,
+    required bool isDark,
+    required ColorScheme colorScheme,
     required VoidCallback onPressed,
   }) {
-    return SizedBox(
+    return Container(
       width: double.infinity,
-      child: Card(
-        elevation: 2,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 2),
+            ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(16),
@@ -149,44 +162,38 @@ class HomeScreen extends StatelessWidget {
             padding: const EdgeInsets.all(20.0),
             child: Row(
               children: [
-                // Icona del bottone con sfondo colorato
+                // Icona con sfondo teal morbido
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: colore.withValues(alpha: 0.1),
+                    color: colorScheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(icona, color: colore, size: 28),
+                  child: Icon(icona, color: colorScheme.primary, size: 24),
                 ),
                 const SizedBox(width: 16),
-                // Testo del bottone (etichetta + descrizione)
+                // Testo
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         etichetta,
-                        style:
-                            Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
+                        style: Theme.of(context).textTheme.titleMedium,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
                         descrizione,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
-                            ),
+                        style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
                   ),
                 ),
-                // Freccia indicante navigazione
+                // Freccia di navigazione
                 Icon(
                   Icons.chevron_right,
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  color: colorScheme.onSurfaceVariant,
+                  size: 20,
                 ),
               ],
             ),

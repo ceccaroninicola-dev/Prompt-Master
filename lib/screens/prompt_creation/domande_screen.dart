@@ -5,9 +5,7 @@ import 'package:prompt_master/providers/sessione_provider.dart';
 import 'package:prompt_master/widgets/barra_avanzamento.dart';
 
 /// Schermata delle domande adattive — terza fase del flusso.
-/// Mostra una domanda alla volta con la barra di avanzamento in alto.
-/// Supporta tre tipi di input: testo libero, bottoni opzioni, chip multipli.
-/// Include il bottone "Genera ora" sempre visibile in basso.
+/// Design minimal stile Apple: card pulite, teal accento, animazioni fluide.
 class DomandeScreen extends StatefulWidget {
   const DomandeScreen({super.key});
 
@@ -108,7 +106,7 @@ class _DomandeScreenState extends State<DomandeScreen> {
     }
   }
 
-  /// Mostra il messaggio di completamento (placeholder per la generazione)
+  /// Mostra il messaggio di completamento
   void _mostraCompletamento() {
     showDialog(
       context: context,
@@ -121,8 +119,7 @@ class _DomandeScreenState extends State<DomandeScreen> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop(); // Chiudi il dialog
-              // Torna alla Home
+              Navigator.of(context).pop();
               Navigator.of(context).popUntil((route) => route.isFirst);
               context.read<SessioneProvider>().resetSessione();
             },
@@ -174,15 +171,22 @@ class _DomandeScreenState extends State<DomandeScreen> {
 
     // Se non ci sono domande, mostra il completamento
     if (domanda == null && sessione.domande.isNotEmpty) {
-      // Tutte le domande sono state completate
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _mostraCompletamento();
       });
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: colorScheme.primary),
+        ),
+      );
     }
 
     if (domanda == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: colorScheme.primary),
+        ),
+      );
     }
 
     return Scaffold(
@@ -192,7 +196,6 @@ class _DomandeScreenState extends State<DomandeScreen> {
           icon: const Icon(Icons.close),
           tooltip: 'Annulla sessione',
           onPressed: () {
-            // Chiedi conferma prima di annullare
             showDialog(
               context: context,
               builder: (ctx) => AlertDialog(
@@ -294,7 +297,6 @@ class _DomandeBodyState extends State<_DomandeBody> {
   @override
   void didUpdateWidget(covariant _DomandeBody oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Quando la domanda cambia, resetta l'input
     if (widget.domanda.id != _ultimaDomandaId) {
       _ultimaDomandaId = widget.domanda.id;
       final rispostaPrecedente =
@@ -309,7 +311,6 @@ class _DomandeBodyState extends State<_DomandeBody> {
     _ultimaDomandaId = widget.domanda.id;
     final rispostaPrecedente =
         widget.sessione.risposte[widget.domanda.id] as String?;
-    // Inizializza l'input con la risposta precedente o il default
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.onResetInput(widget.domanda, rispostaPrecedente);
     });
@@ -317,6 +318,8 @@ class _DomandeBodyState extends State<_DomandeBody> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Column(
       children: [
         // Barra di avanzamento in alto
@@ -326,9 +329,7 @@ class _DomandeBodyState extends State<_DomandeBody> {
             percentuale: widget.sessione.percentualeCompletamento as double,
             domandaCorrente: widget.sessione.domandaCorrente as int,
             totaleDomande: widget.sessione.domande.length as int,
-            // Permetti di navigare alle domande precedenti toccando la barra
             onTapDomanda: (indice) {
-              // Naviga alla domanda selezionata (solo se precedente)
               final diff =
                   (widget.sessione.domandaCorrente as int) - indice;
               for (var i = 0; i < diff; i++) {
@@ -350,7 +351,7 @@ class _DomandeBodyState extends State<_DomandeBody> {
                   opacity: animation,
                   child: SlideTransition(
                     position: Tween<Offset>(
-                      begin: const Offset(0.05, 0),
+                      begin: const Offset(0.03, 0),
                       end: Offset.zero,
                     ).animate(animation),
                     child: child,
@@ -364,15 +365,12 @@ class _DomandeBodyState extends State<_DomandeBody> {
                   // Testo della domanda
                   Text(
                     widget.domanda.testo,
-                    style:
-                        Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
                   const SizedBox(height: 24),
 
                   // Widget di input in base al tipo di domanda
-                  _buildInput(),
+                  _buildInput(isDark),
                 ],
               ),
             ),
@@ -380,24 +378,24 @@ class _DomandeBodyState extends State<_DomandeBody> {
         ),
 
         // Barra inferiore con bottoni di navigazione
-        _buildBarraInferiore(),
+        _buildBarraInferiore(isDark),
       ],
     );
   }
 
-  /// Costruisce il widget di input appropriato in base al tipo di domanda
-  Widget _buildInput() {
+  /// Costruisce il widget di input appropriato
+  Widget _buildInput(bool isDark) {
     switch (widget.domanda.tipoInput) {
       case TipoInput.testoLibero:
         return _buildInputTestoLibero();
       case TipoInput.bottoniOpzioni:
-        return _buildInputBottoni();
+        return _buildInputBottoni(isDark);
       case TipoInput.chipMultipli:
         return _buildInputChip();
     }
   }
 
-  /// Input di tipo testo libero — campo di testo espandibile
+  /// Input di tipo testo libero — campo di testo con bordi morbidi
   Widget _buildInputTestoLibero() {
     return TextField(
       controller: widget.testoController,
@@ -406,127 +404,134 @@ class _DomandeBodyState extends State<_DomandeBody> {
       decoration: InputDecoration(
         hintText: widget.domanda.placeholder ?? 'Scrivi la tua risposta...',
         hintMaxLines: 2,
+        hintStyle: TextStyle(
+          color: widget.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+        ),
         filled: true,
         fillColor: widget.colorScheme.surfaceContainerLow,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(
             color: widget.colorScheme.primary,
             width: 2,
           ),
         ),
-        contentPadding: const EdgeInsets.all(16),
+        contentPadding: const EdgeInsets.all(18),
       ),
     );
   }
 
-  /// Input di tipo bottoni opzioni — selezione singola con card cliccabili
-  Widget _buildInputBottoni() {
+  /// Input di tipo bottoni opzioni — card Apple-style con selezione singola
+  Widget _buildInputBottoni(bool isDark) {
     return Column(
       children: widget.domanda.opzioni.map((opzione) {
         final selezionato = widget.opzioneSelezionata == opzione;
         return Padding(
           padding: const EdgeInsets.only(bottom: 10),
-          child: SizedBox(
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
             width: double.infinity,
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              child: Material(
+            decoration: BoxDecoration(
+              color: selezionato
+                  ? widget.colorScheme.primary.withValues(alpha: 0.08)
+                  : widget.colorScheme.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
                 color: selezionato
-                    ? widget.colorScheme.primaryContainer
-                    : widget.colorScheme.surfaceContainerLow,
+                    ? widget.colorScheme.primary
+                    : isDark
+                        ? widget.colorScheme.outlineVariant
+                        : Colors.transparent,
+                width: selezionato ? 1.5 : 0.5,
+              ),
+              boxShadow: [
+                if (!isDark && !selezionato)
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, 1),
+                  ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
                 borderRadius: BorderRadius.circular(14),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(14),
-                  onTap: () => widget.onOpzioneSelezionata(opzione),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: selezionato
-                            ? widget.colorScheme.primary
-                            : widget.colorScheme.outlineVariant,
-                        width: selezionato ? 2 : 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        // Indicatore di selezione (cerchio)
-                        Container(
-                          width: 22,
-                          height: 22,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: selezionato
-                                  ? widget.colorScheme.primary
-                                  : widget.colorScheme.outline,
-                              width: 2,
-                            ),
+                onTap: () => widget.onOpzioneSelezionata(opzione),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 16,
+                  ),
+                  child: Row(
+                    children: [
+                      // Indicatore di selezione — cerchio teal
+                      Container(
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
                             color: selezionato
                                 ? widget.colorScheme.primary
-                                : Colors.transparent,
+                                : widget.colorScheme.outline,
+                            width: selezionato ? 2 : 1.5,
                           ),
-                          child: selezionato
-                              ? const Icon(
-                                  Icons.check,
-                                  size: 14,
-                                  color: Colors.white,
-                                )
-                              : null,
+                          color: selezionato
+                              ? widget.colorScheme.primary
+                              : Colors.transparent,
                         ),
-                        const SizedBox(width: 14),
-                        // Testo dell'opzione
-                        Expanded(
+                        child: selezionato
+                            ? const Icon(
+                                Icons.check,
+                                size: 14,
+                                color: Colors.white,
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 14),
+                      // Testo dell'opzione
+                      Expanded(
+                        child: Text(
+                          opzione,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyLarge
+                              ?.copyWith(
+                                fontWeight: selezionato
+                                    ? FontWeight.w600
+                                    : FontWeight.normal,
+                              ),
+                        ),
+                      ),
+                      // Badge "Suggerito" — teal leggero
+                      if (opzione == widget.domanda.valoreDefault &&
+                          !selezionato)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: widget.colorScheme.primary
+                                .withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                           child: Text(
-                            opzione,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyLarge
-                                ?.copyWith(
-                                  fontWeight: selezionato
-                                      ? FontWeight.w600
-                                      : FontWeight.normal,
-                                  color: selezionato
-                                      ? widget
-                                          .colorScheme.onPrimaryContainer
-                                      : null,
-                                ),
+                            'Suggerito',
+                            style: TextStyle(
+                              color: widget.colorScheme.primary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ),
-                        // Badge "Default" se è il valore suggerito
-                        if (opzione == widget.domanda.valoreDefault &&
-                            !selezionato)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: widget.colorScheme.tertiaryContainer,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              'Suggerito',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .labelSmall
-                                  ?.copyWith(
-                                    color: widget
-                                        .colorScheme.onTertiaryContainer,
-                                  ),
-                            ),
-                          ),
-                      ],
-                    ),
+                    ],
                   ),
                 ),
               ),
@@ -537,20 +542,16 @@ class _DomandeBodyState extends State<_DomandeBody> {
     );
   }
 
-  /// Input di tipo chip multipli — selezione multipla con chip colorati
+  /// Input di tipo chip multipli — chip teal con selezione multipla
   Widget _buildInputChip() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Istruzione per la selezione multipla
         Text(
           'Seleziona uno o più elementi:',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: widget.colorScheme.onSurfaceVariant,
-              ),
+          style: Theme.of(context).textTheme.bodySmall,
         ),
         const SizedBox(height: 12),
-        // Griglia di chip selezionabili
         Wrap(
           spacing: 10,
           runSpacing: 10,
@@ -561,53 +562,59 @@ class _DomandeBodyState extends State<_DomandeBody> {
               selected: selezionato,
               onSelected: (_) => widget.onChipToggle(opzione),
               showCheckmark: true,
-              checkmarkColor: widget.colorScheme.onPrimaryContainer,
-              selectedColor: widget.colorScheme.primaryContainer,
+              checkmarkColor: Colors.white,
+              selectedColor: widget.colorScheme.primary.withValues(alpha: 0.15),
               backgroundColor: widget.colorScheme.surfaceContainerLow,
               side: BorderSide(
                 color: selezionato
                     ? widget.colorScheme.primary
                     : widget.colorScheme.outlineVariant,
+                width: selezionato ? 1.5 : 0.5,
               ),
               labelStyle: TextStyle(
                 color: selezionato
-                    ? widget.colorScheme.onPrimaryContainer
+                    ? widget.colorScheme.primary
                     : widget.colorScheme.onSurface,
                 fontWeight:
                     selezionato ? FontWeight.w600 : FontWeight.normal,
+                fontSize: 14,
               ),
               padding:
                   const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             );
           }).toList(),
         ),
-        // Mostra i chip selezionati come riepilogo
+        // Riepilogo dei chip selezionati
         if (widget.chipSelezionati.isNotEmpty) ...[
           const SizedBox(height: 16),
           Text(
             'Selezionati: ${widget.chipSelezionati.join(", ")}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: widget.colorScheme.primary,
-                  fontWeight: FontWeight.w500,
-                ),
+            style: TextStyle(
+              color: widget.colorScheme.primary,
+              fontWeight: FontWeight.w500,
+              fontSize: 13,
+            ),
           ),
         ],
       ],
     );
   }
 
-  /// Costruisce la barra inferiore con navigazione e bottone "Genera ora"
-  Widget _buildBarraInferiore() {
+  /// Barra inferiore — stile Apple con ombra sottile
+  Widget _buildBarraInferiore(bool isDark) {
     final puoTornareIndietro = widget.provider.puoTornareIndietro;
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 8,
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
+            blurRadius: 10,
             offset: const Offset(0, -2),
           ),
         ],
@@ -618,41 +625,35 @@ class _DomandeBodyState extends State<_DomandeBody> {
           // Riga con bottoni Indietro e Avanti
           Row(
             children: [
-              // Bottone "Indietro" (visibile solo se non è la prima domanda)
+              // Bottone "Indietro"
               if (puoTornareIndietro)
-                IconButton(
-                  onPressed: () => widget.provider.domandaPrecedente(),
-                  icon: const Icon(Icons.arrow_back_rounded),
-                  tooltip: 'Domanda precedente',
-                  style: IconButton.styleFrom(
-                    backgroundColor:
-                        widget.colorScheme.surfaceContainerHighest,
+                Container(
+                  decoration: BoxDecoration(
+                    color: widget.colorScheme.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: IconButton(
+                    onPressed: () => widget.provider.domandaPrecedente(),
+                    icon: const Icon(Icons.arrow_back_rounded, size: 20),
+                    tooltip: 'Domanda precedente',
+                    color: widget.colorScheme.onSurface,
                   ),
                 ),
               if (puoTornareIndietro) const SizedBox(width: 12),
 
-              // Bottone "Avanti" / "Conferma"
+              // Bottone "Avanti" / "Completa" — teal pieno
               Expanded(
                 child: ElevatedButton(
                   onPressed: _isRispostaValida()
                       ? widget.onInviaRisposta
                       : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: widget.colorScheme.primary,
-                    foregroundColor: widget.colorScheme.onPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
                   ),
                   child: Text(
                     widget.provider.isUltimaDomanda
                         ? 'Completa'
                         : 'Avanti',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
                   ),
                 ),
               ),
@@ -660,15 +661,16 @@ class _DomandeBodyState extends State<_DomandeBody> {
           ),
           const SizedBox(height: 8),
 
-          // Bottone "Genera ora" — sempre visibile
+          // Bottone "Genera ora" — teal testo
           SizedBox(
             width: double.infinity,
             child: TextButton.icon(
               onPressed: widget.onGeneraOra,
-              icon: const Icon(Icons.bolt, size: 18),
-              label: const Text('Genera ora con le info raccolte'),
-              style: TextButton.styleFrom(
-                foregroundColor: widget.colorScheme.secondary,
+              icon: Icon(Icons.bolt, size: 18,
+                  color: widget.colorScheme.primary),
+              label: Text(
+                'Genera ora con le info raccolte',
+                style: TextStyle(color: widget.colorScheme.primary),
               ),
             ),
           ),

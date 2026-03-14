@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// Widget che mostra una barra di avanzamento adattiva.
-/// La barra si aggiorna dinamicamente durante la sessione di domande.
-/// Mostra la percentuale di completamento e il numero della domanda corrente.
+/// Stile Apple minimal: teal come colore primario, animazioni fluide.
 class BarraAvanzamento extends StatelessWidget {
   /// Percentuale di completamento (da 0.0 a 1.0)
   final double percentuale;
@@ -14,7 +13,6 @@ class BarraAvanzamento extends StatelessWidget {
   final int totaleDomande;
 
   /// Callback quando l'utente tocca un punto specifico della barra
-  /// per navigare a una domanda precedente
   final ValueChanged<int>? onTapDomanda;
 
   const BarraAvanzamento({
@@ -43,61 +41,54 @@ class BarraAvanzamento extends StatelessWidget {
                 totaleDomande > 0
                     ? 'Domanda ${domandaCorrente + 1} di $totaleDomande'
                     : 'Analisi in corso...',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                    ),
+                style: Theme.of(context).textTheme.bodySmall,
               ),
-              // Percentuale di completamento
+              // Percentuale di completamento — teal
               Text(
                 '${(percentuale * 100).round()}%',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: TextStyle(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 8),
 
-        // Barra di avanzamento animata con indicatori per ogni domanda
+        // Barra di avanzamento — teal pieno, sfondo sottile
         LayoutBuilder(
           builder: (context, constraints) {
             return Stack(
               children: [
                 // Sfondo della barra
                 Container(
-                  height: 8,
+                  height: 6,
                   width: double.infinity,
                   decoration: BoxDecoration(
                     color: colorScheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(3),
                   ),
                 ),
-                // Riempimento animato della barra
+                // Riempimento animato — teal uniforme
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 400),
                   curve: Curves.easeInOut,
-                  height: 8,
+                  height: 6,
                   width: constraints.maxWidth * percentuale.clamp(0.0, 1.0),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        colorScheme.primary,
-                        colorScheme.secondary,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(4),
+                    color: colorScheme.primary,
+                    borderRadius: BorderRadius.circular(3),
                   ),
                 ),
-                // Indicatori cliccabili per ogni domanda (punti sulla barra)
+                // Indicatori cliccabili per ogni domanda
                 if (totaleDomande > 0)
                   SizedBox(
-                    height: 8,
+                    height: 6,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: List.generate(totaleDomande, (indice) {
-                        // Determina se questa domanda è stata completata
                         final completata = indice < domandaCorrente;
                         final corrente = indice == domandaCorrente;
 
@@ -105,20 +96,23 @@ class BarraAvanzamento extends StatelessWidget {
                           onTap: completata && onTapDomanda != null
                               ? () => onTapDomanda!(indice)
                               : null,
-                          child: Container(
-                            width: 12,
-                            height: 12,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                            width: 10,
+                            height: 10,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: completata
                                   ? colorScheme.primary
                                   : corrente
-                                      ? colorScheme.primaryContainer
+                                      ? colorScheme.primary
+                                          .withValues(alpha: 0.3)
                                       : Colors.transparent,
-                              border: corrente
+                              border: corrente && !completata
                                   ? Border.all(
                                       color: colorScheme.primary,
-                                      width: 2,
+                                      width: 1.5,
                                     )
                                   : null,
                             ),

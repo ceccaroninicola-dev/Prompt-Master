@@ -4,9 +4,7 @@ import 'package:prompt_master/config/app_routes.dart';
 import 'package:prompt_master/providers/sessione_provider.dart';
 
 /// Schermata di conferma categoria — seconda fase del flusso.
-/// Mostra all'utente la categoria rilevata e un riepilogo di ciò che
-/// l'app ha capito dalla frase iniziale.
-/// L'utente può confermare per proseguire o tornare indietro per riformulare.
+/// Design minimal stile Apple: card con ombre sottili, teal accento, padding generoso.
 class ConfermaCategoriaScreen extends StatelessWidget {
   const ConfermaCategoriaScreen({super.key});
 
@@ -27,13 +25,16 @@ class ConfermaCategoriaScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final sessione = context.watch<SessioneProvider>().sessione;
     final categoria = sessione.categoria;
 
-    // Se la categoria non è stata rilevata, torna indietro
+    // Se la categoria non è stata rilevata, mostra il caricamento
     if (categoria == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(color: colorScheme.primary),
+        ),
       );
     }
 
@@ -52,156 +53,163 @@ class ConfermaCategoriaScreen extends StatelessWidget {
                     children: [
                       const SizedBox(height: 16),
 
-                      // Icona della categoria con sfondo decorativo
+                      // Icona della categoria con sfondo teal morbido
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer,
+                          color: colorScheme.primary.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           _getIcona(categoria.icona),
                           size: 48,
-                          color: colorScheme.onPrimaryContainer,
+                          color: colorScheme.primary,
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
 
                       // Nome della categoria
                       Text(
                         categoria.nome,
-                        style:
-                            Theme.of(context).textTheme.headlineSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                        style: Theme.of(context).textTheme.headlineSmall,
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 6),
 
-                      // Sottocategoria (se presente)
+                      // Sottocategoria (se presente) — chip teal
                       if (categoria.sottocategoria != null)
-                        Chip(
-                          label: Text(
-                            categoria.sottocategoria!,
-                            style: TextStyle(color: colorScheme.primary),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 6,
                           ),
-                          backgroundColor:
-                              colorScheme.primaryContainer.withValues(alpha: 0.5),
-                          side: BorderSide.none,
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            categoria.sottocategoria!,
+                            style: TextStyle(
+                              color: colorScheme.primary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
                         ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 28),
 
-                      // Card con il riepilogo di ciò che l'app ha capito
-                      Card(
-                        elevation: 0,
-                        color: colorScheme.surfaceContainerLow,
-                        shape: RoundedRectangleBorder(
+                      // Card riepilogo — stile Apple con ombra sottile
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(20.0),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerLow,
                           borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            if (!isDark)
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.04),
+                                blurRadius: 10,
+                                offset: const Offset(0, 2),
+                              ),
+                          ],
                         ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Intestazione del riepilogo
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.lightbulb_outline,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Intestazione del riepilogo
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.lightbulb_outline,
+                                  color: colorScheme.primary,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Ecco cosa ho capito',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
                                     color: colorScheme.primary,
-                                    size: 20,
                                   ),
-                                  const SizedBox(width: 8),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 14),
+
+                            // Testo del riepilogo
+                            Text(
+                              categoria.riepilogo,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Frase originale dell'utente
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: colorScheme.surface,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: colorScheme.outlineVariant,
+                                  width: 0.5,
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
                                   Text(
-                                    'Ecco cosa ho capito',
+                                    'La tua richiesta:',
+                                    style: Theme.of(context).textTheme.labelSmall,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '"${sessione.fraseIniziale}"',
                                     style: Theme.of(context)
                                         .textTheme
-                                        .titleSmall
-                                        ?.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                          color: colorScheme.primary,
-                                        ),
+                                        .bodyMedium
+                                        ?.copyWith(fontStyle: FontStyle.italic),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 12),
-
-                              // Testo del riepilogo
-                              Text(
-                                categoria.riepilogo,
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                              const SizedBox(height: 16),
-
-                              // Frase originale dell'utente
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.surface,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: colorScheme.outlineVariant,
-                                  ),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'La tua richiesta:',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .labelSmall
-                                          ?.copyWith(
-                                            color:
-                                                colorScheme.onSurfaceVariant,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '"${sessione.fraseIniziale}"',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.copyWith(
-                                            fontStyle: FontStyle.italic,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 20),
 
-                      // Elementi chiave estratti dalla frase
+                      // Parole chiave rilevate
                       if (categoria.elementiChiave.isNotEmpty) ...[
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
                             'Parole chiave rilevate:',
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelMedium
-                                ?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
+                            style: Theme.of(context).textTheme.labelMedium,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 10),
                         Wrap(
                           spacing: 8,
                           runSpacing: 8,
                           children: categoria.elementiChiave
-                              .map((elemento) => Chip(
-                                    label: Text(elemento),
-                                    backgroundColor:
-                                        colorScheme.secondaryContainer,
-                                    side: BorderSide.none,
-                                    labelStyle: TextStyle(
-                                      color:
-                                          colorScheme.onSecondaryContainer,
+                              .map((elemento) => Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: colorScheme.primary
+                                          .withValues(alpha: 0.08),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      elemento,
+                                      style: TextStyle(
+                                        color: colorScheme.primary,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
                                   ))
                               .toList(),
@@ -216,40 +224,30 @@ class ConfermaCategoriaScreen extends StatelessWidget {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  // Bottone "Riformula" — torna alla schermata precedente
+                  // Bottone "Riformula" — outlined teal
                   Expanded(
                     child: OutlinedButton.icon(
                       onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.edit_outlined),
+                      icon: const Icon(Icons.edit_outlined, size: 18),
                       label: const Text('Riformula'),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
-                  // Bottone "Prosegui" — conferma e va alle domande
+                  // Bottone "Prosegui" — teal pieno
                   Expanded(
                     flex: 2,
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        // Conferma la categoria e naviga alle domande
                         context.read<SessioneProvider>().confermCategoria();
-                        Navigator.of(context)
-                            .pushNamed(AppRoutes.domande);
+                        Navigator.of(context).pushNamed(AppRoutes.domande);
                       },
-                      icon: const Icon(Icons.arrow_forward_rounded),
+                      icon: const Icon(Icons.arrow_forward_rounded, size: 20),
                       label: const Text('Prosegui'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: colorScheme.primary,
-                        foregroundColor: colorScheme.onPrimary,
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
                       ),
                     ),
                   ),
