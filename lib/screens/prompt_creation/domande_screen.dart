@@ -25,6 +25,9 @@ class _DomandeScreenState extends State<DomandeScreen> {
   // Chip selezionati per la selezione multipla
   final Set<String> _chipSelezionati = {};
 
+  // Flag per evitare navigazioni multiple alla post-generazione
+  bool _haNavigato = false;
+
   @override
   void dispose() {
     _testoController.dispose();
@@ -102,15 +105,11 @@ class _DomandeScreenState extends State<DomandeScreen> {
 
     provider.rispondiDomanda(_getRisposta(domanda.tipoInput));
 
-    // Se abbiamo completato tutte le domande, mostra un messaggio
+    // Se abbiamo completato tutte le domande, naviga alla post-generazione.
+    // Non serve anche il check nel build() perché lo facciamo qui direttamente.
     if (provider.domandaCorrente == null) {
-      _mostraCompletamento();
+      _navigaAPostGenerazione();
     }
-  }
-
-  /// Naviga alla schermata post-generazione dopo il completamento
-  void _mostraCompletamento() {
-    _navigaAPostGenerazione();
   }
 
   /// Genera il prompt immediatamente (bottone "Genera ora")
@@ -118,8 +117,12 @@ class _DomandeScreenState extends State<DomandeScreen> {
     _navigaAPostGenerazione();
   }
 
-  /// Avvia la generazione del prompt e naviga alla schermata post-generazione
+  /// Avvia la generazione del prompt e naviga alla schermata post-generazione.
+  /// Il flag _haNavigato previene push multipli della stessa rotta.
   void _navigaAPostGenerazione() {
+    if (_haNavigato) return;
+    _haNavigato = true;
+
     final sessione = context.read<SessioneProvider>().sessione;
     final promptProvider = context.read<PromptGeneratoProvider>();
 
@@ -131,7 +134,12 @@ class _DomandeScreenState extends State<DomandeScreen> {
     );
 
     // Naviga alla schermata post-generazione
-    Navigator.of(context).pushNamed(AppRoutes.postGenerazione);
+    Navigator.of(context).pushNamed(AppRoutes.postGenerazione).then((_) {
+      // Quando l'utente torna indietro, resetta il flag
+      if (mounted) {
+        _haNavigato = false;
+      }
+    });
   }
 
   @override
@@ -141,11 +149,14 @@ class _DomandeScreenState extends State<DomandeScreen> {
     final sessione = provider.sessione;
     final domanda = provider.domandaCorrente;
 
-    // Se tutte le domande sono completate, naviga alla post-generazione
+    // Se tutte le domande sono completate, naviga alla post-generazione.
+    // Il flag _haNavigato previene push duplicati dal rebuild del widget.
     if (domanda == null && sessione.domande.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) _navigaAPostGenerazione();
-      });
+      if (!_haNavigato) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _navigaAPostGenerazione();
+        });
+      }
       return Scaffold(
         body: Center(
           child: CircularProgressIndicator(color: colorScheme.primary),
