@@ -3,6 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:prompt_master/models/prompt_generato.dart';
 import 'package:prompt_master/providers/prompt_generato_provider.dart';
+import 'package:prompt_master/providers/sessione_provider.dart';
+import 'package:prompt_master/providers/cronologia_provider.dart';
+import 'package:prompt_master/services/export_service.dart';
 
 /// Schermata post-generazione — mostra il prompt generato con:
 /// - Anteprima in due viste (semplice/strutturata)
@@ -26,6 +29,9 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
 
   /// Controller per il campo di modifica inline
   final _editController = TextEditingController();
+
+  /// AI di destinazione selezionata (null = non ancora scelta)
+  String? _aiSelezionata;
 
   @override
   void dispose() {
@@ -141,7 +147,6 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
 
   // ========== SCORING A STELLE ==========
 
-  /// Sezione scoring con punteggio globale e breakdown per criterio
   Widget _buildScoring(
     PromptGenerato prompt,
     ColorScheme colorScheme,
@@ -168,7 +173,6 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Stelle
               ...List.generate(5, (i) {
                 final valore = prompt.punteggioGlobale - i;
                 return Icon(
@@ -200,7 +204,6 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
               padding: const EdgeInsets.only(bottom: 10),
               child: Row(
                 children: [
-                  // Nome del criterio
                   SizedBox(
                     width: 100,
                     child: Text(
@@ -211,21 +214,18 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
                       ),
                     ),
                   ),
-                  // Mini barra di progresso teal
                   Expanded(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(3),
                       child: LinearProgressIndicator(
                         value: entry.value / 5,
-                        backgroundColor:
-                            colorScheme.surfaceContainerHighest,
+                        backgroundColor: colorScheme.surfaceContainerHighest,
                         color: colorScheme.primary,
                         minHeight: 6,
                       ),
                     ),
                   ),
                   const SizedBox(width: 10),
-                  // Valore numerico
                   SizedBox(
                     width: 30,
                     child: Text(
@@ -249,7 +249,6 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
 
   // ========== TOGGLE VISTA ==========
 
-  /// Toggle per alternare tra vista semplice e strutturata
   Widget _buildToggleVista(ColorScheme colorScheme) {
     return Container(
       padding: const EdgeInsets.all(4),
@@ -281,7 +280,6 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
     );
   }
 
-  /// Singola opzione del toggle
   Widget _buildToggleOpzione({
     required String etichetta,
     required IconData icona,
@@ -296,9 +294,7 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 10),
           decoration: BoxDecoration(
-            color: selezionato
-                ? colorScheme.surface
-                : Colors.transparent,
+            color: selezionato ? colorScheme.surface : Colors.transparent,
             borderRadius: BorderRadius.circular(10),
             boxShadow: selezionato
                 ? [
@@ -325,8 +321,7 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
                 etichetta,
                 style: TextStyle(
                   fontSize: 14,
-                  fontWeight:
-                      selezionato ? FontWeight.w600 : FontWeight.w400,
+                  fontWeight: selezionato ? FontWeight.w600 : FontWeight.w400,
                   color: selezionato
                       ? colorScheme.primary
                       : colorScheme.onSurfaceVariant,
@@ -341,7 +336,6 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
 
   // ========== VISTA SEMPLICE ==========
 
-  /// Vista semplice: testo continuo del prompt
   Widget _buildVistaSemplice(
     PromptGenerato prompt,
     ColorScheme colorScheme,
@@ -373,7 +367,6 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
 
   // ========== VISTA STRUTTURATA ==========
 
-  /// Vista strutturata: sezioni collassabili con icone colorate
   Widget _buildVistaStrutturata(
     PromptGenerato prompt,
     ColorScheme colorScheme,
@@ -382,7 +375,6 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
     return Column(
       children: List.generate(prompt.sezioni.length, (indice) {
         final sezione = prompt.sezioni[indice];
-        // Nascondi sezioni vuote
         if (sezione.contenuto.isEmpty) return const SizedBox.shrink();
 
         final inModifica = _sezioneInModifica == indice;
@@ -426,7 +418,6 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
 
   // ========== SUGGERIMENTI ==========
 
-  /// Chip cliccabili con suggerimenti di miglioramento
   Widget _buildSuggerimenti(
     PromptGenerato prompt,
     ColorScheme colorScheme,
@@ -443,16 +434,10 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
           ),
           label: Text(
             suggerimento.etichetta,
-            style: TextStyle(
-              fontSize: 13,
-              color: colorScheme.onSurface,
-            ),
+            style: TextStyle(fontSize: 13, color: colorScheme.onSurface),
           ),
           backgroundColor: colorScheme.surfaceContainerLow,
-          side: BorderSide(
-            color: colorScheme.outlineVariant,
-            width: 0.5,
-          ),
+          side: BorderSide(color: colorScheme.outlineVariant, width: 0.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -481,9 +466,7 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
             maxHeight: MediaQuery.of(context).size.height * 0.75,
           ),
           decoration: BoxDecoration(
-            color: isDark
-                ? const Color(0xFF1C1C1E)
-                : Colors.white,
+            color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
             borderRadius: const BorderRadius.vertical(
               top: Radius.circular(20),
             ),
@@ -491,17 +474,7 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Maniglia del bottom sheet
-              Container(
-                width: 36,
-                height: 5,
-                margin: const EdgeInsets.only(top: 10),
-                decoration: BoxDecoration(
-                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-              // Intestazione
+              _buildManiglia(colorScheme),
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
                 child: Row(
@@ -533,47 +506,24 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-
-              // Contenuto scrollabile con prima/dopo
               Flexible(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // PRIMA
-                      _buildEtichettaPrimaDopo(
-                        'Prima',
-                        Colors.orange,
-                        colorScheme,
-                      ),
+                      _buildEtichettaPrimaDopo('Prima', Colors.orange),
                       const SizedBox(height: 8),
-                      _buildBoxTesto(
-                        suggerimento.testoPrima,
-                        colorScheme,
-                        isDark,
-                      ),
+                      _buildBoxTesto(suggerimento.testoPrima, colorScheme, isDark),
                       const SizedBox(height: 16),
-
-                      // DOPO
-                      _buildEtichettaPrimaDopo(
-                        'Dopo',
-                        colorScheme.primary,
-                        colorScheme,
-                      ),
+                      _buildEtichettaPrimaDopo('Dopo', colorScheme.primary),
                       const SizedBox(height: 8),
-                      _buildBoxTesto(
-                        suggerimento.testoDopo,
-                        colorScheme,
-                        isDark,
-                      ),
+                      _buildBoxTesto(suggerimento.testoDopo, colorScheme, isDark),
                       const SizedBox(height: 16),
                     ],
                   ),
                 ),
               ),
-
-              // Bottone "Applica"
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
                 child: SizedBox(
@@ -600,68 +550,16 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
     );
   }
 
-  /// Etichetta "Prima" / "Dopo" colorata
-  Widget _buildEtichettaPrimaDopo(
-    String testo,
-    Color colore,
-    ColorScheme colorScheme,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: colore.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(6),
-      ),
-      child: Text(
-        testo,
-        style: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: colore,
-        ),
-      ),
-    );
-  }
-
-  /// Box di testo per anteprima prima/dopo
-  Widget _buildBoxTesto(
-    String testo,
-    ColorScheme colorScheme,
-    bool isDark,
-  ) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: colorScheme.outlineVariant,
-          width: 0.5,
-        ),
-      ),
-      child: Text(
-        testo.isEmpty ? '(vuoto)' : testo,
-        style: TextStyle(
-          fontSize: 14,
-          height: 1.5,
-          color: testo.isEmpty
-              ? colorScheme.onSurfaceVariant
-              : colorScheme.onSurface,
-          fontStyle: testo.isEmpty ? FontStyle.italic : FontStyle.normal,
-        ),
-      ),
-    );
-  }
-
   // ========== BARRA AZIONI ==========
 
-  /// Barra azioni in basso: Copia, Esporta, Salva
   Widget _buildBarraAzioni(
     PromptGenerato prompt,
     ColorScheme colorScheme,
     bool isDark,
   ) {
+    final cronologia = context.watch<CronologiaProvider>();
+    final giaSalvato = cronologia.isGiaSalvato(prompt);
+
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
       decoration: BoxDecoration(
@@ -688,48 +586,48 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
                   ClipboardData(text: prompt.testoCompleto),
                 );
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Prompt copiato negli appunti!'),
-                    duration: Duration(seconds: 2),
+                  SnackBar(
+                    content: const Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.white, size: 18),
+                        SizedBox(width: 8),
+                        Text('Prompt copiato negli appunti!'),
+                      ],
+                    ),
+                    duration: const Duration(seconds: 2),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 );
               },
             ),
           ),
           const SizedBox(width: 10),
-          // Bottone "Esporta"
+          // Bottone "Esporta" — apre il bottom sheet export
           Expanded(
             child: _buildBottoneAzione(
               icona: Icons.ios_share_rounded,
               etichetta: 'Esporta',
               colorScheme: colorScheme,
               isPrimario: false,
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Funzionalità export in arrivo!'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              },
+              onPressed: () => _mostraExportSheet(prompt, colorScheme),
             ),
           ),
           const SizedBox(width: 10),
-          // Bottone "Salva"
+          // Bottone "Salva" — salva nella cronologia in memoria
           Expanded(
             child: _buildBottoneAzione(
-              icona: Icons.bookmark_outline_rounded,
-              etichetta: 'Salva',
+              icona: giaSalvato
+                  ? Icons.bookmark_rounded
+                  : Icons.bookmark_outline_rounded,
+              etichetta: giaSalvato ? 'Salvato' : 'Salva',
               colorScheme: colorScheme,
               isPrimario: false,
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Funzionalità salvataggio in arrivo!'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              },
+              onPressed: giaSalvato
+                  ? null
+                  : () => _salvaPrompt(prompt, colorScheme),
             ),
           ),
         ],
@@ -737,13 +635,489 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
     );
   }
 
-  /// Bottone singolo della barra azioni
+  /// Salva il prompt nella cronologia
+  void _salvaPrompt(PromptGenerato prompt, ColorScheme colorScheme) {
+    final sessione = context.read<SessioneProvider>().sessione;
+    context.read<CronologiaProvider>().salvaPrompt(
+          prompt: prompt,
+          categoria: sessione.categoria?.nome ?? 'Generico',
+          fraseIniziale: sessione.fraseIniziale,
+        );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Row(
+          children: [
+            Icon(Icons.bookmark_added, color: Colors.white, size: 18),
+            SizedBox(width: 8),
+            Text('Prompt salvato!'),
+          ],
+        ),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  // ========== BOTTOM SHEET EXPORT ==========
+
+  /// Mostra il bottom sheet con le opzioni di export e il selettore AI
+  void _mostraExportSheet(PromptGenerato prompt, ColorScheme colorScheme) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildManiglia(colorScheme),
+                  const SizedBox(height: 12),
+
+                  // Titolo
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.ios_share_rounded,
+                          color: colorScheme.primary,
+                          size: 22,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Esporta prompt',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // --- Selettore AI di destinazione ---
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Ottimizza per AI',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        _buildSelettoreAi(
+                          colorScheme,
+                          isDark,
+                          (ai) => setSheetState(() => _aiSelezionata = ai),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Messaggio ottimizzazione
+                  if (_aiSelezionata != null && _aiSelezionata != 'Generico')
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 10,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.auto_awesome,
+                              size: 16,
+                              color: colorScheme.primary,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Prompt ottimizzato per $_aiSelezionata',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                  const SizedBox(height: 20),
+
+                  // --- Opzioni di export ---
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Metodo di esportazione',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+
+                        // Copia negli appunti
+                        _buildOpzioneExport(
+                          icona: Icons.copy_rounded,
+                          etichetta: 'Copia negli appunti',
+                          descrizione: 'Copia il prompt come testo',
+                          colorScheme: colorScheme,
+                          isDark: isDark,
+                          onTap: () {
+                            Navigator.of(ctx).pop();
+                            Clipboard.setData(
+                              ClipboardData(text: prompt.testoCompleto),
+                            );
+                            _mostraConferma(
+                              Icons.check_circle,
+                              'Prompt copiato negli appunti!',
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 8),
+
+                        // Condividi come testo (share sheet nativa)
+                        _buildOpzioneExport(
+                          icona: Icons.share_rounded,
+                          etichetta: 'Condividi come testo',
+                          descrizione: 'WhatsApp, Telegram, Email...',
+                          colorScheme: colorScheme,
+                          isDark: isDark,
+                          onTap: () {
+                            Navigator.of(ctx).pop();
+                            ExportService.condividiTesto(prompt);
+                          },
+                        ),
+                        const SizedBox(height: 8),
+
+                        // Esporta come PDF
+                        _buildOpzioneExport(
+                          icona: Icons.picture_as_pdf_rounded,
+                          etichetta: 'Esporta come PDF',
+                          descrizione: 'Salva il prompt in formato PDF',
+                          colorScheme: colorScheme,
+                          isDark: isDark,
+                          onTap: () {
+                            Navigator.of(ctx).pop();
+                            _esportaConFeedback(
+                              () => ExportService.esportaPdf(
+                                prompt,
+                                nomeAiDestinazione: _aiSelezionata,
+                              ),
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 8),
+
+                        // Esporta come TXT
+                        _buildOpzioneExport(
+                          icona: Icons.description_outlined,
+                          etichetta: 'Esporta come TXT',
+                          descrizione: 'Salva il prompt come file di testo',
+                          colorScheme: colorScheme,
+                          isDark: isDark,
+                          onTap: () {
+                            Navigator.of(ctx).pop();
+                            _esportaConFeedback(
+                              () => ExportService.esportaTxt(
+                                prompt,
+                                nomeAiDestinazione: _aiSelezionata,
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Selettore AI — griglia orizzontale con icone
+  Widget _buildSelettoreAi(
+    ColorScheme colorScheme,
+    bool isDark,
+    ValueChanged<String> onSelect,
+  ) {
+    // Lista delle AI disponibili con icone Material
+    final listaAi = [
+      _AiOption('ChatGPT', Icons.chat_bubble_outline, const Color(0xFF10A37F)),
+      _AiOption('Claude', Icons.auto_awesome, const Color(0xFFD97706)),
+      _AiOption('Gemini', Icons.diamond_outlined, const Color(0xFF4285F4)),
+      _AiOption('Generico', Icons.tune, colorScheme.onSurfaceVariant),
+    ];
+
+    return Row(
+      children: listaAi.map((ai) {
+        final selezionato = _aiSelezionata == ai.nome;
+        return Expanded(
+          child: GestureDetector(
+            onTap: () => onSelect(ai.nome),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              margin: const EdgeInsets.symmetric(horizontal: 3),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: selezionato
+                    ? ai.colore.withValues(alpha: 0.1)
+                    : colorScheme.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: selezionato ? ai.colore : Colors.transparent,
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  if (!isDark && !selezionato)
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    ai.icona,
+                    size: 24,
+                    color: selezionato
+                        ? ai.colore
+                        : colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    ai.nome,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight:
+                          selezionato ? FontWeight.w600 : FontWeight.w400,
+                      color: selezionato
+                          ? ai.colore
+                          : colorScheme.onSurfaceVariant,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  /// Singola opzione nel bottom sheet export
+  Widget _buildOpzioneExport({
+    required IconData icona,
+    required String etichetta,
+    required String descrizione,
+    required ColorScheme colorScheme,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 4,
+              offset: const Offset(0, 1),
+            ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(icona, size: 20, color: colorScheme.primary),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        etichetta,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        descrizione,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Esegue l'export con feedback errore se necessario
+  Future<void> _esportaConFeedback(Future<void> Function() azione) async {
+    try {
+      await azione();
+    } catch (e) {
+      if (mounted) {
+        _mostraConferma(Icons.error_outline, 'Errore durante l\'esportazione');
+      }
+    }
+  }
+
+  /// Mostra una snackbar di conferma con icona
+  void _mostraConferma(IconData icona, String messaggio) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(icona, color: Colors.white, size: 18),
+            const SizedBox(width: 8),
+            Flexible(child: Text(messaggio)),
+          ],
+        ),
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  // ========== WIDGET HELPER ==========
+
+  /// Maniglia del bottom sheet
+  Widget _buildManiglia(ColorScheme colorScheme) {
+    return Container(
+      width: 36,
+      height: 5,
+      margin: const EdgeInsets.only(top: 10),
+      decoration: BoxDecoration(
+        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(3),
+      ),
+    );
+  }
+
+  Widget _buildEtichettaPrimaDopo(String testo, Color colore) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: colore.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        testo,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: colore,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBoxTesto(
+    String testo,
+    ColorScheme colorScheme,
+    bool isDark,
+  ) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colorScheme.outlineVariant, width: 0.5),
+      ),
+      child: Text(
+        testo.isEmpty ? '(vuoto)' : testo,
+        style: TextStyle(
+          fontSize: 14,
+          height: 1.5,
+          color: testo.isEmpty
+              ? colorScheme.onSurfaceVariant
+              : colorScheme.onSurface,
+          fontStyle: testo.isEmpty ? FontStyle.italic : FontStyle.normal,
+        ),
+      ),
+    );
+  }
+
   Widget _buildBottoneAzione({
     required IconData icona,
     required String etichetta,
     required ColorScheme colorScheme,
     required bool isPrimario,
-    required VoidCallback onPressed,
+    required VoidCallback? onPressed,
   }) {
     if (isPrimario) {
       return ElevatedButton(
@@ -778,10 +1152,19 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
   }
 }
 
-// ========== WIDGET CARD SEZIONE (ESTRATTO) ==========
+// ========== MODELLO AI OPTION ==========
+
+/// Rappresenta un'opzione AI nel selettore
+class _AiOption {
+  final String nome;
+  final IconData icona;
+  final Color colore;
+  const _AiOption(this.nome, this.icona, this.colore);
+}
+
+// ========== WIDGET CARD SEZIONE ==========
 
 /// Card collassabile per una singola sezione del prompt nella vista strutturata.
-/// Supporta modifica inline con salva/annulla.
 class _CardSezione extends StatefulWidget {
   final SezionePrompt sezione;
   final Color coloreSezione;
@@ -812,7 +1195,6 @@ class _CardSezione extends StatefulWidget {
 }
 
 class _CardSezioneState extends State<_CardSezione> {
-  /// Controlla se la sezione è espansa o collassata
   bool _espansa = true;
 
   @override
@@ -837,7 +1219,6 @@ class _CardSezioneState extends State<_CardSezione> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Intestazione della sezione — cliccabile per espandere/collassare
           InkWell(
             onTap: () => setState(() => _espansa = !_espansa),
             borderRadius: const BorderRadius.vertical(
@@ -847,7 +1228,6 @@ class _CardSezioneState extends State<_CardSezione> {
               padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
               child: Row(
                 children: [
-                  // Icona con colore della sezione
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
@@ -861,7 +1241,6 @@ class _CardSezioneState extends State<_CardSezione> {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  // Titolo della sezione
                   Expanded(
                     child: Text(
                       widget.sezione.titolo,
@@ -872,7 +1251,6 @@ class _CardSezioneState extends State<_CardSezione> {
                       ),
                     ),
                   ),
-                  // Bottone modifica (solo se espansa e non già in modifica)
                   if (_espansa && !widget.inModifica)
                     GestureDetector(
                       onTap: widget.onTapModifica,
@@ -883,7 +1261,6 @@ class _CardSezioneState extends State<_CardSezione> {
                       ),
                     ),
                   const SizedBox(width: 4),
-                  // Freccia espansione/collassamento
                   AnimatedRotation(
                     turns: _espansa ? 0.5 : 0,
                     duration: const Duration(milliseconds: 200),
@@ -897,8 +1274,6 @@ class _CardSezioneState extends State<_CardSezione> {
               ),
             ),
           ),
-
-          // Contenuto della sezione (collassabile)
           AnimatedCrossFade(
             firstChild: Padding(
               padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
@@ -924,7 +1299,6 @@ class _CardSezioneState extends State<_CardSezione> {
     );
   }
 
-  /// Campo di modifica inline con bottoni Salva e Annulla
   Widget _buildCampoModifica() {
     return Column(
       children: [
@@ -958,7 +1332,6 @@ class _CardSezioneState extends State<_CardSezione> {
           ),
         ),
         const SizedBox(height: 10),
-        // Bottoni Salva e Annulla
         Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [

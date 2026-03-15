@@ -25,15 +25,15 @@ void main() {
       (WidgetTester tester) async {
     await tester.pumpWidget(const PromptMasterApp());
 
-    // Cerca il bottone per cambiare tema (icona dark_mode in modalità chiara)
-    expect(find.byIcon(Icons.dark_mode), findsOneWidget);
+    // Cerca il bottone per cambiare tema (icona dark_mode_outlined in modalità chiara)
+    expect(find.byIcon(Icons.dark_mode_outlined), findsOneWidget);
 
     // Tocca il bottone per cambiare tema
-    await tester.tap(find.byIcon(Icons.dark_mode));
+    await tester.tap(find.byIcon(Icons.dark_mode_outlined));
     await tester.pumpAndSettle();
 
-    // Dopo il tap, l'icona dovrebbe cambiare a light_mode
-    expect(find.byIcon(Icons.light_mode), findsOneWidget);
+    // Dopo il tap, l'icona dovrebbe cambiare a light_mode_outlined
+    expect(find.byIcon(Icons.light_mode_outlined), findsOneWidget);
   });
 
   // Verifica navigazione dalla Home alla schermata di input libero
