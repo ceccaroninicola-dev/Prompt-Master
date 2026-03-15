@@ -28,6 +28,9 @@ class _DomandeScreenState extends State<DomandeScreen> {
   // Flag per evitare navigazioni multiple alla post-generazione
   bool _haNavigato = false;
 
+  // Flag: l'utente è tornato indietro dalla post-generazione
+  bool _ritornatoDaPostGenerazione = false;
+
   @override
   void dispose() {
     _testoController.dispose();
@@ -135,9 +138,11 @@ class _DomandeScreenState extends State<DomandeScreen> {
 
     // Naviga alla schermata post-generazione
     Navigator.of(context).pushNamed(AppRoutes.postGenerazione).then((_) {
-      // Quando l'utente torna indietro, resetta il flag
+      // L'utente è tornato indietro dalla post-generazione:
+      // segna il flag per evitare il loop di ri-navigazione
       if (mounted) {
         _haNavigato = false;
+        _ritornatoDaPostGenerazione = true;
       }
     });
   }
@@ -149,10 +154,18 @@ class _DomandeScreenState extends State<DomandeScreen> {
     final sessione = provider.sessione;
     final domanda = provider.domandaCorrente;
 
-    // Se tutte le domande sono completate, naviga alla post-generazione.
-    // Il flag _haNavigato previene push duplicati dal rebuild del widget.
+    // Se tutte le domande sono completate:
     if (domanda == null && sessione.domande.isNotEmpty) {
-      if (!_haNavigato) {
+      if (_ritornatoDaPostGenerazione) {
+        // L'utente è tornato dalla post-generazione: torna alla Home
+        // per evitare il loop infinito di ri-navigazione
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          }
+        });
+      } else if (!_haNavigato) {
+        // Prima volta: naviga alla post-generazione
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _navigaAPostGenerazione();
         });
@@ -194,9 +207,11 @@ class _DomandeScreenState extends State<DomandeScreen> {
                   TextButton(
                     onPressed: () {
                       Navigator.of(ctx).pop();
-                      Navigator.of(context)
-                          .popUntil((route) => route.isFirst);
                       context.read<SessioneProvider>().resetSessione();
+                      Navigator.of(context).pushNamedAndRemoveUntil(
+                        AppRoutes.home,
+                        (route) => false,
+                      );
                     },
                     child: const Text('Annulla sessione'),
                   ),
@@ -205,6 +220,17 @@ class _DomandeScreenState extends State<DomandeScreen> {
             );
           },
         ),
+        actions: [
+          // Bottone Home — torna alla Home cancellando lo stack
+          IconButton(
+            icon: const Icon(Icons.home_outlined),
+            tooltip: 'Torna alla Home',
+            onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(
+              AppRoutes.home,
+              (route) => false,
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: _DomandeBody(

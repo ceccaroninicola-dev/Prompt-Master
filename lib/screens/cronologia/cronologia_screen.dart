@@ -4,6 +4,7 @@ import 'package:prompt_master/config/app_routes.dart';
 import 'package:prompt_master/providers/cronologia_provider.dart';
 import 'package:prompt_master/providers/prompt_generato_provider.dart';
 import 'package:prompt_master/services/export_service.dart';
+import 'package:prompt_master/widgets/barra_navigazione.dart';
 
 /// Schermata Cronologia — mostra tutti i prompt salvati dall'utente.
 /// Include ricerca, filtri per categoria, swipe per eliminare e menu azioni.
@@ -45,11 +46,10 @@ class _CronologiaScreenState extends State<CronologiaScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Cronologia'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+        automaticallyImplyLeading: false,
       ),
+      // Barra di navigazione inferiore
+      bottomNavigationBar: const BarraNavigazione(indiceCorrente: 2),
       body: SafeArea(
         child: Column(
           children: [

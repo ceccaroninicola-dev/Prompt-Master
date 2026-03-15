@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
+import 'package:prompt_master/config/app_routes.dart';
 import 'package:prompt_master/models/prompt_generato.dart';
 import 'package:prompt_master/providers/prompt_generato_provider.dart';
 import 'package:prompt_master/providers/sessione_provider.dart';
@@ -96,8 +97,30 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
         title: const Text('Il tuo prompt'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+          tooltip: 'Indietro',
+          onPressed: () {
+            // Se è possibile tornare indietro, pop; altrimenti vai alla Home
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            } else {
+              Navigator.of(context).pushNamedAndRemoveUntil(
+                AppRoutes.home,
+                (route) => false,
+              );
+            }
+          },
         ),
+        actions: [
+          // Bottone Home — torna alla Home cancellando lo stack
+          IconButton(
+            icon: const Icon(Icons.home_outlined),
+            tooltip: 'Torna alla Home',
+            onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(
+              AppRoutes.home,
+              (route) => false,
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Column(
