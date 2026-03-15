@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:prompt_master/models/prompt_generato.dart';
+import 'package:prompt_master/models/prompt_template.dart';
 
 /// Provider per la gestione del prompt generato.
 /// Si occupa di generare il prompt fittizio, gestire le modifiche per sezione
@@ -63,6 +64,24 @@ class PromptGeneratoProvider extends ChangeNotifier {
       suggerimenti: nuoviSuggerimenti,
     );
     _ricalcolaPunteggi();
+    notifyListeners();
+  }
+
+  /// Carica un prompt da un template della libreria
+  void caricaDaTemplate(PromptTemplate template) {
+    _prompt = PromptGenerato(
+      sezioni: template.sezioni,
+      punteggioGlobale: template.popolarita,
+      punteggiCriteri: {
+        'Chiarezza': (template.popolarita * 0.95).clamp(0.0, 5.0),
+        'Specificità': (template.popolarita * 0.90).clamp(0.0, 5.0),
+        'Completezza': (template.popolarita * 0.92).clamp(0.0, 5.0),
+        'Struttura': (template.popolarita * 0.98).clamp(0.0, 5.0),
+        'Coerenza': (template.popolarita * 0.96).clamp(0.0, 5.0),
+      },
+      suggerimenti: const [],
+    );
+    _staGenerando = false;
     notifyListeners();
   }
 

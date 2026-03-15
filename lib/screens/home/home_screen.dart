@@ -99,15 +99,11 @@ class HomeScreen extends StatelessWidget {
                   context: context,
                   icona: Icons.library_books_outlined,
                   etichetta: 'Libreria',
-                  descrizione: 'Sfoglia i tuoi prompt salvati',
+                  descrizione: 'Template pronti all\'uso per ogni esigenza',
                   isDark: isDark,
                   colorScheme: colorScheme,
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funzionalità in arrivo!'),
-                      ),
-                    );
+                    Navigator.of(context).pushNamed(AppRoutes.libreria);
                   },
                 ),
                 const SizedBox(height: 12),
