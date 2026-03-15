@@ -92,35 +92,34 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
       );
     }
 
-    return Scaffold(
+    // Disabilita il tasto back del browser/dispositivo:
+    // torna alla Home cancellando lo stack
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRoutes.home,
+            (route) => false,
+          );
+        }
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: const Text('Il tuo prompt'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          tooltip: 'Indietro',
-          onPressed: () {
-            // Se è possibile tornare indietro, pop; altrimenti vai alla Home
-            if (Navigator.of(context).canPop()) {
-              Navigator.of(context).pop();
-            } else {
-              Navigator.of(context).pushNamedAndRemoveUntil(
-                AppRoutes.home,
-                (route) => false,
-              );
-            }
-          },
-        ),
-        actions: [
-          // Bottone Home — torna alla Home cancellando lo stack
-          IconButton(
-            icon: const Icon(Icons.home_outlined),
-            tooltip: 'Torna alla Home',
-            onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(
-              AppRoutes.home,
-              (route) => false,
-            ),
+        automaticallyImplyLeading: false,
+        leading: TextButton.icon(
+          icon: const Icon(Icons.home, size: 20),
+          label: const Text(
+            'Home',
+            style: TextStyle(fontSize: 14),
           ),
-        ],
+          onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRoutes.home,
+            (route) => false,
+          ),
+        ),
+        leadingWidth: 120,
       ),
       body: SafeArea(
         child: Column(
@@ -165,6 +164,7 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 
