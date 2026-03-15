@@ -7,6 +7,7 @@ import 'package:prompt_master/screens/prompt_creation/post_generazione_screen.da
 import 'package:prompt_master/screens/cronologia/cronologia_screen.dart';
 import 'package:prompt_master/screens/libreria/libreria_screen.dart';
 import 'package:prompt_master/screens/libreria/dettaglio_template_screen.dart';
+import 'package:prompt_master/screens/confronto_ai/confronto_ai_screen.dart';
 
 /// Configurazione delle rotte dell'applicazione.
 /// Gestisce la navigazione tra le schermate.
@@ -20,6 +21,7 @@ class AppRoutes {
   static const String cronologia = '/cronologia';
   static const String libreria = '/libreria';
   static const String dettaglioTemplate = '/libreria/dettaglio';
+  static const String confrontoAI = '/confronto-ai';
 
   /// Mappa delle rotte disponibili nell'app
   static Map<String, WidgetBuilder> rotte = {
@@ -31,5 +33,6 @@ class AppRoutes {
     cronologia: (context) => const CronologiaScreen(),
     libreria: (context) => const LibreriaScreen(),
     dettaglioTemplate: (context) => const DettaglioTemplateScreen(),
+    confrontoAI: (context) => const ConfrontoAIScreen(),
   };
 }

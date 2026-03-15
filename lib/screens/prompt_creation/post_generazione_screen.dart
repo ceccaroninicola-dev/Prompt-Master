@@ -6,6 +6,7 @@ import 'package:prompt_master/models/prompt_generato.dart';
 import 'package:prompt_master/providers/prompt_generato_provider.dart';
 import 'package:prompt_master/providers/sessione_provider.dart';
 import 'package:prompt_master/providers/cronologia_provider.dart';
+import 'package:prompt_master/providers/confronto_ai_provider.dart';
 import 'package:prompt_master/services/export_service.dart';
 
 /// Schermata post-generazione — mostra il prompt generato con:
@@ -809,6 +810,20 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
                         ),
                         const SizedBox(height: 10),
 
+                        // Confronta risposte AI — funzionalità killer
+                        _buildOpzioneExport(
+                          icona: Icons.compare_arrows_rounded,
+                          etichetta: 'Confronta risposte AI',
+                          descrizione: 'Invia a più AI e confronta le risposte',
+                          colorScheme: colorScheme,
+                          isDark: isDark,
+                          onTap: () {
+                            Navigator.of(ctx).pop();
+                            _mostraSelezionaAIConfronto(prompt, colorScheme);
+                          },
+                        ),
+                        const SizedBox(height: 8),
+
                         // Copia negli appunti
                         _buildOpzioneExport(
                           icona: Icons.copy_rounded,
@@ -932,6 +947,230 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
         );
       },
     );
+  }
+
+  /// Mostra il bottom sheet per selezionare le AI da confrontare
+  void _mostraSelezionaAIConfronto(
+    PromptGenerato prompt,
+    ColorScheme colorScheme,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final confrontoProvider = context.read<ConfrontoAIProvider>();
+    final sessione = context.read<SessioneProvider>().sessione;
+    final categoria = sessione.categoria?.nome ?? 'Scrittura';
+
+    // Pre-seleziona le AI suggerite per la categoria
+    final suggerite = confrontoProvider.suggerisciAI(categoria);
+    confrontoProvider.preseleziona(suggerite);
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            // Legge lo stato aggiornato dal provider
+            final aiSelezionate = confrontoProvider.aiSelezionate;
+
+            return Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildManiglia(colorScheme),
+                  const SizedBox(height: 12),
+
+                  // Titolo
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.compare_arrows_rounded,
+                          color: colorScheme.primary,
+                          size: 22,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Confronta risposte AI',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Sottotitolo
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Text(
+                      'Seleziona le AI a cui inviare il prompt (min. 2)',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Badge suggerite
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      children: [
+                        Icon(Icons.auto_awesome,
+                            size: 16, color: colorScheme.primary),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Suggerite per $categoria',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Lista AI con checkbox
+                  ...ConfrontoAIProvider.aiDisponibili.map((ai) {
+                    final selezionata = aiSelezionate.contains(ai.nome);
+                    final suggerita = suggerite.any((s) => s.nome == ai.nome);
+
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 3),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: selezionata
+                              ? ai.colore.withValues(alpha: 0.06)
+                              : colorScheme.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: selezionata
+                                ? ai.colore
+                                : Colors.transparent,
+                            width: selezionata ? 1.5 : 0,
+                          ),
+                        ),
+                        child: CheckboxListTile(
+                          value: selezionata,
+                          onChanged: (_) {
+                            confrontoProvider.toggleAI(ai.nome);
+                            setSheetState(() {});
+                          },
+                          secondary: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: ai.colore.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Icon(ai.icona, color: ai.colore, size: 22),
+                          ),
+                          title: Row(
+                            children: [
+                              Text(
+                                ai.nome,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: colorScheme.onSurface,
+                                ),
+                              ),
+                              if (suggerita) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.primary
+                                        .withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    'Suggerita',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: colorScheme.primary,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                          subtitle: Text(
+                            'Forte in: ${ai.categorieForti.join(", ")}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                          activeColor: ai.colore,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          controlAffinity: ListTileControlAffinity.trailing,
+                        ),
+                      ),
+                    );
+                  }),
+                  const SizedBox(height: 16),
+
+                  // Bottone "Confronta"
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: aiSelezionate.length >= 2
+                            ? () {
+                                Navigator.of(ctx).pop();
+                                _avviaConfronto(prompt, categoria);
+                              }
+                            : null,
+                        icon: const Icon(Icons.compare_arrows, size: 20),
+                        label: Text(
+                          aiSelezionate.length >= 2
+                              ? 'Confronta ${aiSelezionate.length} AI'
+                              : 'Seleziona almeno 2 AI',
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Avvia il confronto navigando alla schermata dedicata
+  void _avviaConfronto(PromptGenerato prompt, String categoria) {
+    final confrontoProvider = context.read<ConfrontoAIProvider>();
+
+    // Avvia il confronto (simulato)
+    confrontoProvider.avviaConfronto(prompt, categoria);
+
+    // Naviga alla schermata di confronto
+    Navigator.of(context).pushNamed(AppRoutes.confrontoAI);
   }
 
   /// Selettore AI — griglia orizzontale con icone
