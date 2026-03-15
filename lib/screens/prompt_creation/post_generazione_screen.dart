@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
+import 'package:prompt_master/config/app_routes.dart';
 import 'package:prompt_master/models/prompt_generato.dart';
 import 'package:prompt_master/providers/prompt_generato_provider.dart';
 import 'package:prompt_master/providers/sessione_provider.dart';
@@ -91,13 +92,34 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
       );
     }
 
-    return Scaffold(
+    // Disabilita il tasto back del browser/dispositivo:
+    // torna alla Home cancellando lo stack
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRoutes.home,
+            (route) => false,
+          );
+        }
+      },
+      child: Scaffold(
       appBar: AppBar(
         title: const Text('Il tuo prompt'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+        automaticallyImplyLeading: false,
+        leading: TextButton.icon(
+          icon: const Icon(Icons.home, size: 20),
+          label: const Text(
+            'Home',
+            style: TextStyle(fontSize: 14),
+          ),
+          onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRoutes.home,
+            (route) => false,
+          ),
         ),
+        leadingWidth: 120,
       ),
       body: SafeArea(
         child: Column(
@@ -142,6 +164,7 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -581,26 +604,23 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
               etichetta: 'Copia',
               colorScheme: colorScheme,
               isPrimario: true,
-              onPressed: () {
-                Clipboard.setData(
-                  ClipboardData(text: prompt.testoCompleto),
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Row(
-                      children: [
-                        Icon(Icons.check_circle, color: Colors.white, size: 18),
-                        SizedBox(width: 8),
-                        Text('Prompt copiato negli appunti!'),
-                      ],
-                    ),
-                    duration: const Duration(seconds: 2),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                );
+              onPressed: () async {
+                try {
+                  await ExportService.copiaTestoNegliAppunti(prompt);
+                  if (mounted) {
+                    _mostraConferma(
+                      Icons.check_circle,
+                      'Prompt copiato negli appunti!',
+                    );
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    _mostraConferma(
+                      Icons.error_outline,
+                      'Impossibile copiare il prompt',
+                    );
+                  }
+                }
               },
             ),
           ),
@@ -642,6 +662,7 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
           prompt: prompt,
           categoria: sessione.categoria?.nome ?? 'Generico',
           fraseIniziale: sessione.fraseIniziale,
+          aiDestinazione: _aiSelezionata,
         );
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -795,29 +816,57 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
                           descrizione: 'Copia il prompt come testo',
                           colorScheme: colorScheme,
                           isDark: isDark,
-                          onTap: () {
+                          onTap: () async {
                             Navigator.of(ctx).pop();
-                            Clipboard.setData(
-                              ClipboardData(text: prompt.testoCompleto),
-                            );
-                            _mostraConferma(
-                              Icons.check_circle,
-                              'Prompt copiato negli appunti!',
-                            );
+                            try {
+                              await ExportService.copiaTestoNegliAppunti(prompt);
+                              if (mounted) {
+                                _mostraConferma(
+                                  Icons.check_circle,
+                                  'Prompt copiato negli appunti!',
+                                );
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                _mostraConferma(
+                                  Icons.error_outline,
+                                  'Impossibile copiare il prompt',
+                                );
+                              }
+                            }
                           },
                         ),
                         const SizedBox(height: 8),
 
-                        // Condividi come testo (share sheet nativa)
+                        // Condividi come testo
                         _buildOpzioneExport(
                           icona: Icons.share_rounded,
-                          etichetta: 'Condividi come testo',
-                          descrizione: 'WhatsApp, Telegram, Email...',
+                          etichetta: kIsWeb
+                              ? 'Copia testo completo'
+                              : 'Condividi come testo',
+                          descrizione: kIsWeb
+                              ? 'Copia il prompt negli appunti'
+                              : 'WhatsApp, Telegram, Email...',
                           colorScheme: colorScheme,
                           isDark: isDark,
-                          onTap: () {
+                          onTap: () async {
                             Navigator.of(ctx).pop();
-                            ExportService.condividiTesto(prompt);
+                            try {
+                              await ExportService.condividiTesto(prompt);
+                              if (mounted) {
+                                _mostraConferma(
+                                  Icons.check_circle,
+                                  'Prompt copiato negli appunti!',
+                                );
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                _mostraConferma(
+                                  Icons.error_outline,
+                                  'Impossibile condividere il prompt',
+                                );
+                              }
+                            }
                           },
                         ),
                         const SizedBox(height: 8),
@@ -825,17 +874,24 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
                         // Esporta come PDF
                         _buildOpzioneExport(
                           icona: Icons.picture_as_pdf_rounded,
-                          etichetta: 'Esporta come PDF',
-                          descrizione: 'Salva il prompt in formato PDF',
+                          etichetta: kIsWeb
+                              ? 'Scarica PDF'
+                              : 'Esporta come PDF',
+                          descrizione: kIsWeb
+                              ? 'Download diretto nel browser'
+                              : 'Salva il prompt in formato PDF',
                           colorScheme: colorScheme,
                           isDark: isDark,
-                          onTap: () {
+                          onTap: () async {
                             Navigator.of(ctx).pop();
-                            _esportaConFeedback(
+                            await _esportaConFeedback(
                               () => ExportService.esportaPdf(
                                 prompt,
                                 nomeAiDestinazione: _aiSelezionata,
                               ),
+                              messaggioSuccesso: kIsWeb
+                                  ? 'PDF scaricato!'
+                                  : null,
                             );
                           },
                         ),
@@ -844,17 +900,24 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
                         // Esporta come TXT
                         _buildOpzioneExport(
                           icona: Icons.description_outlined,
-                          etichetta: 'Esporta come TXT',
-                          descrizione: 'Salva il prompt come file di testo',
+                          etichetta: kIsWeb
+                              ? 'Scarica TXT'
+                              : 'Esporta come TXT',
+                          descrizione: kIsWeb
+                              ? 'Download diretto nel browser'
+                              : 'Salva il prompt come file di testo',
                           colorScheme: colorScheme,
                           isDark: isDark,
-                          onTap: () {
+                          onTap: () async {
                             Navigator.of(ctx).pop();
-                            _esportaConFeedback(
+                            await _esportaConFeedback(
                               () => ExportService.esportaTxt(
                                 prompt,
                                 nomeAiDestinazione: _aiSelezionata,
                               ),
+                              messaggioSuccesso: kIsWeb
+                                  ? 'File TXT scaricato!'
+                                  : null,
                             );
                           },
                         ),
@@ -1021,10 +1084,16 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
     );
   }
 
-  /// Esegue l'export con feedback errore se necessario
-  Future<void> _esportaConFeedback(Future<void> Function() azione) async {
+  /// Esegue l'export con feedback di successo o errore
+  Future<void> _esportaConFeedback(
+    Future<void> Function() azione, {
+    String? messaggioSuccesso,
+  }) async {
     try {
       await azione();
+      if (mounted && messaggioSuccesso != null) {
+        _mostraConferma(Icons.check_circle, messaggioSuccesso);
+      }
     } catch (e) {
       if (mounted) {
         _mostraConferma(Icons.error_outline, 'Errore durante l\'esportazione');

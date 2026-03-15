@@ -1,54 +1,52 @@
-import 'dart:typed_data';
+import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:share_plus/share_plus.dart';
 import 'package:prompt_master/models/prompt_generato.dart';
+import 'package:prompt_master/services/download_helper.dart' as download;
 
 /// Servizio per l'esportazione dei prompt in vari formati.
-/// Gestisce la generazione di PDF, TXT e la condivisione nativa.
+/// Su web usa il download diretto nel browser.
 class ExportService {
-  /// Condivide il testo del prompt tramite la share sheet nativa del dispositivo
-  static Future<void> condividiTesto(PromptGenerato prompt) async {
-    await Share.share(
-      prompt.testoCompleto,
-      subject: 'Prompt Master — Il mio prompt',
-    );
+  /// Copia il testo del prompt negli appunti del sistema
+  static Future<void> copiaTestoNegliAppunti(PromptGenerato prompt) async {
+    await Clipboard.setData(ClipboardData(text: prompt.testoCompleto));
   }
 
-  /// Genera un file PDF del prompt e lo condivide
+  /// Condivide il prompt come testo — su web copia negli appunti
+  static Future<void> condividiTesto(PromptGenerato prompt) async {
+    await Clipboard.setData(ClipboardData(text: prompt.testoCompleto));
+  }
+
+  /// Genera un PDF del prompt e lo scarica nel browser
   static Future<void> esportaPdf(
     PromptGenerato prompt, {
     String? nomeAiDestinazione,
   }) async {
-    final pdfBytes = await _generaPdf(prompt, nomeAiDestinazione: nomeAiDestinazione);
-    final file = XFile.fromData(
-      pdfBytes,
-      mimeType: 'application/pdf',
-      name: 'prompt_master.pdf',
+    final pdfBytes = await _generaPdf(
+      prompt,
+      nomeAiDestinazione: nomeAiDestinazione,
     );
-    await Share.shareXFiles(
-      [file],
-      subject: 'Prompt Master — Il mio prompt',
-      fileNameOverrides: ['prompt_master.pdf'],
+    await download.scaricaFile(
+      bytes: pdfBytes,
+      nomeFile: 'prompt_master.pdf',
+      mimeType: 'application/pdf',
     );
   }
 
-  /// Genera un file TXT del prompt e lo condivide
+  /// Genera un TXT del prompt e lo scarica nel browser
   static Future<void> esportaTxt(
     PromptGenerato prompt, {
     String? nomeAiDestinazione,
   }) async {
-    final contenuto = _generaTxt(prompt, nomeAiDestinazione: nomeAiDestinazione);
-    final bytes = Uint8List.fromList(contenuto.codeUnits);
-    final file = XFile.fromData(
-      bytes,
-      mimeType: 'text/plain',
-      name: 'prompt_master.txt',
+    final contenuto = _generaTxt(
+      prompt,
+      nomeAiDestinazione: nomeAiDestinazione,
     );
-    await Share.shareXFiles(
-      [file],
-      subject: 'Prompt Master — Il mio prompt',
-      fileNameOverrides: ['prompt_master.txt'],
+    final bytes = Uint8List.fromList(contenuto.codeUnits);
+    await download.scaricaFile(
+      bytes: bytes,
+      nomeFile: 'prompt_master.txt',
+      mimeType: 'text/plain',
     );
   }
 

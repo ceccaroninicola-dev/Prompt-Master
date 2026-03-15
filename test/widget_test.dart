@@ -14,10 +14,11 @@ void main() {
     // (appare sia nella AppBar che nel corpo della pagina)
     expect(find.text('Prompt Master'), findsWidgets);
 
-    // Verifica che i tre bottoni principali siano presenti
+    // Verifica che i bottoni principali siano presenti
+    // (la bottom nav aggiunge ulteriori istanze di "Crea" e "Cronologia")
     expect(find.text('Crea nuovo prompt'), findsOneWidget);
     expect(find.text('Libreria'), findsOneWidget);
-    expect(find.text('Cronologia'), findsOneWidget);
+    expect(find.text('Cronologia'), findsWidgets);
   });
 
   // Verifica che il toggle del tema funzioni

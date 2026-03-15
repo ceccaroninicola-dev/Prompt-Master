@@ -41,6 +41,17 @@ class ConfermaCategoriaScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Conferma categoria'),
+        actions: [
+          // Bottone Home — torna alla Home cancellando lo stack
+          IconButton(
+            icon: const Icon(Icons.home_outlined),
+            tooltip: 'Torna alla Home',
+            onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(
+              AppRoutes.home,
+              (route) => false,
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -227,7 +238,16 @@ class ConfermaCategoriaScreen extends StatelessWidget {
                   // Bottone "Riformula" — outlined teal
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () => Navigator.of(context).pop(),
+                      onPressed: () {
+                        if (Navigator.of(context).canPop()) {
+                          Navigator.of(context).pop();
+                        } else {
+                          Navigator.of(context).pushNamedAndRemoveUntil(
+                            AppRoutes.home,
+                            (route) => false,
+                          );
+                        }
+                      },
                       icon: const Icon(Icons.edit_outlined, size: 18),
                       label: const Text('Riformula'),
                       style: OutlinedButton.styleFrom(

@@ -66,6 +66,13 @@ class PromptGeneratoProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Carica un prompt già esistente (es. dalla cronologia)
+  void caricaPrompt(PromptGenerato prompt) {
+    _prompt = prompt;
+    _staGenerando = false;
+    notifyListeners();
+  }
+
   /// Resetta il provider
   void reset() {
     _prompt = null;

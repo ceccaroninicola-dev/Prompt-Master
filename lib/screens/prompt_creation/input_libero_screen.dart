@@ -64,6 +64,17 @@ class _InputLiberoScreenState extends State<InputLiberoScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nuovo Prompt'),
+        actions: [
+          // Bottone Home — torna alla Home cancellando lo stack
+          IconButton(
+            icon: const Icon(Icons.home_outlined),
+            tooltip: 'Torna alla Home',
+            onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(
+              AppRoutes.home,
+              (route) => false,
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(

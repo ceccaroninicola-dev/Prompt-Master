@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:prompt_master/config/app_routes.dart';
 import 'package:prompt_master/providers/theme_provider.dart';
+import 'package:prompt_master/widgets/barra_navigazione.dart';
 import 'package:provider/provider.dart';
 
 /// Schermata principale (Home) dell'app Prompt Master.
@@ -14,9 +15,13 @@ class HomeScreen extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
+    // Impedisci il pop del browser sulla rotta Home (è la radice)
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
       appBar: AppBar(
         title: const Text('Prompt Master'),
+        automaticallyImplyLeading: false,
         actions: [
           // Toggle tema chiaro/scuro
           IconButton(
@@ -31,6 +36,8 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
+      // Barra di navigazione inferiore
+      bottomNavigationBar: const BarraNavigazione(indiceCorrente: 0),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -114,11 +121,7 @@ class HomeScreen extends StatelessWidget {
                   isDark: isDark,
                   colorScheme: colorScheme,
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funzionalità in arrivo!'),
-                      ),
-                    );
+                    Navigator.of(context).pushNamed(AppRoutes.cronologia);
                   },
                 ),
               ],
@@ -126,6 +129,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
       ),
+    ),
     );
   }
 
