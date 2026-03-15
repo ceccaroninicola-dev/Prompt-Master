@@ -148,12 +148,23 @@ class _ConfrontoAIScreenState extends State<ConfrontoAIScreen> {
     );
   }
 
+  /// Naviga alla pagina indicata con animazione
+  void _vaiAPagina(int indice) {
+    _pageController.animateToPage(
+      indice,
+      duration: const Duration(milliseconds: 350),
+      curve: Curves.easeInOut,
+    );
+  }
+
   /// Contenuto principale: card swipabili con le risposte
   Widget _buildRisultati(
     ConfrontoAI confronto,
     ColorScheme colorScheme,
     bool isDark,
   ) {
+    final totaleCard = confronto.risposte.length;
+
     return Column(
       children: [
         // Intestazione
@@ -164,7 +175,7 @@ class _ConfrontoAIScreenState extends State<ConfrontoAIScreen> {
               Icon(Icons.compare_arrows, color: colorScheme.primary, size: 22),
               const SizedBox(width: 8),
               Text(
-                '${confronto.risposte.length} risposte confrontate',
+                '$totaleCard risposte confrontate',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),
@@ -173,36 +184,101 @@ class _ConfrontoAIScreenState extends State<ConfrontoAIScreen> {
           ),
         ),
 
-        // Card swipabili
+        // Card swipabili con frecce di navigazione ai lati
         Expanded(
-          child: PageView.builder(
-            controller: _pageController,
-            itemCount: confronto.risposte.length,
-            onPageChanged: (indice) {
-              setState(() => _paginaCorrente = indice);
-            },
-            itemBuilder: (context, indice) {
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 6),
-                child: _buildCardRisposta(
-                  confronto.risposte[indice],
-                  colorScheme,
-                  isDark,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // PageView con physics compatibile web
+              PageView.builder(
+                controller: _pageController,
+                // ClampingScrollPhysics funziona meglio su web
+                physics: const ClampingScrollPhysics(),
+                itemCount: totaleCard,
+                onPageChanged: (indice) {
+                  setState(() => _paginaCorrente = indice);
+                },
+                itemBuilder: (context, indice) {
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: _buildCardRisposta(
+                      confronto.risposte[indice],
+                      colorScheme,
+                      isDark,
+                    ),
+                  );
+                },
+              ),
+
+              // Freccia sinistra
+              if (_paginaCorrente > 0)
+                Positioned(
+                  left: 4,
+                  child: _buildFreccia(
+                    icona: Icons.chevron_left_rounded,
+                    colorScheme: colorScheme,
+                    isDark: isDark,
+                    onPressed: () => _vaiAPagina(_paginaCorrente - 1),
+                  ),
                 ),
-              );
-            },
+
+              // Freccia destra
+              if (_paginaCorrente < totaleCard - 1)
+                Positioned(
+                  right: 4,
+                  child: _buildFreccia(
+                    icona: Icons.chevron_right_rounded,
+                    colorScheme: colorScheme,
+                    isDark: isDark,
+                    onPressed: () => _vaiAPagina(_paginaCorrente + 1),
+                  ),
+                ),
+            ],
           ),
         ),
 
-        // Indicatore di posizione (pallini)
-        _buildIndicatorePosizione(
-          confronto.risposte.length,
-          colorScheme,
-        ),
+        // Indicatore di posizione (pallini cliccabili)
+        _buildIndicatorePosizione(totaleCard, colorScheme),
 
         // Barra azioni in basso
         _buildBarraAzioni(confronto, colorScheme, isDark),
       ],
+    );
+  }
+
+  /// Bottone freccia per navigare tra le card — stile Apple traslucido
+  Widget _buildFreccia({
+    required IconData icona,
+    required ColorScheme colorScheme,
+    required bool isDark,
+    required VoidCallback onPressed,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: (isDark ? Colors.white : Colors.black)
+                .withValues(alpha: isDark ? 0.15 : 0.06),
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Icon(
+            icona,
+            size: 28,
+            color: colorScheme.onSurface,
+          ),
+        ),
+      ),
     );
   }
 
@@ -452,7 +528,7 @@ class _ConfrontoAIScreenState extends State<ConfrontoAIScreen> {
     );
   }
 
-  /// Indicatore di posizione — pallini in basso
+  /// Indicatore di posizione — pallini cliccabili in basso
   Widget _buildIndicatorePosizione(int totale, ColorScheme colorScheme) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -460,16 +536,20 @@ class _ConfrontoAIScreenState extends State<ConfrontoAIScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: List.generate(totale, (indice) {
           final attivo = indice == _paginaCorrente;
-          return AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            width: attivo ? 24 : 8,
-            height: 8,
-            margin: const EdgeInsets.symmetric(horizontal: 3),
-            decoration: BoxDecoration(
-              color: attivo
-                  ? colorScheme.primary
-                  : colorScheme.primary.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(4),
+          return GestureDetector(
+            onTap: () => _vaiAPagina(indice),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              width: attivo ? 24 : 8,
+              height: 8,
+              // Area di tap più generosa rispetto alla dimensione visiva
+              margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
+              decoration: BoxDecoration(
+                color: attivo
+                    ? colorScheme.primary
+                    : colorScheme.primary.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(4),
+              ),
             ),
           );
         }),
