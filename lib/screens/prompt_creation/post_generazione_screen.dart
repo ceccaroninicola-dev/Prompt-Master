@@ -639,6 +639,7 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
           prompt: prompt,
           categoria: sessione.categoria?.nome ?? 'Generico',
           fraseIniziale: sessione.fraseIniziale,
+          aiDestinazione: _aiSelezionata,
         );
 
     ScaffoldMessenger.of(context).showSnackBar(

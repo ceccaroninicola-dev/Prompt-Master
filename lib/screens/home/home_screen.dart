@@ -114,11 +114,7 @@ class HomeScreen extends StatelessWidget {
                   isDark: isDark,
                   colorScheme: colorScheme,
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funzionalità in arrivo!'),
-                      ),
-                    );
+                    Navigator.of(context).pushNamed(AppRoutes.cronologia);
                   },
                 ),
               ],
