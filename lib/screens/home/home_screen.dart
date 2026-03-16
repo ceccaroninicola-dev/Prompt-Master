@@ -23,6 +23,17 @@ class HomeScreen extends StatelessWidget {
         title: const Text('Prompt Master'),
         automaticallyImplyLeading: false,
         actions: [
+          // Icona profilo utente
+          IconButton(
+            icon: Icon(
+              Icons.person_outline,
+              color: colorScheme.onSurfaceVariant,
+            ),
+            tooltip: 'Il mio profilo',
+            onPressed: () {
+              Navigator.of(context).pushNamed(AppRoutes.profilo);
+            },
+          ),
           // Toggle tema chiaro/scuro
           IconButton(
             icon: Icon(
@@ -104,6 +115,20 @@ class HomeScreen extends StatelessWidget {
                   colorScheme: colorScheme,
                   onPressed: () {
                     Navigator.of(context).pushNamed(AppRoutes.libreria);
+                  },
+                ),
+                const SizedBox(height: 12),
+
+                // Card "Community"
+                _buildCardAzione(
+                  context: context,
+                  icona: Icons.people_outline,
+                  etichetta: 'Community',
+                  descrizione: 'Scopri e condividi prompt con altri utenti',
+                  isDark: isDark,
+                  colorScheme: colorScheme,
+                  onPressed: () {
+                    Navigator.of(context).pushNamed(AppRoutes.community);
                   },
                 ),
                 const SizedBox(height: 12),

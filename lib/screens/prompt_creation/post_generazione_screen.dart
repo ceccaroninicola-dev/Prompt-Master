@@ -7,6 +7,8 @@ import 'package:prompt_master/providers/prompt_generato_provider.dart';
 import 'package:prompt_master/providers/sessione_provider.dart';
 import 'package:prompt_master/providers/cronologia_provider.dart';
 import 'package:prompt_master/providers/confronto_ai_provider.dart';
+import 'package:prompt_master/providers/community_provider.dart';
+import 'package:prompt_master/models/prompt_pubblico.dart';
 import 'package:prompt_master/services/export_service.dart';
 
 /// Schermata post-generazione — mostra il prompt generato con:
@@ -637,6 +639,17 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
             ),
           ),
           const SizedBox(width: 10),
+          // Bottone "Pubblica" — pubblica nella community
+          Expanded(
+            child: _buildBottoneAzione(
+              icona: Icons.public_outlined,
+              etichetta: 'Pubblica',
+              colorScheme: colorScheme,
+              isPrimario: false,
+              onPressed: () => _mostraPubblicaSheet(prompt, colorScheme),
+            ),
+          ),
+          const SizedBox(width: 10),
           // Bottone "Salva" — salva nella cronologia in memoria
           Expanded(
             child: _buildBottoneAzione(
@@ -679,6 +692,272 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
+  }
+
+  // ========== BOTTOM SHEET PUBBLICA ==========
+
+  /// Mostra il bottom sheet per pubblicare il prompt nella community
+  void _mostraPubblicaSheet(PromptGenerato prompt, ColorScheme colorScheme) {
+    Visibilita visibilitaSelezionata = Visibilita.pubblico;
+    final titoloController = TextEditingController();
+    final descrizioneController = TextEditingController();
+
+    // Pre-compila titolo dalla sessione
+    final sessione = context.read<SessioneProvider>().sessione;
+    titoloController.text = sessione.categoria?.nome ?? 'Il mio prompt';
+    descrizioneController.text = sessione.fraseIniziale;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return Container(
+              padding: EdgeInsets.fromLTRB(
+                  24, 20, 24, MediaQuery.of(ctx).viewInsets.bottom + 24),
+              decoration: BoxDecoration(
+                color: Theme.of(ctx).colorScheme.surface,
+                borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24)),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Maniglia
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: colorScheme.outlineVariant,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Titolo
+                    Text(
+                      'Pubblica nella community',
+                      style: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Campo titolo
+                    TextField(
+                      controller: titoloController,
+                      decoration: InputDecoration(
+                        labelText: 'Titolo del prompt',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Campo descrizione
+                    TextField(
+                      controller: descrizioneController,
+                      maxLines: 2,
+                      decoration: InputDecoration(
+                        labelText: 'Descrizione breve',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Visibilità
+                    Text(
+                      'Visibilità',
+                      style: Theme.of(ctx).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    // Opzioni visibilità
+                    _buildOpzioneVisibilita(
+                      ctx,
+                      icona: Icons.lock_outline,
+                      titolo: 'Privato',
+                      descrizione: 'Visibile solo a te',
+                      visibilita: Visibilita.privato,
+                      selezionata: visibilitaSelezionata,
+                      colorScheme: colorScheme,
+                      onTap: () => setSheetState(
+                          () => visibilitaSelezionata = Visibilita.privato),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildOpzioneVisibilita(
+                      ctx,
+                      icona: Icons.link,
+                      titolo: 'Solo link',
+                      descrizione: 'Accessibile solo con il link diretto',
+                      visibilita: Visibilita.soloLink,
+                      selezionata: visibilitaSelezionata,
+                      colorScheme: colorScheme,
+                      onTap: () => setSheetState(
+                          () => visibilitaSelezionata = Visibilita.soloLink),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildOpzioneVisibilita(
+                      ctx,
+                      icona: Icons.public,
+                      titolo: 'Pubblico',
+                      descrizione:
+                          'Visibile a tutti nella community',
+                      visibilita: Visibilita.pubblico,
+                      selezionata: visibilitaSelezionata,
+                      colorScheme: colorScheme,
+                      onTap: () => setSheetState(
+                          () => visibilitaSelezionata = Visibilita.pubblico),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Bottone pubblica
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: () {
+                          if (titoloController.text.trim().isEmpty) return;
+                          context.read<CommunityProvider>().pubblicaPrompt(
+                                titolo: titoloController.text.trim(),
+                                descrizione:
+                                    descrizioneController.text.trim(),
+                                categoria:
+                                    sessione.categoria?.nome ?? 'Generico',
+                                sezioni: prompt.sezioni,
+                                punteggio: prompt.punteggioGlobale,
+                                visibilita: visibilitaSelezionata,
+                              );
+                          Navigator.of(ctx).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Row(
+                                children: [
+                                  const Icon(Icons.check_circle,
+                                      color: Colors.white, size: 18),
+                                  const SizedBox(width: 8),
+                                  Text(visibilitaSelezionata ==
+                                          Visibilita.pubblico
+                                      ? 'Prompt pubblicato nella community!'
+                                      : 'Prompt salvato!'),
+                                ],
+                              ),
+                              duration: const Duration(seconds: 2),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.publish),
+                        label: const Text('Pubblica'),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// Opzione di visibilità nel bottom sheet di pubblicazione
+  Widget _buildOpzioneVisibilita(
+    BuildContext context, {
+    required IconData icona,
+    required String titolo,
+    required String descrizione,
+    required Visibilita visibilita,
+    required Visibilita selezionata,
+    required ColorScheme colorScheme,
+    required VoidCallback onTap,
+  }) {
+    final isSelezionata = visibilita == selezionata;
+    return Container(
+      decoration: BoxDecoration(
+        color: isSelezionata
+            ? colorScheme.primary.withValues(alpha: 0.08)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isSelezionata
+              ? colorScheme.primary.withValues(alpha: 0.3)
+              : colorScheme.outlineVariant,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Icon(
+                  icona,
+                  size: 22,
+                  color: isSelezionata
+                      ? colorScheme.primary
+                      : colorScheme.onSurfaceVariant,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        titolo,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: isSelezionata
+                              ? colorScheme.primary
+                              : colorScheme.onSurface,
+                        ),
+                      ),
+                      Text(
+                        descrizione,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isSelezionata)
+                  Icon(Icons.check_circle,
+                      size: 20, color: colorScheme.primary),
+              ],
+            ),
+          ),
         ),
       ),
     );
