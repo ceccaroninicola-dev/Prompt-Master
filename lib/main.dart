@@ -8,6 +8,7 @@ import 'package:prompt_master/providers/prompt_generato_provider.dart';
 import 'package:prompt_master/providers/cronologia_provider.dart';
 import 'package:prompt_master/providers/libreria_provider.dart';
 import 'package:prompt_master/providers/confronto_ai_provider.dart';
+import 'package:prompt_master/providers/community_provider.dart';
 
 /// Entry point dell'applicazione Prompt Master.
 /// Configura i provider globali e avvia l'app.
@@ -32,6 +33,7 @@ class PromptMasterApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CronologiaProvider()),
         ChangeNotifierProvider(create: (_) => LibreriaProvider()),
         ChangeNotifierProvider(create: (_) => ConfrontoAIProvider()),
+        ChangeNotifierProvider(create: (_) => CommunityProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
