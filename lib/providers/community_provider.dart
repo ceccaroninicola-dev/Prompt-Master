@@ -632,11 +632,7 @@ class CommunityProvider extends ChangeNotifier {
           Commento(id: 'c16', autoreId: 'u10', autoreNome: '@francesca_art', autoreColore: 0xFFE040FB, testo: 'I risultati su Midjourney sono pazzeschi con questo prompt!', data: DateTime(2026, 3, 10)),
         ],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un concept artist specializzato in mondi fantasy e creature mitologiche.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Devo creare concept art per un gioco fantasy RPG con un\'estetica unica.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: 'Genera una descrizione dettagliata per immagine: soggetto, ambiente, illuminazione, stile artistico, palette colori, atmosfera, dettagli tecnici per AI generativa.', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'Prompt ottimizzato per Midjourney v6 con parametri --ar, --style, --chaos.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Stile coerente con art direction fantasy epico. No elementi moderni o anacronistici.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Descrizione Immagine', icona: 'image', contenuto: 'Genera un\'immagine di concept art per un gioco fantasy RPG, descrivendo in dettaglio soggetto, ambiente, illuminazione, stile artistico, palette colori e atmosfera. Ottimizza il prompt per Midjourney v6 includendo parametri --ar, --style e --chaos. Mantieni uno stile coerente con un\'art direction fantasy epica, senza elementi moderni o anacronistici.', colore: 0xFF7C3AED),
         ],
       ),
       PromptPubblico(
@@ -654,11 +650,7 @@ class CommunityProvider extends ChangeNotifier {
         tag: ['ui', 'mockup', 'design'],
         commenti: [],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un UI designer esperto con focus su design system moderni e accessibilità.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Devo creare un mockup rapido per un\'app mobile seguendo le linee guida Material Design 3.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: 'Descrivi il layout della schermata: header, body, footer, componenti, colori, tipografia, spaziature.', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'Descrizione testuale strutturata + prompt per DALL-E o Stable Diffusion.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Segui WCAG 2.1 AA. Supporta dark e light mode. Mobile-first.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Descrizione Immagine', icona: 'image', contenuto: 'Genera un\'immagine di mockup per un\'app mobile seguendo le linee guida Material Design 3. Descrivi il layout completo della schermata includendo header, body, footer, componenti, colori, tipografia e spaziature. Produci sia una descrizione testuale strutturata sia un prompt ottimizzato per DALL-E o Stable Diffusion. Rispetta le linee guida WCAG 2.1 AA, supporta dark e light mode e adotta un approccio mobile-first.', colore: 0xFF7C3AED),
         ],
       ),
 
@@ -680,11 +672,7 @@ class CommunityProvider extends ChangeNotifier {
           Commento(id: 'c17', autoreId: 'u1', autoreNome: '@marco_dev', autoreColore: 0xFF1976D2, testo: 'Combo perfetta coding + analisi dati!', data: DateTime(2026, 3, 8)),
         ],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un data analyst senior esperto in visualizzazione dati con Python.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Devo creare una dashboard interattiva per visualizzare KPI aziendali da un dataset CSV.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: '1. Analizza la struttura del dataset\n2. Identifica KPI principali\n3. Genera codice Plotly/Dash per la dashboard\n4. Aggiungi filtri interattivi\n5. Esporta in HTML', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'Codice Python completo con commenti, pronto da eseguire.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Usa solo Plotly e Dash. Design responsive. Palette colori coerente.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Istruzione Analisi', icona: 'analytics', contenuto: 'Crea una dashboard interattiva per visualizzare KPI aziendali a partire da un dataset CSV. Analizza la struttura del dataset, identifica i KPI principali, genera codice Plotly/Dash con filtri interattivi ed esportazione in HTML. Fornisci codice Python completo con commenti, pronto da eseguire. Usa esclusivamente Plotly e Dash, con design responsive e palette colori coerente.', colore: 0xFF7C3AED),
         ],
       ),
 
@@ -706,11 +694,7 @@ class CommunityProvider extends ChangeNotifier {
           Commento(id: 'c18', autoreId: 'u9', autoreNome: '@matteo_startup', autoreColore: 0xFFFF5722, testo: 'Ci ha ridotto il tempo di build del 60%!', data: DateTime(2026, 3, 5)),
         ],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un DevOps engineer esperto in containerizzazione e ottimizzazione Docker.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Devo containerizzare un\'applicazione web con backend API e frontend statico.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: 'Genera un Dockerfile multi-stage ottimizzato: stage di build, stage di produzione, con layer caching e security hardening.', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'Dockerfile completo con commenti per ogni istruzione. Docker-compose.yml se necessario.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Immagine base Alpine. Non eseguire come root. Minimizza layer e dimensione finale.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Istruzione Codice', icona: 'code', contenuto: 'Genera un Dockerfile multi-stage ottimizzato per containerizzare un\'applicazione web con backend API e frontend statico. Includi stage di build e produzione con layer caching e security hardening. Fornisci il Dockerfile completo con commenti per ogni istruzione e un docker-compose.yml se necessario. Usa immagine base Alpine, non eseguire come root e minimizza layer e dimensione finale.', colore: 0xFF7C3AED),
         ],
       ),
       PromptPubblico(
@@ -728,11 +712,7 @@ class CommunityProvider extends ChangeNotifier {
         tag: ['go', 'testing', 'tdd'],
         commenti: [],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un Go developer senior con forte focus sulla qualità del codice e testing.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Devo scrivere test unitari completi per una funzione Go usando il pattern table-driven.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: '1. Analizza la funzione\n2. Identifica edge cases\n3. Genera test table-driven\n4. Includi benchmark se rilevanti\n5. Aggiungi test di errore', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'File _test.go completo con subtests, helper e commenti.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Solo libreria standard testing. Copertura minima 90%. Nomi test descrittivi.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Istruzione Codice', icona: 'code', contenuto: 'Scrivi test unitari completi per la funzione Go fornita usando il pattern table-driven. Analizza la funzione, identifica gli edge cases, genera test table-driven con subtests e helper, includi benchmark se rilevanti e aggiungi test di errore. Produci un file _test.go completo con commenti. Usa solo la libreria standard testing, assicura una copertura minima del 90% e utilizza nomi test descrittivi.', colore: 0xFF7C3AED),
         ],
       ),
 
@@ -754,11 +734,7 @@ class CommunityProvider extends ChangeNotifier {
           Commento(id: 'c19', autoreId: 'u3', autoreNome: '@luca_ai', autoreColore: 0xFF4CAF50, testo: 'Ottimo anche per workshop aziendali!', data: DateTime(2026, 3, 4)),
         ],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un pedagogista esperto con specializzazione in didattica attiva e apprendimento cooperativo.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Devo creare un piano lezione interattivo per una classe di studenti delle superiori.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: '1. Definisci obiettivi di apprendimento\n2. Crea attività di warm-up\n3. Sviluppa il contenuto principale con attività pratiche\n4. Includi momento di riflessione\n5. Prepara valutazione formativa', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'Piano lezione strutturato con tempistiche, materiali necessari e note per l\'insegnante.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Durata 60 minuti. Inclusivo per diversi stili di apprendimento. No materiali costosi.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Istruzione Studio', icona: 'school', contenuto: 'Crea un piano lezione interattivo per una classe di studenti delle superiori con approccio di didattica attiva. Definisci obiettivi di apprendimento, crea un\'attività di warm-up, sviluppa il contenuto principale con attività pratiche, includi un momento di riflessione e prepara una valutazione formativa. Struttura il piano con tempistiche, materiali necessari e note per l\'insegnante. La lezione deve durare 60 minuti, essere inclusiva per diversi stili di apprendimento e non richiedere materiali costosi.', colore: 0xFF7C3AED),
         ],
       ),
 
@@ -780,11 +756,7 @@ class CommunityProvider extends ChangeNotifier {
           Commento(id: 'c20', autoreId: 'u4', autoreNome: '@giulia_mkt', autoreColore: 0xFFFF9800, testo: 'Struttura chiara e persuasiva. Bravo!', data: DateTime(2026, 2, 21)),
         ],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un advisor di startup con esperienza nel fundraising seed e Series A.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Sto preparando un pitch deck per un round seed di una startup SaaS B2B.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: 'Crea la struttura di 12 slide: problema, soluzione, mercato, modello di business, traction, team, roadmap, financials, ask.', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'Una sezione per slide con: titolo, bullet point chiave, note per il presenter.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Max 12 slide. Storytelling coinvolgente. Dati e metriche concrete dove possibile.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Istruzione Marketing', icona: 'campaign', contenuto: 'Crea la struttura di un pitch deck per un round seed di una startup SaaS B2B, con 12 slide che coprano problema, soluzione, mercato, modello di business, traction, team, roadmap, financials e ask. Per ogni slide fornisci titolo, bullet point chiave e note per il presenter. Usa uno storytelling coinvolgente e includi dati e metriche concrete dove possibile, mantenendo il massimo di 12 slide.', colore: 0xFF7C3AED),
         ],
       ),
 
@@ -807,11 +779,7 @@ class CommunityProvider extends ChangeNotifier {
           Commento(id: 'c22', autoreId: 'u2', autoreNome: '@sara_writes', autoreColore: 0xFFE91E63, testo: 'Lo uso per le immagini dei miei articoli di blog.', data: DateTime(2026, 3, 16)),
         ],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un fotografo professionista specializzato in ritratti artistici con illuminazione naturale.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Devo generare un ritratto fotografico realistico con un\'atmosfera specifica usando AI generativa.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: 'Descrivi: soggetto, espressione, postura, illuminazione (direzione, temperatura, intensità), sfondo, profondità di campo, lens type, mood generale.', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'Prompt per Stable Diffusion XL con negative prompt, steps, CFG scale, sampler.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Stile fotografico realistico, non illustrativo. Evita uncanny valley. Risoluzione 4K.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Descrizione Immagine', icona: 'image', contenuto: 'Genera un\'immagine di ritratto fotografico realistico con illuminazione naturale, descrivendo in dettaglio soggetto, espressione, postura, illuminazione (direzione, temperatura, intensità), sfondo, profondità di campo, lens type e mood generale. Ottimizza il prompt per Stable Diffusion XL includendo negative prompt, steps, CFG scale e sampler. Mantieni uno stile fotografico realistico, non illustrativo, evitando l\'uncanny valley, con risoluzione 4K.', colore: 0xFF7C3AED),
         ],
       ),
       PromptPubblico(
@@ -829,11 +797,7 @@ class CommunityProvider extends ChangeNotifier {
         tag: ['logo', 'branding', 'minimalismo'],
         commenti: [],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un graphic designer specializzato in brand identity e logo design minimalista.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Devo creare un logo minimalista per un brand tech/startup.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: 'Genera una descrizione dettagliata per: forma geometrica, tipografia, simbolismo, palette colori (max 2 colori), varianti (positivo, negativo, monochrome).', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'Brief creativo + prompt per DALL-E 3 con stile flat, vettoriale, sfondo bianco.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Scalabile da favicon a billboard. Leggibile in bianco e nero. No clipart generico.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Descrizione Immagine', icona: 'image', contenuto: 'Genera un\'immagine di logo minimalista per un brand tech/startup, descrivendo forma geometrica, tipografia, simbolismo, palette colori (massimo 2 colori) e varianti (positivo, negativo, monochrome). Produci un brief creativo e un prompt ottimizzato per DALL-E 3 con stile flat, vettoriale e sfondo bianco. Il logo deve essere scalabile da favicon a billboard, leggibile in bianco e nero, senza clipart generici.', colore: 0xFF7C3AED),
         ],
       ),
 
