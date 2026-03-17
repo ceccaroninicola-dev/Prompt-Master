@@ -58,17 +58,21 @@ class SessioneProvider extends ChangeNotifier {
     notifyListeners();
 
     final api = ApiService();
+    debugPrint('[Sessione] Avvio sessione — API key configurata: ${api.apiKeyConfigurata}');
 
     // STEP 1: Rileva la categoria con l'AI (o fallback fittizio)
     CategoriaRilevata categoria;
+    bool categoriaViaAI = false;
     if (api.apiKeyConfigurata) {
       try {
+        debugPrint('[Sessione] STEP 1: Analisi categoria via AI...');
         final json = await api.chiamaAIJson(
           systemPrompt: AiPrompts.analisiCategoria,
           messaggioUtente: fraseLibera,
           temperature: 0.3,
           maxTokens: 500,
         );
+        debugPrint('[Sessione] STEP 1: Categoria ricevuta: ${json['categoria']}');
         categoria = CategoriaRilevata(
           nome: json['categoria'] as String? ?? 'Scrittura',
           icona: json['icona'] as String? ?? 'edit_note',
@@ -80,21 +84,27 @@ class SessioneProvider extends ChangeNotifier {
                   .toList() ??
               _estraiElementiChiave(fraseLibera),
         );
+        categoriaViaAI = true;
       } on ApiException catch (e) {
+        debugPrint('[Sessione] STEP 1: Errore API → ${e.messaggio}');
         _errore = e.messaggio;
         // Fallback ai dati fittizi in caso di errore
         categoria = _rilevaCategoria(fraseLibera);
       }
     } else {
+      debugPrint('[Sessione] STEP 1: Nessuna API key, uso fallback');
       // Senza API key, usa i dati fittizi
       await Future.delayed(const Duration(milliseconds: 1200));
       categoria = _rilevaCategoria(fraseLibera);
     }
 
     // STEP 2: Genera le domande con l'AI (o fallback fittizie)
+    // Ogni chiamata è indipendente: se la categoria ha fallito,
+    // tenta comunque le domande (potrebbe essere un errore temporaneo)
     List<Domanda> domande;
-    if (api.apiKeyConfigurata && _errore == null) {
+    if (api.apiKeyConfigurata) {
       try {
+        debugPrint('[Sessione] STEP 2: Generazione domande via AI...');
         final json = await api.chiamaAIJson(
           systemPrompt: AiPrompts.generazioneDomande,
           messaggioUtente: 'Categoria rilevata: ${categoria.nome}\n'
@@ -105,8 +115,16 @@ class SessioneProvider extends ChangeNotifier {
           maxTokens: 1500,
         );
         domande = _parsaDomande(json);
+        debugPrint('[Sessione] STEP 2: ${domande.length} domande generate');
+        // Se le domande sono arrivate via AI, cancella l'eventuale errore
+        // della categoria (l'utente vedrà comunque la categoria fallback)
+        if (!categoriaViaAI && _errore != null) {
+          debugPrint('[Sessione] Domande OK ma categoria fallback — mostro avviso');
+        }
       } on ApiException catch (e) {
-        _errore = e.messaggio;
+        debugPrint('[Sessione] STEP 2: Errore API → ${e.messaggio}');
+        // Salva solo l'errore più recente se non ce n'è già uno
+        _errore ??= e.messaggio;
         domande = _generaDomandeFittizie(categoria.nome);
       }
     } else {
