@@ -95062,7 +95062,7 @@ break
 case 2:q=6
 m=o.aag(b,a,c)
 s=9
-return B.U(n.oY(3000,m,'Sei un esperto di prompt engineering. Genera un prompt ottimizzato e strutturato\nbasandoti sulla frase iniziale dell\'utente e le sue risposte alle domande.\n\nIl prompt deve essere UNIVERSALE (funzionare su qualsiasi AI) e avere queste sezioni:\n\n1. Ruolo \u2014 Chi deve essere l\'AI (personalit\xe0, competenze, esperienza)\n2. Contesto \u2014 Situazione e background della richiesta\n3. Istruzioni \u2014 Passi precisi da seguire (lista numerata)\n4. Formato Output \u2014 Come deve essere strutturata la risposta\n5. Vincoli \u2014 Limiti e regole da rispettare\n6. Esempi \u2014 Esempi di output atteso (se utili)\n\nGenera anche:\n- Punteggio di qualit\xe0 globale (0.0-5.0)\n- Punteggi per criterio: Chiarezza, Specificit\xe0, Completezza, Struttura, Coerenza\n- 3-4 suggerimenti di miglioramento con testo prima/dopo\n\nRispondi SOLO con questo JSON:\n{\n  "sezioni": [\n    {\n      "titolo": "Ruolo",\n      "icona": "person",\n      "contenuto": "testo della sezione...",\n      "colore": 869307\n    }\n  ],\n  "punteggioGlobale": 4.2,\n  "punteggiCriteri": {\n    "Chiarezza": 4.5,\n    "Specificit\xe0": 3.8,\n    "Completezza": 4.0,\n    "Struttura": 4.6,\n    "Coerenza": 4.3\n  },\n  "suggerimenti": [\n    {\n      "etichetta": "Breve etichetta",\n      "icona": "lightbulb",\n      "sezioneIndice": 0,\n      "testoPrima": "testo attuale della sezione",\n      "testoDopo": "testo migliorato della sezione",\n      "descrizione": "spiegazione del miglioramento"\n    }\n  ]\n}\n\nIcone disponibili per le sezioni: person, info, list, format_align_left, block, lightbulb.\nColori (come interi hex): Ruolo=869307 (teal), Contesto=558706 (cyan), Istruzioni=8141037 (viola),\nFormatoOutput=15358988 (arancione), Vincoli=14427686 (rosso), Esempi=16096011 (giallo).\nIcone suggerimenti: lightbulb, format_align_left, record_voice_over, block, add_circle.',0.7),$async$tF)
+return B.U(n.oY(3000,m,'Sei un esperto di prompt engineering. Genera un prompt PRONTO ALL\'USO e strutturato\nbasandoti sulla frase iniziale dell\'utente e le sue risposte alle domande.\n\nREGOLA FONDAMENTALE: Il prompt generato deve essere un\'ISTRUZIONE DIRETTA all\'AI,\nNON un meta-prompt. L\'utente copier\xe0 questo prompt su ChatGPT/Claude/Gemini e deve\nottenere DIRETTAMENTE il risultato desiderato, senza passaggi intermedi.\n\nEsempi di cosa \xe8 SBAGLIATO (meta-prompt):\n- "Crea un prompt per generare un\'immagine di un tramonto" \u274c\n- "Scrivi un prompt che chieda all\'AI di scrivere un\'email" \u274c\n- "Il seguente prompt serve per ottenere codice Python" \u274c\n\nEsempi di cosa \xe8 CORRETTO (istruzione diretta):\n- "Genera un\'immagine di un tramonto sul mare con colori caldi..." \u2705\n- "Scrivi un\'email professionale al mio capo per chiedere ferie..." \u2705\n- "Scrivi una funzione Python che ordina una lista..." \u2705\n\nIn base al tipo di richiesta:\n- IMMAGINI \u2192 Il prompt deve dire "Genera/Crea un\'immagine di..." con descrizione visiva dettagliata\n- TESTI/SCRITTURA \u2192 Il prompt deve dire "Scrivi..." con le specifiche del testo richiesto\n- CODICE \u2192 Il prompt deve dire "Scrivi il codice..." o "Implementa..." con le specifiche tecniche\n- EMAIL \u2192 Il prompt deve dire "Scrivi un\'email..." con tono, destinatario e contenuto\n- MARKETING \u2192 Il prompt deve dire "Scrivi un post/campagna/copy..." con target e obiettivo\n- ANALISI \u2192 Il prompt deve dire "Analizza..." con i dati e i criteri di analisi\n- QUALSIASI ALTRA COSA \u2192 Il prompt deve essere l\'istruzione diretta per ottenere quel risultato\n\nIl prompt deve avere queste sezioni:\n\n1. Ruolo \u2014 Chi deve essere l\'AI (personalit\xe0, competenze, esperienza)\n2. Contesto \u2014 Situazione e background della richiesta\n3. Istruzioni \u2014 L\'ISTRUZIONE DIRETTA da eseguire (lista numerata dei passi)\n4. Formato Output \u2014 Come deve essere strutturata la risposta/il risultato\n5. Vincoli \u2014 Limiti e regole da rispettare\n6. Esempi \u2014 Esempi di output atteso (se utili)\n\nGenera anche:\n- Punteggio di qualit\xe0 globale (0.0-5.0)\n- Punteggi per criterio: Chiarezza, Specificit\xe0, Completezza, Struttura, Coerenza\n- 3-4 suggerimenti di miglioramento con testo prima/dopo\n\nRispondi SOLO con questo JSON:\n{\n  "sezioni": [\n    {\n      "titolo": "Ruolo",\n      "icona": "person",\n      "contenuto": "testo della sezione...",\n      "colore": 869307\n    }\n  ],\n  "punteggioGlobale": 4.2,\n  "punteggiCriteri": {\n    "Chiarezza": 4.5,\n    "Specificit\xe0": 3.8,\n    "Completezza": 4.0,\n    "Struttura": 4.6,\n    "Coerenza": 4.3\n  },\n  "suggerimenti": [\n    {\n      "etichetta": "Breve etichetta",\n      "icona": "lightbulb",\n      "sezioneIndice": 0,\n      "testoPrima": "testo attuale della sezione",\n      "testoDopo": "testo migliorato della sezione",\n      "descrizione": "spiegazione del miglioramento"\n    }\n  ]\n}\n\nIcone disponibili per le sezioni: person, info, list, format_align_left, block, lightbulb.\nColori (come interi hex): Ruolo=869307 (teal), Contesto=558706 (cyan), Istruzioni=8141037 (viola),\nFormatoOutput=15358988 (arancione), Vincoli=14427686 (rosso), Esempi=16096011 (giallo).\nIcone suggerimenti: lightbulb, format_align_left, record_voice_over, block, add_circle.',0.7),$async$tF)
 case 9:l=e
 o.a=o.aj3(l)
 q=1
@@ -95141,38 +95141,38 @@ q=B.yq(A.p.a3(3.5+r,1))
 this.a=p.apx(B.an(["Chiarezza",B.yq(A.p.a3(A.p.bd(3.8+1.2*s,0,5),1)),"Specificit\xe0",B.yq(A.p.a3(A.p.bd(3.2+r,0,5),1)),"Completezza",B.yq(A.p.a3(A.p.bd(3.5+1.3*s,0,5),1)),"Struttura",B.yq(A.p.a3(A.p.bd(4+0.8*s,0,5),1)),"Coerenza",B.yq(A.p.a3(A.p.bd(3.9+s,0,5),1))],t.N,t.i),q)},
 Fi(a,b,c){var s=this.acj(b,c),r=s[5].c,q=s[3].c,p=s[0].c,o=s[4].c
 return new B.nO(s,4.2,A.aFE,B.b([new B.h1("Aggiungi esempio","lightbulb",5,r,r+"\n\nEsempio di output atteso:\n- Versione breve e diretta per social media\n- Versione estesa per blog o newsletter","Aggiunge un esempio concreto di output atteso per guidare meglio l'AI nella generazione."),new B.h1("Specifica formato","format_align_left",3,q,q+"\nStruttura il contenuto con: titolo, sottotitolo, corpo principale diviso in sezioni, conclusione con CTA.","Aggiunge dettagli sulla struttura del formato di output per risultati pi\xf9 precisi."),new B.h1("Definisci tono","record_voice_over",0,p,p+" Comunica con un tono autorevole ma accessibile, come un mentore che guida con competenza e empatia.","Definisce meglio la personalit\xe0 e il tono di voce per una risposta pi\xf9 coerente."),new B.h1("Aggiungi vincoli","block",4,o,o+" Limita la risposta a massimo 500 parole. Non includere riferimenti a marchi specifici senza autorizzazione.","Aggiunge vincoli specifici per controllare meglio l'output generato.")],t.qe))},
-acj(a4,a5){var s,r,q,p,o,n,m,l,k="Ruolo",j="person",i=4279080072,h="Contesto",g="info",f=4278751666,e="Istruzioni",d="list",c=4286331629,b="Formato Output",a="format_align_left",a0=4293548044,a1="Vincoli",a2="block",a3=4292617766
-switch(a4){case"Coding":s=a5.h(0,"linguaggio")
+acj(a6,a7){var s,r,q,p,o,n,m,l,k,j,i="Ruolo",h="person",g=4279080072,f="Contesto",e="info",d=4278751666,c="Istruzioni",b="list",a=4286331629,a0="Formato Output",a1="format_align_left",a2=4293548044,a3="Vincoli",a4="block",a5=4292617766
+switch(a6){case"Coding":s=a7.h(0,"linguaggio")
 if(s==null)s="Python"
-r=a5.h(0,"tipo_aiuto")
+r=a7.h(0,"tipo_aiuto")
 if(r==null)r="Scrivere codice nuovo"
-q=a5.h(0,"contesto")
+q=a7.h(0,"contesto")
 if(q==null)q="Il progetto \xe8 in fase di sviluppo."
-p=a5.h(0,"livello_dettaglio")
+p=a7.h(0,"livello_dettaglio")
 if(p==null)p="Includi commenti esplicativi."
-o=a5.h(0,"requisiti_extra")
+o=a7.h(0,"requisiti_extra")
 if(o==null)o="Performance, Sicurezza"
-return B.b([new B.K(k,j,"Sei un esperto sviluppatore "+s+" con oltre 10 anni di esperienza. Scrivi codice pulito, ben documentato e seguendo le best practices.",i),new B.K(h,g,"L'utente ha bisogno di aiuto per: "+r+". "+q,f),new B.K(e,d,"1. Analizza attentamente la richiesta\n2. Scrivi il codice "+s+" richiesto\n3. Aggiungi commenti esplicativi nel codice\n4. Gestisci i casi limite e gli errori\n5. Segui le convenzioni di naming del linguaggio",c),new B.K(b,a,"Fornisci il codice in un blocco formattato. "+p+" Se necessario, aggiungi note sulle dipendenze richieste.",a0),new B.K(a1,a2,"Requisiti: "+o+". Non usare librerie deprecate. Assicurati che il codice sia compatibile con le versioni recenti di "+s+".",a3),A.aMV],t.l)
-case"Immagini":n=a5.h(0,"stile")
+return B.b([new B.K(i,h,"Sei un esperto sviluppatore "+s+" con oltre 10 anni di esperienza. Scrivi codice pulito, ben documentato e seguendo le best practices.",g),new B.K(f,e,"Ho bisogno di aiuto per: "+r+". "+q,d),new B.K(c,b,"Scrivi il codice "+s+" seguendo questi passi:\n1. Implementa la soluzione richiesta\n2. Aggiungi commenti esplicativi nel codice\n3. Gestisci i casi limite e gli errori\n4. Segui le convenzioni di naming del linguaggio",a),new B.K(a0,a1,"Fornisci il codice in un blocco formattato. "+p+" Se necessario, aggiungi note sulle dipendenze richieste.",a2),new B.K(a3,a4,"Requisiti: "+o+". Non usare librerie deprecate. Assicurati che il codice sia compatibile con le versioni recenti di "+s+".",a5),A.aMV],t.l)
+case"Immagini":n=a7.h(0,"stile")
 if(n==null)n="Fotorealistico"
-q=a5.h(0,"soggetto")
-if(q==null)q="Il soggetto verr\xe0 specificato."
-p=a5.h(0,"atmosfera")
-if(p==null)p="Luminosa"
-o=a5.h(0,"colori")
-if(o==null)o="Nessuna preferenza"
-return B.b([new B.K(k,j,"Sei un art director esperto nella creazione di prompt per immagini AI. Conosci le tecniche di composizione, illuminazione e stile visivo.",i),new B.K(h,g,"L'utente vuole generare un'immagine in stile "+n+". "+q,f),new B.K(e,d,"1. Descrivi il soggetto principale con dettagli precisi\n2. Specifica lo stile artistico: "+n+"\n3. Indica l'illuminazione e l'atmosfera desiderata\n4. Aggiungi dettagli sulla composizione e l'inquadratura",c),new B.K(b,a,"Formato immagine: 16:9 landscape. Risoluzione alta. Atmosfera: "+p+".",a0),new B.K(a1,a2,"Colori dominanti: "+o+". Evita elementi testuali nell'immagine. Mantieni uno stile coerente e professionale.",a3),A.aKB],t.l)
-default:m=a5.h(0,"tono")
-if(m==null)m="Informale"
-l=a5.h(0,"tipo_contenuto")
-if(l==null)l="Post social media"
-q=a5.h(0,"pubblico")
+m=a7.h(0,"soggetto")
+if(m==null)m="il soggetto richiesto"
+l=a7.h(0,"atmosfera")
+if(l==null)l="Luminosa"
+q=a7.h(0,"colori")
+if(q==null)q="Nessuna preferenza"
+return B.b([new B.K(i,h,"Sei un generatore di immagini AI con competenze avanzate in composizione, illuminazione e stile visivo.",g),new B.K(f,e,"Devi generare un'immagine in stile "+n+". "+m,d),new B.K(c,b,"Genera un'immagine con queste caratteristiche:\n1. Soggetto: "+m+"\n2. Stile artistico: "+n+"\n3. Atmosfera: "+l+"\n4. Composizione ben bilanciata con punto focale chiaro",a),new B.K(a0,a1,"Formato immagine: 16:9 landscape. Risoluzione alta. Atmosfera: "+l+".",a2),new B.K(a3,a4,"Colori dominanti: "+q+". Evita elementi testuali nell'immagine. Mantieni uno stile coerente e professionale.",a5),A.aKB],t.l)
+default:k=a7.h(0,"tono")
+if(k==null)k="Informale"
+j=a7.h(0,"tipo_contenuto")
+if(j==null)j="Post social media"
+q=a7.h(0,"pubblico")
 if(q==null)q="Professionisti"
-p=a5.h(0,"lunghezza")
+p=a7.h(0,"lunghezza")
 if(p==null)p="Medio (3-5 paragrafi)"
-o=a5.h(0,"dettagli_extra")
+o=a7.h(0,"dettagli_extra")
 if(o==null)o="Nessun dettaglio aggiuntivo specificato."
-return B.b([new B.K(k,j,"Sei un copywriter professionista specializzato in "+l+". Hai esperienza nella creazione di contenuti coinvolgenti e persuasivi.",i),new B.K(h,g,"L'utente vuole creare un "+l+" con tono "+m+". Il pubblico target \xe8: "+q+".",f),new B.K(e,d,"1. Scrivi un "+l+" con tono "+m+"\n2. Adatta il linguaggio al pubblico target\n3. Includi un hook iniziale che catturi l'attenzione\n4. Concludi con una call-to-action efficace\n5. Usa formattazione adeguata al formato scelto",c),new B.K(b,a,"Lunghezza: "+p+". Usa paragrafi brevi e punti elenco dove appropriato. Includi emoji solo se adatti al tono scelto.",a0),new B.K(a1,a2,"Mantieni un tono "+m+" coerente in tutto il testo. Evita jargon tecnico non necessario. Il testo deve essere originale e non generico.",a3),new B.K("Esempi","lightbulb",o,4294286859)],t.l)}}}
+return B.b([new B.K(i,h,"Sei un copywriter professionista specializzato in "+j+". Hai esperienza nella creazione di contenuti coinvolgenti e persuasivi.",g),new B.K(f,e,"Devo creare un "+j+" con tono "+k+". Il pubblico target \xe8: "+q+".",d),new B.K(c,b,"Scrivi un "+j+" seguendo queste indicazioni:\n1. Usa un tono "+k+"\n2. Adatta il linguaggio al pubblico target\n3. Includi un hook iniziale che catturi l'attenzione\n4. Concludi con una call-to-action efficace\n5. Usa formattazione adeguata al formato scelto",a),new B.K(a0,a1,"Lunghezza: "+p+". Usa paragrafi brevi e punti elenco dove appropriato. Includi emoji solo se adatti al tono scelto.",a2),new B.K(a3,a4,"Mantieni un tono "+k+" coerente in tutto il testo. Evita jargon tecnico non necessario. Il testo deve essere originale e non generico.",a5),new B.K("Esempi","lightbulb",o,4294286859)],t.l)}}}
 B.ag0.prototype={
 $1(a){return a.a===this.a.a},
 $S:586}

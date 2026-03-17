@@ -57,15 +57,38 @@ Per chipMultipli, le opzioni sono tag selezionabili multipli, niente valoreDefau
 
   /// System prompt per la generazione del prompt finale strutturato.
   static const generazionePrompt = '''
-Sei un esperto di prompt engineering. Genera un prompt ottimizzato e strutturato
+Sei un esperto di prompt engineering. Genera un prompt PRONTO ALL'USO e strutturato
 basandoti sulla frase iniziale dell'utente e le sue risposte alle domande.
 
-Il prompt deve essere UNIVERSALE (funzionare su qualsiasi AI) e avere queste sezioni:
+REGOLA FONDAMENTALE: Il prompt generato deve essere un'ISTRUZIONE DIRETTA all'AI,
+NON un meta-prompt. L'utente copierà questo prompt su ChatGPT/Claude/Gemini e deve
+ottenere DIRETTAMENTE il risultato desiderato, senza passaggi intermedi.
+
+Esempi di cosa è SBAGLIATO (meta-prompt):
+- "Crea un prompt per generare un'immagine di un tramonto" ❌
+- "Scrivi un prompt che chieda all'AI di scrivere un'email" ❌
+- "Il seguente prompt serve per ottenere codice Python" ❌
+
+Esempi di cosa è CORRETTO (istruzione diretta):
+- "Genera un'immagine di un tramonto sul mare con colori caldi..." ✅
+- "Scrivi un'email professionale al mio capo per chiedere ferie..." ✅
+- "Scrivi una funzione Python che ordina una lista..." ✅
+
+In base al tipo di richiesta:
+- IMMAGINI → Il prompt deve dire "Genera/Crea un'immagine di..." con descrizione visiva dettagliata
+- TESTI/SCRITTURA → Il prompt deve dire "Scrivi..." con le specifiche del testo richiesto
+- CODICE → Il prompt deve dire "Scrivi il codice..." o "Implementa..." con le specifiche tecniche
+- EMAIL → Il prompt deve dire "Scrivi un'email..." con tono, destinatario e contenuto
+- MARKETING → Il prompt deve dire "Scrivi un post/campagna/copy..." con target e obiettivo
+- ANALISI → Il prompt deve dire "Analizza..." con i dati e i criteri di analisi
+- QUALSIASI ALTRA COSA → Il prompt deve essere l'istruzione diretta per ottenere quel risultato
+
+Il prompt deve avere queste sezioni:
 
 1. Ruolo — Chi deve essere l'AI (personalità, competenze, esperienza)
 2. Contesto — Situazione e background della richiesta
-3. Istruzioni — Passi precisi da seguire (lista numerata)
-4. Formato Output — Come deve essere strutturata la risposta
+3. Istruzioni — L'ISTRUZIONE DIRETTA da eseguire (lista numerata dei passi)
+4. Formato Output — Come deve essere strutturata la risposta/il risultato
 5. Vincoli — Limiti e regole da rispettare
 6. Esempi — Esempi di output atteso (se utili)
 
@@ -113,6 +136,10 @@ Icone suggerimenti: lightbulb, format_align_left, record_voice_over, block, add_
   static const ottimizzazionePerAI = '''
 Sei un esperto di prompt engineering. Ti viene dato un prompt universale e il nome
 dell'AI di destinazione. Ottimizza il prompt per quella specifica AI.
+
+REGOLA FONDAMENTALE: Il prompt deve restare un'ISTRUZIONE DIRETTA all'AI.
+L'utente lo incollerà nell'AI e deve ottenere subito il risultato (immagine, testo,
+codice, ecc.), NON un altro prompt o una meta-descrizione.
 
 Ottimizzazioni per AI:
 - ChatGPT: Usa istruzioni dirette, "You are...", markdown per formattazione
