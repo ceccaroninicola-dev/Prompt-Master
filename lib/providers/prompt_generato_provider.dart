@@ -307,60 +307,26 @@ class PromptGeneratoProvider extends ChangeNotifier {
     switch (categoria) {
       case 'Coding':
         final linguaggio = risposte['linguaggio'] ?? 'Python';
-        final tipoAiuto = risposte['tipo_aiuto'] ?? 'Scrivere codice nuovo';
+        final tipoAiuto = risposte['tipo_aiuto'] ?? 'scrivere codice nuovo';
+        final contesto = risposte['contesto'] ?? '';
+        final contestoDesc =
+            contesto.isNotEmpty ? ' $contesto.' : '';
+        final requisiti = risposte['requisiti_extra'] ?? 'Performance, Sicurezza';
+        final dettaglio =
+            risposte['livello_dettaglio'] ?? 'Includi commenti esplicativi.';
         return [
           SezionePrompt(
-            titolo: 'Ruolo',
-            icona: 'person',
+            titolo: 'Istruzione Codice',
+            icona: 'code',
             contenuto:
-                'Sei un esperto sviluppatore $linguaggio con oltre 10 anni di esperienza. '
-                'Scrivi codice pulito, ben documentato e seguendo le best practices.',
-            colore: 0xFF0D9488,
-          ),
-          SezionePrompt(
-            titolo: 'Contesto',
-            icona: 'info',
-            contenuto:
-                'Ho bisogno di aiuto per: $tipoAiuto. '
-                '${risposte['contesto'] ?? 'Il progetto è in fase di sviluppo.'}',
-            colore: 0xFF0891B2,
-          ),
-          SezionePrompt(
-            titolo: 'Istruzioni',
-            icona: 'list',
-            contenuto:
-                'Scrivi il codice $linguaggio seguendo questi passi:\n'
-                '1. Implementa la soluzione richiesta\n'
-                '2. Aggiungi commenti esplicativi nel codice\n'
-                '3. Gestisci i casi limite e gli errori\n'
-                '4. Segui le convenzioni di naming del linguaggio',
+                'Scrivi codice $linguaggio per $tipoAiuto.$contestoDesc '
+                'Il codice deve essere pulito, ben documentato e seguire le '
+                'best practices di $linguaggio. $dettaglio '
+                'Gestisci i casi limite e gli errori. '
+                'Requisiti: $requisiti. '
+                'Usa solo librerie aggiornate e compatibili con le versioni '
+                'recenti di $linguaggio.',
             colore: 0xFF7C3AED,
-          ),
-          SezionePrompt(
-            titolo: 'Formato Output',
-            icona: 'format_align_left',
-            contenuto:
-                'Fornisci il codice in un blocco formattato. '
-                '${risposte['livello_dettaglio'] ?? 'Includi commenti esplicativi.'} '
-                'Se necessario, aggiungi note sulle dipendenze richieste.',
-            colore: 0xFFEA580C,
-          ),
-          SezionePrompt(
-            titolo: 'Vincoli',
-            icona: 'block',
-            contenuto:
-                'Requisiti: ${risposte['requisiti_extra'] ?? 'Performance, Sicurezza'}. '
-                'Non usare librerie deprecate. '
-                'Assicurati che il codice sia compatibile con le versioni recenti di $linguaggio.',
-            colore: 0xFFDC2626,
-          ),
-          const SezionePrompt(
-            titolo: 'Esempi',
-            icona: 'lightbulb',
-            contenuto:
-                'Se la richiesta è ambigua, fornisci prima un esempio semplice '
-                'e poi una versione più avanzata.',
-            colore: 0xFFF59E0B,
           ),
         ];
 
@@ -386,80 +352,91 @@ class PromptGeneratoProvider extends ChangeNotifier {
 
       default:
         final tono = risposte['tono'] ?? 'Informale';
-        final tipo = risposte['tipo_contenuto'] ?? 'Post social media';
+        final tipo = risposte['tipo_contenuto'] ?? 'post social media';
+        final pubblico = risposte['pubblico'] ?? 'Professionisti';
+        final lunghezza = risposte['lunghezza'] ?? 'Medio (3-5 paragrafi)';
+        final dettagli = risposte['dettagli_extra'] ?? '';
+        final dettagliDesc =
+            dettagli.isNotEmpty ? ' $dettagli.' : '';
+        // Scegli titolo e icona in base alla categoria
+        final titolo = _titoloPerCategoria(categoria);
+        final icona = _iconaPerCategoria(categoria);
         return [
           SezionePrompt(
-            titolo: 'Ruolo',
-            icona: 'person',
+            titolo: titolo,
+            icona: icona,
             contenuto:
-                'Sei un copywriter professionista specializzato in $tipo. '
-                'Hai esperienza nella creazione di contenuti coinvolgenti e persuasivi.',
-            colore: 0xFF0D9488,
-          ),
-          SezionePrompt(
-            titolo: 'Contesto',
-            icona: 'info',
-            contenuto:
-                'Devo creare un $tipo con tono $tono. '
-                'Il pubblico target è: ${risposte['pubblico'] ?? 'Professionisti'}.',
-            colore: 0xFF0891B2,
-          ),
-          SezionePrompt(
-            titolo: 'Istruzioni',
-            icona: 'list',
-            contenuto:
-                'Scrivi un $tipo seguendo queste indicazioni:\n'
-                '1. Usa un tono $tono\n'
-                '2. Adatta il linguaggio al pubblico target\n'
-                '3. Includi un hook iniziale che catturi l\'attenzione\n'
-                '4. Concludi con una call-to-action efficace\n'
-                '5. Usa formattazione adeguata al formato scelto',
+                'Scrivi un $tipo con tono $tono, rivolto a $pubblico. '
+                'Inizia con un hook che catturi l\'attenzione, '
+                'sviluppa il contenuto in modo coinvolgente e '
+                'concludi con una call-to-action efficace. '
+                'Lunghezza: $lunghezza. '
+                'Usa paragrafi brevi e formattazione adeguata al formato. '
+                'Il testo deve essere originale, diretto e senza jargon '
+                'tecnico non necessario.$dettagliDesc',
             colore: 0xFF7C3AED,
-          ),
-          SezionePrompt(
-            titolo: 'Formato Output',
-            icona: 'format_align_left',
-            contenuto:
-                'Lunghezza: ${risposte['lunghezza'] ?? 'Medio (3-5 paragrafi)'}. '
-                'Usa paragrafi brevi e punti elenco dove appropriato. '
-                'Includi emoji solo se adatti al tono scelto.',
-            colore: 0xFFEA580C,
-          ),
-          SezionePrompt(
-            titolo: 'Vincoli',
-            icona: 'block',
-            contenuto:
-                'Mantieni un tono $tono coerente in tutto il testo. '
-                'Evita jargon tecnico non necessario. '
-                'Il testo deve essere originale e non generico.',
-            colore: 0xFFDC2626,
-          ),
-          SezionePrompt(
-            titolo: 'Esempi',
-            icona: 'lightbulb',
-            contenuto:
-                risposte['dettagli_extra'] ??
-                'Nessun dettaglio aggiuntivo specificato.',
-            colore: 0xFFF59E0B,
           ),
         ];
     }
   }
 
-  /// Genera suggerimenti di miglioramento contestuali (fallback)
+  /// Restituisce il titolo della sezione in base alla categoria
+  String _titoloPerCategoria(String categoria) {
+    switch (categoria) {
+      case 'Scrittura':
+        return 'Istruzione Testo';
+      case 'Marketing':
+        return 'Istruzione Marketing';
+      case 'Email':
+        return 'Istruzione Email';
+      case 'Analisi':
+        return 'Istruzione Analisi';
+      case 'Studio':
+        return 'Istruzione Studio';
+      case 'Social Media':
+        return 'Istruzione Social';
+      default:
+        return 'Istruzione';
+    }
+  }
+
+  /// Restituisce l'icona della sezione in base alla categoria
+  String _iconaPerCategoria(String categoria) {
+    switch (categoria) {
+      case 'Scrittura':
+        return 'edit_note';
+      case 'Marketing':
+        return 'campaign';
+      case 'Email':
+        return 'email';
+      case 'Analisi':
+        return 'analytics';
+      case 'Studio':
+        return 'school';
+      case 'Social Media':
+        return 'share';
+      default:
+        return 'list';
+    }
+  }
+
+  /// Genera suggerimenti di miglioramento contestuali (fallback).
+  /// Tutti i prompt sono ora a sezione unica (istruzione diretta).
   List<SuggerimentoMiglioramento> _generaSuggerimenti(
     List<SezionePrompt> sezioni,
   ) {
-    // Per immagini (sezione unica), suggerimenti specifici sulla descrizione
-    if (sezioni.length == 1) {
+    final contenuto = sezioni[0].contenuto;
+    final isImmagine = sezioni[0].titolo == 'Descrizione Immagine';
+
+    if (isImmagine) {
       return [
         SuggerimentoMiglioramento(
           etichetta: 'Più dettagli visivi',
           icona: 'lightbulb',
           sezioneIndice: 0,
-          testoPrima: sezioni[0].contenuto,
+          testoPrima: contenuto,
           testoDopo:
-              '${sezioni[0].contenuto} '
+              '$contenuto '
               'Dettagli aggiuntivi: texture realistiche, riflessi naturali, '
               'micro-dettagli sulle superfici.',
           descrizione:
@@ -470,8 +447,8 @@ class PromptGeneratoProvider extends ChangeNotifier {
           etichetta: 'Migliora illuminazione',
           icona: 'lightbulb',
           sezioneIndice: 0,
-          testoPrima: sezioni[0].contenuto,
-          testoDopo: sezioni[0].contenuto.replaceFirst(
+          testoPrima: contenuto,
+          testoDopo: contenuto.replaceFirst(
               'illuminazione naturale',
               'illuminazione cinematografica con rim light e ombre profonde'),
           descrizione:
@@ -481,9 +458,9 @@ class PromptGeneratoProvider extends ChangeNotifier {
           etichetta: 'Aggiungi qualità',
           icona: 'add_circle',
           sezioneIndice: 0,
-          testoPrima: sezioni[0].contenuto,
+          testoPrima: contenuto,
           testoDopo:
-              '${sezioni[0].contenuto} '
+              '$contenuto '
               '8K, ultra detailed, award-winning, professional quality.',
           descrizione:
               'Aggiunge tag di qualità per risultati più '
@@ -492,57 +469,43 @@ class PromptGeneratoProvider extends ChangeNotifier {
       ];
     }
 
-    // Per categorie con 6 sezioni (Coding, Scrittura, ecc.)
+    // Suggerimenti per tutte le altre categorie (sezione unica)
     return [
       SuggerimentoMiglioramento(
         etichetta: 'Aggiungi esempio',
         icona: 'lightbulb',
-        sezioneIndice: 5,
-        testoPrima: sezioni[5].contenuto,
+        sezioneIndice: 0,
+        testoPrima: contenuto,
         testoDopo:
-            '${sezioni[5].contenuto}\n\n'
-            'Esempio di output atteso:\n'
-            '- Versione breve e diretta per social media\n'
-            '- Versione estesa per blog o newsletter',
+            '$contenuto\n\n'
+            'Esempio di risultato atteso: [descrivi qui un esempio concreto '
+            'del risultato che vorresti ottenere].',
         descrizione:
             'Aggiunge un esempio concreto di output atteso '
             'per guidare meglio l\'AI nella generazione.',
       ),
       SuggerimentoMiglioramento(
-        etichetta: 'Specifica formato',
+        etichetta: 'Più specifico',
         icona: 'format_align_left',
-        sezioneIndice: 3,
-        testoPrima: sezioni[3].contenuto,
+        sezioneIndice: 0,
+        testoPrima: contenuto,
         testoDopo:
-            '${sezioni[3].contenuto}\n'
-            'Struttura il contenuto con: titolo, sottotitolo, '
-            'corpo principale diviso in sezioni, conclusione con CTA.',
+            '$contenuto '
+            'Struttura il risultato con: titolo, sottotitoli, '
+            'corpo principale diviso in sezioni chiare.',
         descrizione:
             'Aggiunge dettagli sulla struttura '
             'del formato di output per risultati più precisi.',
       ),
       SuggerimentoMiglioramento(
-        etichetta: 'Definisci tono',
-        icona: 'record_voice_over',
-        sezioneIndice: 0,
-        testoPrima: sezioni[0].contenuto,
-        testoDopo:
-            '${sezioni[0].contenuto} '
-            'Comunica con un tono autorevole ma accessibile, '
-            'come un mentore che guida con competenza e empatia.',
-        descrizione:
-            'Definisce meglio la personalità e il tono '
-            'di voce per una risposta più coerente.',
-      ),
-      SuggerimentoMiglioramento(
         etichetta: 'Aggiungi vincoli',
         icona: 'block',
-        sezioneIndice: 4,
-        testoPrima: sezioni[4].contenuto,
+        sezioneIndice: 0,
+        testoPrima: contenuto,
         testoDopo:
-            '${sezioni[4].contenuto} '
+            '$contenuto '
             'Limita la risposta a massimo 500 parole. '
-            'Non includere riferimenti a marchi specifici senza autorizzazione.',
+            'Non includere riferimenti generici o contenuti banali.',
         descrizione:
             'Aggiunge vincoli specifici per '
             'controllare meglio l\'output generato.',

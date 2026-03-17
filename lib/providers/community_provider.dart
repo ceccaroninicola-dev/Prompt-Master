@@ -422,11 +422,7 @@ class CommunityProvider extends ChangeNotifier {
           Commento(id: 'c2', autoreId: 'u7', autoreNome: '@paolo_code', autoreColore: 0xFF607D8B, testo: 'Suggerisco di aggiungere una sezione per i test unitari.', data: DateTime(2026, 3, 15)),
         ],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un senior Python developer con 15 anni di esperienza nel debugging di applicazioni complesse.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Devo analizzare un bug in un\'applicazione Python che si manifesta solo in produzione. Il codice funziona correttamente in ambiente di sviluppo.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: '1. Analizza il traceback fornito\n2. Identifica le possibili cause root\n3. Suggerisci fix con codice\n4. Proponi test per prevenire regressioni', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'Rispondi con: diagnosi breve, causa probabile, codice fix, test suggeriti.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Usa solo librerie standard Python. Il fix deve essere retrocompatibile con Python 3.8+.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Istruzione Codice', icona: 'code', contenuto: 'Analizza il bug nella mia applicazione Python che si manifesta solo in produzione ma funziona correttamente in ambiente di sviluppo. Esamina il traceback fornito, identifica le possibili cause root, suggerisci fix con codice e proponi test per prevenire regressioni. Rispondi con diagnosi breve, causa probabile, codice fix e test suggeriti. Usa solo librerie standard Python e assicurati che il fix sia retrocompatibile con Python 3.8+.', colore: 0xFF7C3AED),
         ],
       ),
       PromptPubblico(
@@ -446,11 +442,7 @@ class CommunityProvider extends ChangeNotifier {
           Commento(id: 'c3', autoreId: 'u6', autoreNome: '@emma_data', autoreColore: 0xFF00BCD4, testo: 'Perfetto per i miei progetti di data science!', data: DateTime(2026, 3, 11)),
         ],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un esperto di architettura API REST e FastAPI.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Sto creando un\'API REST per un\'app di gestione progetti con autenticazione JWT.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: 'Genera gli endpoint CRUD completi con validazione Pydantic, gestione errori e documentazione OpenAPI.', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'Codice Python con type hints, docstring e commenti inline.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Usa async/await. Segui le best practice di sicurezza OWASP.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Istruzione Codice', icona: 'code', contenuto: 'Genera gli endpoint CRUD completi per un\'API REST FastAPI dedicata a un\'app di gestione progetti con autenticazione JWT. Includi validazione Pydantic, gestione errori e documentazione OpenAPI. Produci codice Python con type hints, docstring e commenti inline. Usa async/await e segui le best practice di sicurezza OWASP.', colore: 0xFF7C3AED),
         ],
       ),
       PromptPubblico(
@@ -472,11 +464,7 @@ class CommunityProvider extends ChangeNotifier {
           Commento(id: 'c6', autoreId: 'u2', autoreNome: '@sara_writes', autoreColore: 0xFFE91E63, testo: 'Anche per chi non è developer, aiuta a capire il codice.', data: DateTime(2026, 3, 12)),
         ],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un tech lead esperto che conduce code review approfondite ma costruttive.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Devo fare review di un pull request. Voglio feedback su qualità, sicurezza, performance e leggibilità.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: '1. Analizza il codice riga per riga\n2. Segnala bug potenziali\n3. Suggerisci miglioramenti\n4. Evidenzia aspetti positivi\n5. Dai un voto complessivo', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'Lista numerata con: [CRITICO], [SUGGERIMENTO], [POSITIVO] per ogni punto.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Tono costruttivo e educativo. Non solo criticare, anche spiegare il perché.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Istruzione Codice', icona: 'code', contenuto: 'Esegui una code review approfondita del pull request fornito, analizzando il codice riga per riga. Valuta qualità, sicurezza, performance e leggibilità. Segnala bug potenziali, suggerisci miglioramenti e evidenzia anche gli aspetti positivi, assegnando un voto complessivo. Presenta i risultati come lista numerata con etichette [CRITICO], [SUGGERIMENTO], [POSITIVO] per ogni punto. Mantieni un tono costruttivo e educativo, spiegando sempre il perché di ogni osservazione.', colore: 0xFF7C3AED),
         ],
       ),
 
@@ -499,11 +487,7 @@ class CommunityProvider extends ChangeNotifier {
           Commento(id: 'c8', autoreId: 'u11', autoreNome: '@davide_pm', autoreColore: 0xFF795548, testo: 'Struttura perfetta per raccontare storie di prodotto.', data: DateTime(2026, 3, 14)),
         ],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un copywriter specializzato in LinkedIn con esperienza nel personal branding.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Voglio creare un post LinkedIn che racconti una lezione professionale in modo coinvolgente.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: '1. Hook potente nella prima riga\n2. Storia personale breve\n3. Lezione pratica\n4. Call to action\n5. 3-5 hashtag rilevanti', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'Post pronto da pubblicare, max 1300 caratteri, con righe corte e spazi per leggibilità mobile.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'No linguaggio corporate. Tono autentico e conversazionale. No emoji eccessivi.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Istruzione Marketing', icona: 'campaign', contenuto: 'Scrivi un post LinkedIn che racconti una lezione professionale in modo coinvolgente, con un hook potente nella prima riga, una storia personale breve, una lezione pratica, una call to action e 3-5 hashtag rilevanti. Il post deve essere pronto da pubblicare, massimo 1300 caratteri, con righe corte e spazi per leggibilità mobile. Usa un tono autentico e conversazionale, evitando linguaggio corporate ed emoji eccessivi.', colore: 0xFF7C3AED),
         ],
       ),
       PromptPubblico(
@@ -521,11 +505,7 @@ class CommunityProvider extends ChangeNotifier {
         tag: ['newsletter', 'email', 'conversione'],
         commenti: [],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un email marketer esperto con focus sulla conversione.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Devo scrivere una newsletter settimanale per una lista di 5000 iscritti nel settore tech.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: 'Crea oggetto email accattivante, preview text, corpo con 3 sezioni tematiche e CTA finale.', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'Formato markdown con sezioni chiare. Oggetto email separato.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Max 500 parole. Niente spam trigger words. Tono informale ma professionale.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Istruzione Email', icona: 'email', contenuto: 'Scrivi una newsletter settimanale per una lista di 5000 iscritti nel settore tech, orientata alla conversione. Crea un oggetto email accattivante, un preview text efficace, un corpo con 3 sezioni tematiche e una CTA finale. Formatta in markdown con sezioni chiare e oggetto email separato. Mantieni il testo entro le 500 parole, evita spam trigger words e usa un tono informale ma professionale.', colore: 0xFF7C3AED),
         ],
       ),
 
@@ -548,11 +528,7 @@ class CommunityProvider extends ChangeNotifier {
           Commento(id: 'c10', autoreId: 'u8', autoreNome: '@chiara_edu', autoreColore: 0xFFFFC107, testo: 'Lo uso con i miei studenti per insegnare il pensiero critico!', data: DateTime(2026, 3, 14)),
         ],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un analista logico che risolve problemi complessi attraverso ragionamento strutturato.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Ho un problema complesso che richiede analisi multi-dimensionale e ragionamento step-by-step.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: '1. Scomponi il problema in sotto-problemi\n2. Per ogni sotto-problema, ragiona ad alta voce\n3. Identifica assunzioni e bias\n4. Valuta alternative\n5. Sintetizza la conclusione', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'Ragionamento numerato con [STEP], [ANALISI], [CONCLUSIONE] per ogni fase.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Mostra sempre il ragionamento, non solo la risposta. Segnala incertezze.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Istruzione Analisi', icona: 'analytics', contenuto: 'Analizza il problema complesso fornito scomponendolo in sotto-problemi, ragionando ad alta voce per ciascuno. Identifica assunzioni e bias, valuta alternative e sintetizza una conclusione strutturata. Presenta il ragionamento numerato con etichette [STEP], [ANALISI], [CONCLUSIONE] per ogni fase. Mostra sempre il percorso logico completo, non solo la risposta finale, e segnala esplicitamente le incertezze.', colore: 0xFF7C3AED),
         ],
       ),
       PromptPubblico(
@@ -572,11 +548,7 @@ class CommunityProvider extends ChangeNotifier {
           Commento(id: 'c11', autoreId: 'u6', autoreNome: '@emma_data', autoreColore: 0xFF00BCD4, testo: 'Indispensabile per il mio dottorato!', data: DateTime(2026, 3, 7)),
         ],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un ricercatore accademico esperto nell\'analisi di paper scientifici.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Devo analizzare un paper scientifico e estrarre le informazioni più rilevanti per la mia ricerca.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: '1. Riassumi abstract e contributo principale\n2. Analizza metodologia\n3. Valuta risultati e limiti\n4. Identifica applicazioni pratiche\n5. Suggerisci paper correlati', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'Scheda riassuntiva strutturata con bullet points per ogni sezione.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Mantieni rigore accademico. Distingui fatti da interpretazioni.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Istruzione Studio', icona: 'school', contenuto: 'Analizza il paper scientifico fornito estraendo le informazioni più rilevanti. Riassumi abstract e contributo principale, analizza la metodologia, valuta risultati e limiti, identifica applicazioni pratiche e suggerisci paper correlati. Presenta i risultati come scheda riassuntiva strutturata con bullet points per ogni sezione. Mantieni rigore accademico e distingui chiaramente i fatti dalle interpretazioni.', colore: 0xFF7C3AED),
         ],
       ),
       PromptPubblico(
@@ -598,11 +570,7 @@ class CommunityProvider extends ChangeNotifier {
           Commento(id: 'c14', autoreId: 'u7', autoreNome: '@paolo_code', autoreColore: 0xFF607D8B, testo: 'Incredibile come un prompt possa migliorare sé stesso.', data: DateTime(2026, 3, 3)),
         ],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un prompt engineer esperto che analizza e ottimizza prompt per qualsiasi AI.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Ho un prompt che funziona ma non produce risultati ottimali. Voglio migliorarlo sistematicamente.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: '1. Analizza il prompt fornito\n2. Identifica punti deboli (vaghezza, ambiguità, mancanza di contesto)\n3. Riscrivi ogni sezione migliorandola\n4. Spiega ogni modifica\n5. Fornisci versione finale ottimizzata', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'Prima/dopo per ogni sezione, con spiegazione della modifica. Prompt finale completo alla fine.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Non cambiare l\'intento originale. Migliora solo chiarezza, specificità e struttura.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Istruzione Analisi', icona: 'analytics', contenuto: 'Analizza il prompt fornito e ottimizzalo sistematicamente. Identifica punti deboli come vaghezza, ambiguità o mancanza di contesto, poi riscrivi ogni sezione migliorandola. Mostra il confronto prima/dopo per ogni modifica con una spiegazione chiara, e fornisci la versione finale ottimizzata completa. Non cambiare l\'intento originale del prompt, migliora solo chiarezza, specificità e struttura.', colore: 0xFF7C3AED),
         ],
       ),
 
@@ -624,11 +592,7 @@ class CommunityProvider extends ChangeNotifier {
           Commento(id: 'c15', autoreId: 'u12', autoreNome: '@valentina_seo', autoreColore: 0xFF3F51B5, testo: 'Perfetto per pianificare il mese in anticipo!', data: DateTime(2026, 3, 12)),
         ],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un social media manager esperto con focus sulla pianificazione strategica dei contenuti.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Gestisco i social di un brand tech. Devo pianificare i contenuti del prossimo mese.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: 'Crea un calendario editoriale per 30 giorni con: data, piattaforma, tipo di post, copy, hashtag suggeriti.', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'Tabella markdown con colonne: Data, Piattaforma, Tipo, Copy, Hashtag.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Alterna formati (carosello, reel, story, post). Max 3 post al giorno. Includi date rilevanti del mese.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Istruzione Social', icona: 'share', contenuto: 'Crea un calendario editoriale social per 30 giorni per un brand tech, includendo per ogni giorno: data, piattaforma, tipo di post, copy e hashtag suggeriti. Presenta il risultato come tabella markdown con colonne Data, Piattaforma, Tipo, Copy, Hashtag. Alterna i formati tra carosello, reel, story e post, con massimo 3 post al giorno, e includi le date rilevanti del mese.', colore: 0xFF7C3AED),
         ],
       ),
       PromptPubblico(
@@ -646,11 +610,7 @@ class CommunityProvider extends ChangeNotifier {
         tag: ['competitor', 'analisi', 'strategia'],
         commenti: [],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un consulente di strategia aziendale specializzato in analisi competitiva.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Devo analizzare un competitor diretto del mio prodotto per trovare punti di differenziazione.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: '1. Analizza punti di forza e debolezza\n2. Identifica gap nel mercato\n3. Suggerisci strategie di differenziazione\n4. Proponi unique selling proposition', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'SWOT analysis seguita da raccomandazioni strategiche numerate.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Basati solo su informazioni pubblicamente disponibili. No speculazioni non supportate.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Istruzione Marketing', icona: 'campaign', contenuto: 'Analizza il competitor diretto fornito per trovare punti di differenziazione. Valuta punti di forza e debolezza, identifica gap nel mercato, suggerisci strategie di differenziazione e proponi una unique selling proposition. Presenta i risultati come SWOT analysis seguita da raccomandazioni strategiche numerate. Basati solo su informazioni pubblicamente disponibili, senza speculazioni non supportate.', colore: 0xFF7C3AED),
         ],
       ),
 

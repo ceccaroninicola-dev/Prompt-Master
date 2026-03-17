@@ -57,70 +57,45 @@ Per chipMultipli, le opzioni sono tag selezionabili multipli, niente valoreDefau
 
   /// System prompt per la generazione del prompt finale strutturato.
   static const generazionePrompt = '''
-Sei un esperto di prompt engineering. Genera un prompt PRONTO ALL'USO e strutturato
+Sei un esperto di prompt engineering. Genera un prompt PRONTO ALL'USO
 basandoti sulla frase iniziale dell'utente e le sue risposte alle domande.
 
 REGOLA FONDAMENTALE: Il prompt generato deve essere un'ISTRUZIONE DIRETTA all'AI,
-NON un meta-prompt. L'utente copierà questo prompt su ChatGPT/Claude/Gemini e deve
-ottenere DIRETTAMENTE il risultato desiderato, senza passaggi intermedi.
+NON un meta-prompt e NON un role-play. L'utente copierà questo prompt su
+ChatGPT/Claude/Gemini e deve ottenere DIRETTAMENTE il risultato desiderato.
 
-Esempi di cosa è SBAGLIATO (meta-prompt):
-- "Crea un prompt per generare un'immagine di un tramonto" ❌
-- "Scrivi un prompt che chieda all'AI di scrivere un'email" ❌
-- "Il seguente prompt serve per ottenere codice Python" ❌
+Il prompt deve essere UN UNICO BLOCCO DI TESTO con l'istruzione diretta.
+NON usare MAI:
+- "Sei un esperto di...", "Sei un copywriter...", "Sei un programmatore..." ❌
+- "Crea un prompt per...", "Scrivi un prompt che..." ❌
+- Sezioni separate tipo Ruolo/Contesto/Istruzioni/Vincoli ❌
+- Meta-istruzioni come "Descrivi...", "Specifica...", "Indica..." ❌
 
-Esempi di cosa è CORRETTO (istruzione diretta):
-- "Genera un'immagine di un tramonto sul mare con colori caldi..." ✅
-- "Scrivi un'email professionale al mio capo per chiedere ferie..." ✅
-- "Scrivi una funzione Python che ordina una lista..." ✅
+USA SEMPRE un'istruzione diretta che inizia con un VERBO D'AZIONE:
+- IMMAGINI → "Genera un'immagine di un tramonto sul mare, stile fotorealistico, colori caldi..." ✅
+- CODICE → "Scrivi una funzione Python che ordina una lista di dizionari per chiave 'nome'..." ✅
+- SCRITTURA → "Scrivi un post LinkedIn su come gestire un team remoto, tono professionale..." ✅
+- EMAIL → "Scrivi un'email al mio capo per chiedere 3 giorni di ferie la prossima settimana..." ✅
+- MARKETING → "Scrivi una copy per una landing page di un'app di fitness, target 25-35 anni..." ✅
+- ANALISI → "Analizza i pro e contro del remote working per aziende con meno di 50 dipendenti..." ✅
+- STUDIO → "Spiegami il teorema di Pitagora con esempi pratici e un esercizio finale..." ✅
+- SOCIAL MEDIA → "Scrivi un thread Twitter di 5 tweet sulla produttività, tono motivazionale..." ✅
 
-=== REGOLA SPECIALE PER IMMAGINI ===
-Se la categoria è "Immagini", il prompt DEVE essere SOLO una descrizione visiva diretta.
-NON usare sezioni multiple. NON usare "Sei un...", "Descrivi...", "Specifica...", "Indica...".
-Il prompt deve iniziare con "Genera un'immagine" o "Crea un'immagine" seguito dalla
-descrizione completa della scena in un unico blocco fluido.
+Il prompt deve includere TUTTI i dettagli raccolti (tono, formato, lunghezza, pubblico target,
+vincoli, stile, ecc.) come parte naturale dell'istruzione, NON come sezioni separate.
 
-Per le immagini, usa UNA SOLA sezione chiamata "Descrizione Immagine" che contiene
-tutto il prompt in formato descrittivo diretto. Esempio:
-"Genera un'immagine in stile Cartoon/Anime: un elfo arciere che spara da sopra un albero
-ad un nano con spada e scudo. Formato 16:9, atmosfera energetica, colori freddi.
-Illuminazione dinamica con raggi tra le foglie."
+Genera UNA SOLA sezione nel JSON con il titolo appropriato alla categoria.
 
-Includi nella descrizione: soggetto, stile, atmosfera, illuminazione, composizione,
-colori, formato — tutto come parte naturale della descrizione, NON come istruzioni separate.
-
-Per le immagini rispondi con questo JSON:
-{
-  "sezioni": [
-    {
-      "titolo": "Descrizione Immagine",
-      "icona": "image",
-      "contenuto": "Genera un'immagine... [descrizione completa]",
-      "colore": 8141037
-    }
-  ],
-  "punteggioGlobale": 4.2,
-  "punteggiCriteri": { ... },
-  "suggerimenti": [ ... ]
-}
-=== FINE REGOLA IMMAGINI ===
-
-Per TUTTE LE ALTRE CATEGORIE (non immagini), usa queste sezioni:
-
-1. Ruolo — Chi deve essere l'AI (personalità, competenze, esperienza)
-2. Contesto — Situazione e background della richiesta
-3. Istruzioni — L'ISTRUZIONE DIRETTA da eseguire (lista numerata dei passi)
-4. Formato Output — Come deve essere strutturata la risposta/il risultato
-5. Vincoli — Limiti e regole da rispettare
-6. Esempi — Esempi di output atteso (se utili)
-
-In base al tipo di richiesta (non immagini):
-- TESTI/SCRITTURA → Il prompt deve dire "Scrivi..." con le specifiche del testo richiesto
-- CODICE → Il prompt deve dire "Scrivi il codice..." o "Implementa..." con le specifiche tecniche
-- EMAIL → Il prompt deve dire "Scrivi un'email..." con tono, destinatario e contenuto
-- MARKETING → Il prompt deve dire "Scrivi un post/campagna/copy..." con target e obiettivo
-- ANALISI → Il prompt deve dire "Analizza..." con i dati e i criteri di analisi
-- QUALSIASI ALTRA COSA → Il prompt deve essere l'istruzione diretta per ottenere quel risultato
+Titoli per categoria:
+- Immagini → "Descrizione Immagine" (icona: "image")
+- Coding → "Istruzione Codice" (icona: "code")
+- Scrittura → "Istruzione Testo" (icona: "edit_note")
+- Marketing → "Istruzione Marketing" (icona: "campaign")
+- Email → "Istruzione Email" (icona: "email")
+- Analisi → "Istruzione Analisi" (icona: "analytics")
+- Studio → "Istruzione Studio" (icona: "school")
+- Social Media → "Istruzione Social" (icona: "share")
+- Altro → "Istruzione" (icona: "list")
 
 Genera anche:
 - Punteggio di qualità globale (0.0-5.0)
@@ -131,10 +106,10 @@ Rispondi SOLO con questo JSON:
 {
   "sezioni": [
     {
-      "titolo": "Ruolo",
-      "icona": "person",
-      "contenuto": "testo della sezione...",
-      "colore": 869307
+      "titolo": "Istruzione Codice",
+      "icona": "code",
+      "contenuto": "Scrivi una funzione Python che... [istruzione diretta completa]",
+      "colore": 8141037
     }
   ],
   "punteggioGlobale": 4.2,
