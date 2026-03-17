@@ -45,6 +45,17 @@ class HomeScreen extends StatelessWidget {
             tooltip: 'Cambia tema',
             onPressed: () => themeProvider.cambiaTema(),
           ),
+          // Impostazioni (API key)
+          IconButton(
+            icon: Icon(
+              Icons.settings_outlined,
+              color: colorScheme.onSurfaceVariant,
+            ),
+            tooltip: 'Impostazioni',
+            onPressed: () {
+              Navigator.of(context).pushNamed(AppRoutes.impostazioni);
+            },
+          ),
         ],
       ),
       // Barra di navigazione inferiore

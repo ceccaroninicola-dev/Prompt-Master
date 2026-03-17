@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:prompt_master/models/confronto_ai.dart';
 import 'package:prompt_master/models/prompt_generato.dart';
+import 'package:prompt_master/services/api_service.dart';
+import 'package:prompt_master/services/ai_prompts.dart';
 
 /// Provider per la gestione del confronto multi-AI.
-/// Gestisce la selezione delle AI, la simulazione delle risposte
-/// e il calcolo della risposta migliore.
+/// Gestisce la selezione delle AI, la generazione delle risposte
+/// (via GPT-4o-mini o fallback fittizio) e il calcolo della risposta migliore.
 class ConfrontoAIProvider extends ChangeNotifier {
   /// Lista completa delle AI disponibili
   static final List<InfoAI> aiDisponibili = [
@@ -54,13 +56,11 @@ class ConfrontoAIProvider extends ChangeNotifier {
 
   /// Suggerisce le 2-3 AI migliori per la categoria del prompt
   List<InfoAI> suggerisciAI(String categoria) {
-    // Filtra le AI che hanno la categoria tra le loro forze
     final suggerite = aiDisponibili
         .where((ai) => ai.categorieForti.contains(categoria))
         .take(3)
         .toList();
 
-    // Se meno di 2 suggerimenti, aggiungi ChatGPT e Claude come default
     if (suggerite.length < 2) {
       for (final ai in aiDisponibili) {
         if (!suggerite.any((s) => s.nome == ai.nome)) {
@@ -92,19 +92,64 @@ class ConfrontoAIProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Avvia il confronto: simula l'invio del prompt alle AI selezionate
+  /// Avvia il confronto: genera risposte per ogni AI selezionata
+  /// Usa GPT-4o-mini per simulare le risposte, con fallback fittizio
   Future<void> avviaConfronto(PromptGenerato prompt, String categoria) async {
     _staCaricando = true;
     notifyListeners();
 
-    // Simula il tempo di attesa delle API (1.5 secondi)
-    await Future.delayed(const Duration(milliseconds: 1500));
-
-    // Genera risposte fittizie per ogni AI selezionata
+    final api = ApiService();
     final risposte = <RispostaAI>[];
+
     for (final nomeAi in _aiSelezionate) {
       final ai = aiDisponibili.firstWhere((a) => a.nome == nomeAi);
-      risposte.add(_generaRispostaFittizia(ai, prompt, categoria));
+
+      if (api.apiKeyConfigurata) {
+        try {
+          final json = await api.chiamaAIJson(
+            systemPrompt: AiPrompts.confrontoRisposte,
+            messaggioUtente:
+                'Simula la risposta di "$nomeAi" a questo prompt:\n\n'
+                '${prompt.testoCompleto}\n\n'
+                'Categoria: $categoria',
+            temperature: 0.8,
+            maxTokens: 1500,
+          );
+
+          final risposta = json['risposta'] as String? ?? 'Risposta generata.';
+          final punteggio =
+              (json['punteggio'] as num?)?.toDouble() ?? 4.0;
+          final dettaglioJson =
+              json['punteggiDettaglio'] as Map<String, dynamic>? ?? {};
+          final dettaglio = dettaglioJson.map(
+              (k, v) => MapEntry(k, (v as num).toDouble()));
+
+          risposte.add(RispostaAI(
+            ai: ai,
+            risposta: risposta,
+            punteggio: punteggio,
+            punteggiDettaglio: dettaglio.isNotEmpty
+                ? dettaglio
+                : {
+                    'Pertinenza': punteggio * 0.98,
+                    'Completezza': punteggio * 0.95,
+                    'Chiarezza': punteggio * 1.02,
+                    'Qualità': punteggio * 0.97,
+                  },
+          ));
+        } on ApiException {
+          // Fallback per questa AI specifica
+          risposte.add(_generaRispostaFittizia(ai, prompt, categoria));
+        }
+      } else {
+        // Senza API key, usa dati fittizi
+        risposte.add(_generaRispostaFittizia(ai, prompt, categoria));
+      }
+    }
+
+    // Simula un piccolo ritardo se non si usa l'API (UX)
+    if (!api.apiKeyConfigurata) {
+      await Future.delayed(const Duration(milliseconds: 1500));
     }
 
     // Determina la risposta migliore
@@ -117,7 +162,6 @@ class ConfrontoAIProvider extends ChangeNotifier {
       }
     }
 
-    // Segna la risposta migliore
     final risposteFinali = risposte.asMap().entries.map((entry) {
       return entry.value.conMigliore(entry.key == indiceMigliore);
     }).toList();
@@ -140,9 +184,8 @@ class ConfrontoAIProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ===== GENERAZIONE RISPOSTE FITTIZIE =====
+  // ===== GENERAZIONE RISPOSTE FITTIZIE (fallback) =====
 
-  /// Genera una risposta fittizia per una specifica AI
   RispostaAI _generaRispostaFittizia(
     InfoAI ai,
     PromptGenerato prompt,
@@ -164,7 +207,6 @@ class ConfrontoAIProvider extends ChangeNotifier {
     );
   }
 
-  /// Restituisce un punteggio fittizio basato sull'AI e la categoria
   double _getPunteggioPerAI(String nomeAi, String categoria) {
     final ai = aiDisponibili.firstWhere((a) => a.nome == nomeAi);
     final isForte = ai.categorieForti.contains(categoria);
@@ -185,7 +227,6 @@ class ConfrontoAIProvider extends ChangeNotifier {
     }
   }
 
-  /// Restituisce risposte fittizie diverse per ogni AI
   String _getRispostaPerAI(String nomeAi, String categoria) {
     switch (nomeAi) {
       case 'ChatGPT':
@@ -292,7 +333,7 @@ class ConfrontoAIProvider extends ChangeNotifier {
 
   static const _risposteGemini = {
     'Coding':
-        '🔧 Ecco l\'implementazione richiesta con un approccio moderno:\n\n'
+        'Ecco l\'implementazione richiesta con un approccio moderno:\n\n'
         '```python\ndef processa(dati: list) -> list:\n'
         '    # Utilizzo dict.fromkeys per preservare l\'ordine e rimuovere duplicati\n'
         '    return list(dict.fromkeys(sorted(dati)))\n```\n\n'
@@ -302,10 +343,10 @@ class ConfrontoAIProvider extends ChangeNotifier {
         'su milioni di elementi.',
     'default':
         'Basandomi sulla tua richiesta, ho preparato una risposta che combina ricerca e praticità.\n\n'
-        '📌 **Punti chiave:**\n\n'
-        '• Il contesto suggerisce un approccio graduale piuttosto che una soluzione unica\n'
-        '• Ho identificato 3 aree di intervento prioritarie\n'
-        '• Ogni suggerimento include un esempio pratico\n\n'
+        '**Punti chiave:**\n\n'
+        '- Il contesto suggerisce un approccio graduale piuttosto che una soluzione unica\n'
+        '- Ho identificato 3 aree di intervento prioritarie\n'
+        '- Ogni suggerimento include un esempio pratico\n\n'
         '**Raccomandazione:** Inizia dal punto 1, valuta i risultati dopo una settimana, '
         'poi procedi con gli step successivi.\n\n'
         'Posso approfondire qualsiasi aspetto se necessario.',
@@ -331,7 +372,7 @@ class ConfrontoAIProvider extends ChangeNotifier {
 
   static const _risposteMistral = {
     'Coding':
-        'Voici mon implémentation — pardon, ecco la mia implementazione! 🇫🇷\n\n'
+        'Ecco la mia implementazione con un tocco funzionale:\n\n'
         '```python\nfrom functools import reduce\n\ndef deduplica_e_ordina(dati: list[int]) -> list[int]:\n'
         '    """Approccio funzionale alla deduplicazione."""\n'
         '    return sorted(\n'

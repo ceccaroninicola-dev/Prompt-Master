@@ -9,10 +9,20 @@ import 'package:prompt_master/providers/cronologia_provider.dart';
 import 'package:prompt_master/providers/libreria_provider.dart';
 import 'package:prompt_master/providers/confronto_ai_provider.dart';
 import 'package:prompt_master/providers/community_provider.dart';
+import 'package:prompt_master/services/api_service.dart';
 
 /// Entry point dell'applicazione Prompt Master.
-/// Configura i provider globali e avvia l'app.
+/// Configura i provider globali, inizializza l'API key e avvia l'app.
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Inizializza la API key da variabile d'ambiente (se disponibile)
+  // Su web, usa --dart-define=OPENAI_API_KEY=sk-xxx durante il build
+  const apiKey = String.fromEnvironment('OPENAI_API_KEY');
+  if (apiKey.isNotEmpty) {
+    ApiService().impostaApiKey(apiKey);
+  }
+
   runApp(const PromptMasterApp());
 }
 

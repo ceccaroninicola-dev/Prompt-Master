@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:prompt_master/models/prompt_generato.dart';
 import 'package:prompt_master/models/prompt_template.dart';
+import 'package:prompt_master/services/api_service.dart';
+import 'package:prompt_master/services/ai_prompts.dart';
 
 /// Provider per la gestione del prompt generato.
-/// Si occupa di generare il prompt fittizio, gestire le modifiche per sezione
-/// e ricalcolare il punteggio quando il contenuto cambia.
+/// Usa GPT-4o-mini per la generazione, con fallback ai dati fittizi.
 class PromptGeneratoProvider extends ChangeNotifier {
   /// Il prompt generato corrente
   PromptGenerato? _prompt;
@@ -12,35 +13,108 @@ class PromptGeneratoProvider extends ChangeNotifier {
   /// Indica se la generazione è in corso
   bool _staGenerando = false;
 
+  /// Eventuale errore durante la generazione
+  String? _errore;
+
+  /// Prompt ottimizzato per un'AI specifica (cache)
+  String? _promptOttimizzato;
+
+  /// AI per cui è stato ottimizzato il prompt
+  String? _aiOttimizzata;
+
   // -- Getter --
 
   PromptGenerato? get prompt => _prompt;
   bool get staGenerando => _staGenerando;
+  String? get errore => _errore;
+  String? get promptOttimizzato => _promptOttimizzato;
+  String? get aiOttimizzata => _aiOttimizzata;
 
-  /// Genera un prompt fittizio a partire dalle risposte della sessione.
-  /// In futuro sarà sostituito da una vera chiamata AI.
+  /// Genera un prompt a partire dalle risposte della sessione.
+  /// Usa l'AI se disponibile, altrimenti crea dati fittizi.
   Future<void> generaPrompt({
     required String fraseIniziale,
     required String categoria,
     required Map<String, String> risposte,
   }) async {
     _staGenerando = true;
+    _errore = null;
+    _promptOttimizzato = null;
+    _aiOttimizzata = null;
     notifyListeners();
 
-    // Simula il tempo di generazione dell'AI
-    await Future.delayed(const Duration(milliseconds: 800));
+    final api = ApiService();
 
-    // Genera il prompt fittizio basato sulla categoria
-    _prompt = _creaPromptFittizio(fraseIniziale, categoria, risposte);
+    if (api.apiKeyConfigurata) {
+      try {
+        // Costruisci il messaggio con tutte le informazioni raccolte
+        final messaggioUtente = _costruisciMessaggio(
+            fraseIniziale, categoria, risposte);
+
+        final json = await api.chiamaAIJson(
+          systemPrompt: AiPrompts.generazionePrompt,
+          messaggioUtente: messaggioUtente,
+          temperature: 0.7,
+          maxTokens: 3000,
+        );
+
+        _prompt = _parsaPromptDaJson(json);
+      } on ApiException catch (e) {
+        _errore = e.messaggio;
+        // Fallback ai dati fittizi
+        _prompt = _creaPromptFittizio(fraseIniziale, categoria, risposte);
+      }
+    } else {
+      // Senza API key, usa i dati fittizi
+      await Future.delayed(const Duration(milliseconds: 800));
+      _prompt = _creaPromptFittizio(fraseIniziale, categoria, risposte);
+    }
+
     _staGenerando = false;
     notifyListeners();
+  }
+
+  /// Ottimizza il prompt per un'AI di destinazione specifica.
+  /// Restituisce il testo ottimizzato.
+  Future<String?> ottimizzaPerAI(String nomeAI) async {
+    if (_prompt == null) return null;
+
+    // Se è già ottimizzato per la stessa AI, usa la cache
+    if (_aiOttimizzata == nomeAI && _promptOttimizzato != null) {
+      return _promptOttimizzato;
+    }
+
+    final api = ApiService();
+
+    if (api.apiKeyConfigurata) {
+      try {
+        final risultato = await api.chiamaAI(
+          systemPrompt: AiPrompts.ottimizzazionePerAI,
+          messaggioUtente: 'AI di destinazione: $nomeAI\n\n'
+              'Prompt originale:\n${_prompt!.testoCompleto}',
+          temperature: 0.5,
+          maxTokens: 2000,
+        );
+        _promptOttimizzato = risultato;
+        _aiOttimizzata = nomeAI;
+        notifyListeners();
+        return risultato;
+      } on ApiException {
+        // Fallback: restituisci il prompt originale
+        return _prompt!.testoCompleto;
+      }
+    }
+
+    // Senza API key, restituisci il prompt originale
+    return _prompt!.testoCompleto;
   }
 
   /// Aggiorna il contenuto di una sezione specifica
   void aggiornaSezione(int indice, String nuovoContenuto) {
     if (_prompt == null) return;
     _prompt = _prompt!.conSezioneAggiornata(indice, nuovoContenuto);
-    // Ricalcola i punteggi (simulato)
+    _promptOttimizzato = null; // Invalida la cache
+    _aiOttimizzata = null;
     _ricalcolaPunteggi();
     notifyListeners();
   }
@@ -49,13 +123,11 @@ class PromptGeneratoProvider extends ChangeNotifier {
   void applicaSuggerimento(SuggerimentoMiglioramento suggerimento) {
     if (_prompt == null) return;
 
-    // Aggiorna la sezione con il testo migliorato
     _prompt = _prompt!.conSezioneAggiornata(
       suggerimento.sezioneIndice,
       suggerimento.testoDopo,
     );
 
-    // Rimuovi il suggerimento applicato e ricalcola i punteggi
     final nuoviSuggerimenti = List<SuggerimentoMiglioramento>.from(
       _prompt!.suggerimenti,
     )..removeWhere((s) => s.etichetta == suggerimento.etichetta);
@@ -63,6 +135,8 @@ class PromptGeneratoProvider extends ChangeNotifier {
     _prompt = _prompt!.conPunteggiAggiornati(
       suggerimenti: nuoviSuggerimenti,
     );
+    _promptOttimizzato = null;
+    _aiOttimizzata = null;
     _ricalcolaPunteggi();
     notifyListeners();
   }
@@ -82,6 +156,8 @@ class PromptGeneratoProvider extends ChangeNotifier {
       suggerimenti: const [],
     );
     _staGenerando = false;
+    _promptOttimizzato = null;
+    _aiOttimizzata = null;
     notifyListeners();
   }
 
@@ -89,6 +165,8 @@ class PromptGeneratoProvider extends ChangeNotifier {
   void caricaPrompt(PromptGenerato prompt) {
     _prompt = prompt;
     _staGenerando = false;
+    _promptOttimizzato = null;
+    _aiOttimizzata = null;
     notifyListeners();
   }
 
@@ -96,20 +174,87 @@ class PromptGeneratoProvider extends ChangeNotifier {
   void reset() {
     _prompt = null;
     _staGenerando = false;
+    _errore = null;
+    _promptOttimizzato = null;
+    _aiOttimizzata = null;
     notifyListeners();
   }
 
   // -- Metodi privati --
 
+  /// Costruisce il messaggio per l'AI con tutte le informazioni raccolte
+  String _costruisciMessaggio(
+    String fraseIniziale,
+    String categoria,
+    Map<String, String> risposte,
+  ) {
+    final buffer = StringBuffer();
+    buffer.writeln('Categoria: $categoria');
+    buffer.writeln('Frase iniziale dell\'utente: "$fraseIniziale"');
+    buffer.writeln('');
+    buffer.writeln('Risposte alle domande:');
+    risposte.forEach((domanda, risposta) {
+      buffer.writeln('- $domanda: $risposta');
+    });
+    return buffer.toString();
+  }
+
+  /// Parsa il prompt dalla risposta JSON dell'AI
+  PromptGenerato _parsaPromptDaJson(Map<String, dynamic> json) {
+    // Parsa le sezioni
+    final sezioniJson = json['sezioni'] as List<dynamic>? ?? [];
+    final sezioni = sezioniJson.map((s) {
+      final mappa = s as Map<String, dynamic>;
+      return SezionePrompt(
+        titolo: mappa['titolo'] as String? ?? 'Sezione',
+        icona: mappa['icona'] as String? ?? 'article',
+        contenuto: mappa['contenuto'] as String? ?? '',
+        colore: (mappa['colore'] as num?)?.toInt() ?? 0xFF009688,
+      );
+    }).toList();
+
+    // Se non ci sono sezioni, usa fallback
+    if (sezioni.isEmpty) {
+      return _creaPromptFittizio('', 'Scrittura', {});
+    }
+
+    // Parsa i punteggi
+    final punteggioGlobale =
+        (json['punteggioGlobale'] as num?)?.toDouble() ?? 4.0;
+    final punteggiCriteriJson =
+        json['punteggiCriteri'] as Map<String, dynamic>? ?? {};
+    final punteggiCriteri = punteggiCriteriJson.map(
+        (k, v) => MapEntry(k, (v as num).toDouble()));
+
+    // Parsa i suggerimenti
+    final suggerimentiJson = json['suggerimenti'] as List<dynamic>? ?? [];
+    final suggerimenti = suggerimentiJson.map((s) {
+      final mappa = s as Map<String, dynamic>;
+      return SuggerimentoMiglioramento(
+        etichetta: mappa['etichetta'] as String? ?? 'Suggerimento',
+        icona: mappa['icona'] as String? ?? 'lightbulb',
+        sezioneIndice: (mappa['sezioneIndice'] as num?)?.toInt() ?? 0,
+        testoPrima: mappa['testoPrima'] as String? ?? '',
+        testoDopo: mappa['testoDopo'] as String? ?? '',
+        descrizione: mappa['descrizione'] as String? ?? '',
+      );
+    }).toList();
+
+    return PromptGenerato(
+      sezioni: sezioni,
+      punteggioGlobale: punteggioGlobale,
+      punteggiCriteri: punteggiCriteri,
+      suggerimenti: suggerimenti,
+    );
+  }
+
   /// Ricalcola i punteggi dopo una modifica (simulato)
   void _ricalcolaPunteggi() {
     if (_prompt == null) return;
 
-    // Calcola un punteggio basato sulla lunghezza totale del contenuto
     final lunghezzaTotale = _prompt!.sezioni
         .fold<int>(0, (sum, s) => sum + s.contenuto.length);
 
-    // Più contenuto = punteggio più alto (semplificazione)
     final fattore = (lunghezzaTotale / 800).clamp(0.5, 1.0);
     final base = 3.5;
 
@@ -118,22 +263,26 @@ class PromptGeneratoProvider extends ChangeNotifier {
         (base + (1.5 * fattore)).toStringAsFixed(1),
       ),
       punteggiCriteri: {
-        'Chiarezza': double.parse((3.8 + (1.2 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
-        'Specificità': double.parse((3.2 + (1.5 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
-        'Completezza': double.parse((3.5 + (1.3 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
-        'Struttura': double.parse((4.0 + (0.8 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
-        'Coerenza': double.parse((3.9 + (1.0 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
+        'Chiarezza': double.parse(
+            (3.8 + (1.2 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
+        'Specificità': double.parse(
+            (3.2 + (1.5 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
+        'Completezza': double.parse(
+            (3.5 + (1.3 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
+        'Struttura': double.parse(
+            (4.0 + (0.8 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
+        'Coerenza': double.parse(
+            (3.9 + (1.0 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
       },
     );
   }
 
-  /// Crea un prompt fittizio con sezioni e punteggi predefiniti
+  /// Crea un prompt fittizio (fallback senza AI)
   PromptGenerato _creaPromptFittizio(
     String fraseIniziale,
     String categoria,
     Map<String, String> risposte,
   ) {
-    // Sezioni del prompt basate sulla categoria
     final sezioni = _generaSezioni(categoria, risposte);
 
     return PromptGenerato(
@@ -150,7 +299,7 @@ class PromptGeneratoProvider extends ChangeNotifier {
     );
   }
 
-  /// Genera le sezioni del prompt in base alla categoria
+  /// Genera le sezioni del prompt in base alla categoria (fallback)
   List<SezionePrompt> _generaSezioni(
     String categoria,
     Map<String, String> risposte,
@@ -269,7 +418,6 @@ class PromptGeneratoProvider extends ChangeNotifier {
           ),
         ];
 
-      // Scrittura (default)
       default:
         final tono = risposte['tono'] ?? 'Informale';
         final tipo = risposte['tipo_contenuto'] ?? 'Post social media';
@@ -323,14 +471,15 @@ class PromptGeneratoProvider extends ChangeNotifier {
             titolo: 'Esempi',
             icona: 'lightbulb',
             contenuto:
-                risposte['dettagli_extra'] ?? 'Nessun dettaglio aggiuntivo specificato.',
+                risposte['dettagli_extra'] ??
+                'Nessun dettaglio aggiuntivo specificato.',
             colore: 0xFFF59E0B,
           ),
         ];
     }
   }
 
-  /// Genera suggerimenti di miglioramento contestuali
+  /// Genera suggerimenti di miglioramento contestuali (fallback)
   List<SuggerimentoMiglioramento> _generaSuggerimenti(
     List<SezionePrompt> sezioni,
   ) {
