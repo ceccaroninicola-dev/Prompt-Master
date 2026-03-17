@@ -1,3 +1,7 @@
+# File con chiavi segrete — MAI committare!
+.env
+.env.*
+
 # Miscellaneous
 *.class
 *.log

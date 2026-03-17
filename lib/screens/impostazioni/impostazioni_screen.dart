@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:prompt_master/services/api_service.dart';
 
-/// Schermata impostazioni — permette di configurare la API key OpenAI.
+/// Schermata impostazioni — permette di configurare la API key OpenAI
+/// e il proxy CORS per Flutter Web.
 /// Design Apple-minimal con teal come accento.
 class ImpostazioniScreen extends StatefulWidget {
   const ImpostazioniScreen({super.key});
@@ -12,7 +14,10 @@ class ImpostazioniScreen extends StatefulWidget {
 
 class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
   final _apiKeyController = TextEditingController();
+  final _corsProxyController = TextEditingController();
   bool _mostraApiKey = false;
+  bool _staTesting = false;
+  String? _risultatoTest;
 
   @override
   void initState() {
@@ -26,7 +31,34 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
   @override
   void dispose() {
     _apiKeyController.dispose();
+    _corsProxyController.dispose();
     super.dispose();
+  }
+
+  /// Testa la connessione API con una chiamata reale
+  Future<void> _testaConnessione() async {
+    setState(() {
+      _staTesting = true;
+      _risultatoTest = null;
+    });
+
+    try {
+      final risultato = await ApiService().chiamaAI(
+        systemPrompt: 'Rispondi solo con "OK" senza altro testo.',
+        messaggioUtente: 'Test di connessione.',
+        temperature: 0.0,
+        maxTokens: 10,
+      );
+      setState(() {
+        _risultatoTest = 'Connessione riuscita! Risposta: $risultato';
+      });
+    } on ApiException catch (e) {
+      setState(() {
+        _risultatoTest = 'Errore: ${e.messaggio}';
+      });
+    }
+
+    setState(() => _staTesting = false);
   }
 
   @override
@@ -89,7 +121,8 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
                           Text(
                             apiConfigurata
                                 ? 'GPT-4o-mini attivo per analisi e generazione'
-                                : 'L\'app funziona con dati di esempio. Aggiungi la API key per usare l\'AI vera.',
+                                : 'L\'app funziona con dati di esempio. '
+                                    'Aggiungi la API key per usare l\'AI vera.',
                             style: TextStyle(
                               fontSize: 12,
                               color: colorScheme.onSurfaceVariant,
@@ -196,6 +229,161 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: 20),
+
+              // === PROXY CORS (solo su web) ===
+              if (kIsWeb) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: Colors.blue.withValues(alpha: 0.2),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.language,
+                              size: 18, color: Colors.blue[700]),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Proxy CORS (solo Web)',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: Colors.blue[700],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Il browser blocca le chiamate dirette a OpenAI (CORS). '
+                        'Per usare l\'AI su web, inserisci l\'URL di un proxy CORS.\n'
+                        'Es: https://corsproxy.io/?',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              height: 1.4,
+                            ),
+                      ),
+                      const SizedBox(height: 10),
+                      TextField(
+                        controller: _corsProxyController,
+                        decoration: InputDecoration(
+                          hintText: 'https://corsproxy.io/?',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 12),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: _corsProxyController.text.isNotEmpty
+                              ? () {
+                                  ApiService().impostaCorsProxy(
+                                      _corsProxyController.text.trim());
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: const Text(
+                                          'Proxy CORS salvato!'),
+                                      behavior: SnackBarBehavior.floating,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                  );
+                                }
+                              : null,
+                          icon: const Icon(Icons.save_outlined, size: 18),
+                          label: const Text('Salva Proxy'),
+                          style: OutlinedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+
+              // === TESTA CONNESSIONE ===
+              if (apiConfigurata)
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: _staTesting ? null : _testaConnessione,
+                    icon: _staTesting
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.wifi_find, size: 18),
+                    label: Text(
+                        _staTesting ? 'Testando...' : 'Testa connessione'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Risultato test
+              if (_risultatoTest != null) ...[
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: _risultatoTest!.startsWith('Connessione')
+                        ? Colors.green.withValues(alpha: 0.1)
+                        : Colors.red.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        _risultatoTest!.startsWith('Connessione')
+                            ? Icons.check_circle
+                            : Icons.error_outline,
+                        size: 18,
+                        color: _risultatoTest!.startsWith('Connessione')
+                            ? Colors.green
+                            : Colors.red,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          _risultatoTest!,
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(
+                                color: _risultatoTest!
+                                        .startsWith('Connessione')
+                                    ? Colors.green[700]
+                                    : Colors.red[700],
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 28),
 
               // === INFO ===

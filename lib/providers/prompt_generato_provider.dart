@@ -321,7 +321,7 @@ class PromptGeneratoProvider extends ChangeNotifier {
             titolo: 'Contesto',
             icona: 'info',
             contenuto:
-                'L\'utente ha bisogno di aiuto per: $tipoAiuto. '
+                'Ho bisogno di aiuto per: $tipoAiuto. '
                 '${risposte['contesto'] ?? 'Il progetto è in fase di sviluppo.'}',
             colore: 0xFF0891B2,
           ),
@@ -329,11 +329,11 @@ class PromptGeneratoProvider extends ChangeNotifier {
             titolo: 'Istruzioni',
             icona: 'list',
             contenuto:
-                '1. Analizza attentamente la richiesta\n'
-                '2. Scrivi il codice $linguaggio richiesto\n'
-                '3. Aggiungi commenti esplicativi nel codice\n'
-                '4. Gestisci i casi limite e gli errori\n'
-                '5. Segui le convenzioni di naming del linguaggio',
+                'Scrivi il codice $linguaggio seguendo questi passi:\n'
+                '1. Implementa la soluzione richiesta\n'
+                '2. Aggiungi commenti esplicativi nel codice\n'
+                '3. Gestisci i casi limite e gli errori\n'
+                '4. Segui le convenzioni di naming del linguaggio',
             colore: 0xFF7C3AED,
           ),
           SezionePrompt(
@@ -366,31 +366,33 @@ class PromptGeneratoProvider extends ChangeNotifier {
 
       case 'Immagini':
         final stile = risposte['stile'] ?? 'Fotorealistico';
+        final soggetto = risposte['soggetto'] ?? 'il soggetto richiesto';
+        final atmosfera = risposte['atmosfera'] ?? 'Luminosa';
         return [
           SezionePrompt(
             titolo: 'Ruolo',
             icona: 'person',
             contenuto:
-                'Sei un art director esperto nella creazione di prompt per immagini AI. '
-                'Conosci le tecniche di composizione, illuminazione e stile visivo.',
+                'Sei un generatore di immagini AI con competenze avanzate in '
+                'composizione, illuminazione e stile visivo.',
             colore: 0xFF0D9488,
           ),
           SezionePrompt(
             titolo: 'Contesto',
             icona: 'info',
             contenuto:
-                'L\'utente vuole generare un\'immagine in stile $stile. '
-                '${risposte['soggetto'] ?? 'Il soggetto verrà specificato.'}',
+                'Devi generare un\'immagine in stile $stile. $soggetto',
             colore: 0xFF0891B2,
           ),
           SezionePrompt(
             titolo: 'Istruzioni',
             icona: 'list',
             contenuto:
-                '1. Descrivi il soggetto principale con dettagli precisi\n'
-                '2. Specifica lo stile artistico: $stile\n'
-                '3. Indica l\'illuminazione e l\'atmosfera desiderata\n'
-                '4. Aggiungi dettagli sulla composizione e l\'inquadratura',
+                'Genera un\'immagine con queste caratteristiche:\n'
+                '1. Soggetto: $soggetto\n'
+                '2. Stile artistico: $stile\n'
+                '3. Atmosfera: $atmosfera\n'
+                '4. Composizione ben bilanciata con punto focale chiaro',
             colore: 0xFF7C3AED,
           ),
           SezionePrompt(
@@ -398,7 +400,7 @@ class PromptGeneratoProvider extends ChangeNotifier {
             icona: 'format_align_left',
             contenuto:
                 'Formato immagine: 16:9 landscape. '
-                'Risoluzione alta. Atmosfera: ${risposte['atmosfera'] ?? 'Luminosa'}.',
+                'Risoluzione alta. Atmosfera: $atmosfera.',
             colore: 0xFFEA580C,
           ),
           SezionePrompt(
@@ -434,7 +436,7 @@ class PromptGeneratoProvider extends ChangeNotifier {
             titolo: 'Contesto',
             icona: 'info',
             contenuto:
-                'L\'utente vuole creare un $tipo con tono $tono. '
+                'Devo creare un $tipo con tono $tono. '
                 'Il pubblico target è: ${risposte['pubblico'] ?? 'Professionisti'}.',
             colore: 0xFF0891B2,
           ),
@@ -442,7 +444,8 @@ class PromptGeneratoProvider extends ChangeNotifier {
             titolo: 'Istruzioni',
             icona: 'list',
             contenuto:
-                '1. Scrivi un $tipo con tono $tono\n'
+                'Scrivi un $tipo seguendo queste indicazioni:\n'
+                '1. Usa un tono $tono\n'
                 '2. Adatta il linguaggio al pubblico target\n'
                 '3. Includi un hook iniziale che catturi l\'attenzione\n'
                 '4. Concludi con una call-to-action efficace\n'
