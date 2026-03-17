@@ -368,55 +368,19 @@ class PromptGeneratoProvider extends ChangeNotifier {
         final stile = risposte['stile'] ?? 'Fotorealistico';
         final soggetto = risposte['soggetto'] ?? 'il soggetto richiesto';
         final atmosfera = risposte['atmosfera'] ?? 'Luminosa';
+        final colori = risposte['colori'] ?? '';
+        final coloriDesc = colori.isNotEmpty ? ' Colori: $colori.' : '';
         return [
           SezionePrompt(
-            titolo: 'Ruolo',
-            icona: 'person',
+            titolo: 'Descrizione Immagine',
+            icona: 'image',
             contenuto:
-                'Sei un generatore di immagini AI con competenze avanzate in '
-                'composizione, illuminazione e stile visivo.',
-            colore: 0xFF0D9488,
-          ),
-          SezionePrompt(
-            titolo: 'Contesto',
-            icona: 'info',
-            contenuto:
-                'Devi generare un\'immagine in stile $stile. $soggetto',
-            colore: 0xFF0891B2,
-          ),
-          SezionePrompt(
-            titolo: 'Istruzioni',
-            icona: 'list',
-            contenuto:
-                'Genera un\'immagine con queste caratteristiche:\n'
-                '1. Soggetto: $soggetto\n'
-                '2. Stile artistico: $stile\n'
-                '3. Atmosfera: $atmosfera\n'
-                '4. Composizione ben bilanciata con punto focale chiaro',
+                'Genera un\'immagine in stile $stile: $soggetto. '
+                'Formato 16:9 landscape, atmosfera $atmosfera.$coloriDesc '
+                'Composizione ben bilanciata con punto focale chiaro, '
+                'illuminazione naturale e coerente con l\'atmosfera. '
+                'Alta risoluzione, senza elementi testuali nell\'immagine.',
             colore: 0xFF7C3AED,
-          ),
-          SezionePrompt(
-            titolo: 'Formato Output',
-            icona: 'format_align_left',
-            contenuto:
-                'Formato immagine: 16:9 landscape. '
-                'Risoluzione alta. Atmosfera: $atmosfera.',
-            colore: 0xFFEA580C,
-          ),
-          SezionePrompt(
-            titolo: 'Vincoli',
-            icona: 'block',
-            contenuto:
-                'Colori dominanti: ${risposte['colori'] ?? 'Nessuna preferenza'}. '
-                'Evita elementi testuali nell\'immagine. '
-                'Mantieni uno stile coerente e professionale.',
-            colore: 0xFFDC2626,
-          ),
-          const SezionePrompt(
-            titolo: 'Esempi',
-            icona: 'lightbulb',
-            contenuto: '',
-            colore: 0xFFF59E0B,
           ),
         ];
 
@@ -486,6 +450,49 @@ class PromptGeneratoProvider extends ChangeNotifier {
   List<SuggerimentoMiglioramento> _generaSuggerimenti(
     List<SezionePrompt> sezioni,
   ) {
+    // Per immagini (sezione unica), suggerimenti specifici sulla descrizione
+    if (sezioni.length == 1) {
+      return [
+        SuggerimentoMiglioramento(
+          etichetta: 'Più dettagli visivi',
+          icona: 'lightbulb',
+          sezioneIndice: 0,
+          testoPrima: sezioni[0].contenuto,
+          testoDopo:
+              '${sezioni[0].contenuto} '
+              'Dettagli aggiuntivi: texture realistiche, riflessi naturali, '
+              'micro-dettagli sulle superfici.',
+          descrizione:
+              'Aggiunge dettagli visivi specifici per un\'immagine '
+              'più ricca e realistica.',
+        ),
+        SuggerimentoMiglioramento(
+          etichetta: 'Migliora illuminazione',
+          icona: 'lightbulb',
+          sezioneIndice: 0,
+          testoPrima: sezioni[0].contenuto,
+          testoDopo: sezioni[0].contenuto.replaceFirst(
+              'illuminazione naturale',
+              'illuminazione cinematografica con rim light e ombre profonde'),
+          descrizione:
+              'Rende l\'illuminazione più drammatica e professionale.',
+        ),
+        SuggerimentoMiglioramento(
+          etichetta: 'Aggiungi qualità',
+          icona: 'add_circle',
+          sezioneIndice: 0,
+          testoPrima: sezioni[0].contenuto,
+          testoDopo:
+              '${sezioni[0].contenuto} '
+              '8K, ultra detailed, award-winning, professional quality.',
+          descrizione:
+              'Aggiunge tag di qualità per risultati più '
+              'dettagliati e professionali.',
+        ),
+      ];
+    }
+
+    // Per categorie con 6 sezioni (Coding, Scrittura, ecc.)
     return [
       SuggerimentoMiglioramento(
         etichetta: 'Aggiungi esempio',

@@ -74,16 +74,38 @@ Esempi di cosa è CORRETTO (istruzione diretta):
 - "Scrivi un'email professionale al mio capo per chiedere ferie..." ✅
 - "Scrivi una funzione Python che ordina una lista..." ✅
 
-In base al tipo di richiesta:
-- IMMAGINI → Il prompt deve dire "Genera/Crea un'immagine di..." con descrizione visiva dettagliata
-- TESTI/SCRITTURA → Il prompt deve dire "Scrivi..." con le specifiche del testo richiesto
-- CODICE → Il prompt deve dire "Scrivi il codice..." o "Implementa..." con le specifiche tecniche
-- EMAIL → Il prompt deve dire "Scrivi un'email..." con tono, destinatario e contenuto
-- MARKETING → Il prompt deve dire "Scrivi un post/campagna/copy..." con target e obiettivo
-- ANALISI → Il prompt deve dire "Analizza..." con i dati e i criteri di analisi
-- QUALSIASI ALTRA COSA → Il prompt deve essere l'istruzione diretta per ottenere quel risultato
+=== REGOLA SPECIALE PER IMMAGINI ===
+Se la categoria è "Immagini", il prompt DEVE essere SOLO una descrizione visiva diretta.
+NON usare sezioni multiple. NON usare "Sei un...", "Descrivi...", "Specifica...", "Indica...".
+Il prompt deve iniziare con "Genera un'immagine" o "Crea un'immagine" seguito dalla
+descrizione completa della scena in un unico blocco fluido.
 
-Il prompt deve avere queste sezioni:
+Per le immagini, usa UNA SOLA sezione chiamata "Descrizione Immagine" che contiene
+tutto il prompt in formato descrittivo diretto. Esempio:
+"Genera un'immagine in stile Cartoon/Anime: un elfo arciere che spara da sopra un albero
+ad un nano con spada e scudo. Formato 16:9, atmosfera energetica, colori freddi.
+Illuminazione dinamica con raggi tra le foglie."
+
+Includi nella descrizione: soggetto, stile, atmosfera, illuminazione, composizione,
+colori, formato — tutto come parte naturale della descrizione, NON come istruzioni separate.
+
+Per le immagini rispondi con questo JSON:
+{
+  "sezioni": [
+    {
+      "titolo": "Descrizione Immagine",
+      "icona": "image",
+      "contenuto": "Genera un'immagine... [descrizione completa]",
+      "colore": 8141037
+    }
+  ],
+  "punteggioGlobale": 4.2,
+  "punteggiCriteri": { ... },
+  "suggerimenti": [ ... ]
+}
+=== FINE REGOLA IMMAGINI ===
+
+Per TUTTE LE ALTRE CATEGORIE (non immagini), usa queste sezioni:
 
 1. Ruolo — Chi deve essere l'AI (personalità, competenze, esperienza)
 2. Contesto — Situazione e background della richiesta
@@ -91,6 +113,14 @@ Il prompt deve avere queste sezioni:
 4. Formato Output — Come deve essere strutturata la risposta/il risultato
 5. Vincoli — Limiti e regole da rispettare
 6. Esempi — Esempi di output atteso (se utili)
+
+In base al tipo di richiesta (non immagini):
+- TESTI/SCRITTURA → Il prompt deve dire "Scrivi..." con le specifiche del testo richiesto
+- CODICE → Il prompt deve dire "Scrivi il codice..." o "Implementa..." con le specifiche tecniche
+- EMAIL → Il prompt deve dire "Scrivi un'email..." con tono, destinatario e contenuto
+- MARKETING → Il prompt deve dire "Scrivi un post/campagna/copy..." con target e obiettivo
+- ANALISI → Il prompt deve dire "Analizza..." con i dati e i criteri di analisi
+- QUALSIASI ALTRA COSA → Il prompt deve essere l'istruzione diretta per ottenere quel risultato
 
 Genera anche:
 - Punteggio di qualità globale (0.0-5.0)
