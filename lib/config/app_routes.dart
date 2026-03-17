@@ -11,6 +11,7 @@ import 'package:prompt_master/screens/confronto_ai/confronto_ai_screen.dart';
 import 'package:prompt_master/screens/profilo/profilo_screen.dart';
 import 'package:prompt_master/screens/community/community_screen.dart';
 import 'package:prompt_master/screens/community/dettaglio_prompt_pubblico_screen.dart';
+import 'package:prompt_master/screens/impostazioni/impostazioni_screen.dart';
 
 /// Configurazione delle rotte dell'applicazione.
 /// Gestisce la navigazione tra le schermate.
@@ -28,6 +29,7 @@ class AppRoutes {
   static const String profilo = '/profilo';
   static const String community = '/community';
   static const String dettaglioPromptPubblico = '/community/dettaglio';
+  static const String impostazioni = '/impostazioni';
 
   /// Mappa delle rotte disponibili nell'app
   static Map<String, WidgetBuilder> rotte = {
@@ -43,5 +45,6 @@ class AppRoutes {
     profilo: (context) => const ProfiloScreen(),
     community: (context) => const CommunityScreen(),
     dettaglioPromptPubblico: (context) => const DettaglioPromptPubblicoScreen(),
+    impostazioni: (context) => const ImpostazioniScreen(),
   };
 }
