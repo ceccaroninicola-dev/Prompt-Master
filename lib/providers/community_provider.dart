@@ -819,11 +819,7 @@ class CommunityProvider extends ChangeNotifier {
           Commento(id: 'c23', autoreId: 'u1', autoreNome: '@marco_dev', autoreColore: 0xFF1976D2, testo: 'Finalmente user story chiare dal product manager! 😄', data: DateTime(2026, 3, 1)),
         ],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un product owner certificato con esperienza in metodologie agile.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Devo scrivere user story chiare e implementabili per il prossimo sprint del mio team.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: '1. Formato "Come [persona], voglio [azione], così che [beneficio]"\n2. Criteri di accettazione GIVEN-WHEN-THEN\n3. Story points stimati\n4. Dipendenze identificate', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'Card user story con: titolo, descrizione, criteri di accettazione, priority, story points.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Segui criteri INVEST. Ogni story completabile in uno sprint. Linguaggio non tecnico.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Istruzione Analisi', icona: 'analytics', contenuto: 'Scrivi user story chiare e implementabili per il prossimo sprint, usando il formato "Come [persona], voglio [azione], così che [beneficio]". Per ogni story includi criteri di accettazione GIVEN-WHEN-THEN, story points stimati e dipendenze identificate. Presenta ogni story come card con titolo, descrizione, criteri di accettazione, priority e story points. Segui i criteri INVEST, assicura che ogni story sia completabile in uno sprint e usa linguaggio non tecnico.', colore: 0xFF7C3AED),
         ],
       ),
 
@@ -846,11 +842,7 @@ class CommunityProvider extends ChangeNotifier {
           Commento(id: 'c25', autoreId: 'u4', autoreNome: '@giulia_mkt', autoreColore: 0xFFFF9800, testo: 'Il nostro blog ha aumentato il traffico del 40% usando questo approccio.', data: DateTime(2026, 3, 12)),
         ],
         sezioni: [
-          const SezionePrompt(titolo: 'Ruolo', icona: 'person', contenuto: 'Sei un content strategist specializzato in SEO on-page e content marketing.', colore: 0xFF1976D2),
-          const SezionePrompt(titolo: 'Contesto', icona: 'info', contenuto: 'Devo scrivere un articolo blog che si posizioni in prima pagina per una keyword specifica.', colore: 0xFF388E3C),
-          const SezionePrompt(titolo: 'Istruzioni', icona: 'list', contenuto: '1. Ricerca keyword e search intent\n2. Struttura H1-H2-H3 ottimizzata\n3. Introduzione con hook\n4. Corpo con sottosezioni e FAQ\n5. Meta title e meta description\n6. Internal linking suggeriti', colore: 0xFFF57C00),
-          const SezionePrompt(titolo: 'Formato Output', icona: 'format_align_left', contenuto: 'Articolo in markdown con heading gerarchici. Meta tag separati. Keyword density target: 1-2%.', colore: 0xFF7B1FA2),
-          const SezionePrompt(titolo: 'Vincoli', icona: 'block', contenuto: 'Min 1500 parole. Leggibilità Flesch-Kincaid < 60. No keyword stuffing. Contenuto originale e utile.', colore: 0xFFC62828),
+          const SezionePrompt(titolo: 'Istruzione Testo', icona: 'edit_note', contenuto: 'Scrivi un articolo blog SEO-optimized per posizionarsi in prima pagina per una keyword specifica. Struttura il contenuto con heading gerarchici H1-H2-H3, un\'introduzione con hook, corpo con sottosezioni e FAQ, meta title, meta description e suggerimenti di internal linking. Formatta in markdown con meta tag separati e keyword density target dell\'1-2%. L\'articolo deve avere minimo 1500 parole, leggibilità Flesch-Kincaid inferiore a 60, senza keyword stuffing, con contenuto originale e utile.', colore: 0xFF7C3AED),
         ],
       ),
     ];
