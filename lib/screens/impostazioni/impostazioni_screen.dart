@@ -17,7 +17,9 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
   final _corsProxyController = TextEditingController();
   bool _mostraApiKey = false;
   bool _staTesting = false;
+  bool _staTestandoProxy = false;
   String? _risultatoTest;
+  String? _risultatoTestProxy;
 
   @override
   void initState() {
@@ -26,6 +28,10 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
     if (ApiService().apiKeyConfigurata) {
       _apiKeyController.text = '••••••••••••••••';
     }
+    // Pre-compila il proxy se già configurato
+    if (ApiService().corsProxy.isNotEmpty) {
+      _corsProxyController.text = ApiService().corsProxy;
+    }
   }
 
   @override
@@ -33,6 +39,20 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
     _apiKeyController.dispose();
     _corsProxyController.dispose();
     super.dispose();
+  }
+
+  /// Testa la connessione al proxy CORS
+  Future<void> _testaProxy() async {
+    setState(() {
+      _staTestandoProxy = true;
+      _risultatoTestProxy = null;
+    });
+
+    final risultato = await ApiService().testaProxy();
+    setState(() {
+      _risultatoTestProxy = risultato;
+      _staTestandoProxy = false;
+    });
   }
 
   /// Testa la connessione API con una chiamata reale
@@ -237,10 +257,14 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.blue.withValues(alpha: 0.08),
+                    color: ApiService().proxyConfigurato
+                        ? Colors.green.withValues(alpha: 0.08)
+                        : Colors.orange.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(
-                      color: Colors.blue.withValues(alpha: 0.2),
+                      color: ApiService().proxyConfigurato
+                          ? Colors.green.withValues(alpha: 0.2)
+                          : Colors.orange.withValues(alpha: 0.2),
                     ),
                   ),
                   child: Column(
@@ -248,23 +272,34 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.language,
-                              size: 18, color: Colors.blue[700]),
+                          Icon(
+                            ApiService().proxyConfigurato
+                                ? Icons.cloud_done
+                                : Icons.cloud_off,
+                            size: 18,
+                            color: ApiService().proxyConfigurato
+                                ? Colors.green[700]
+                                : Colors.orange[700],
+                          ),
                           const SizedBox(width: 8),
                           Text(
-                            'Proxy CORS (solo Web)',
+                            ApiService().proxyConfigurato
+                                ? 'Proxy CORS attivo'
+                                : 'Proxy CORS richiesto',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
-                              color: Colors.blue[700],
+                              color: ApiService().proxyConfigurato
+                                  ? Colors.green[700]
+                                  : Colors.orange[700],
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Il browser blocca le chiamate dirette a OpenAI (CORS). '
-                        'Per usare l\'AI su web, inserisci l\'URL di un proxy CORS.\n'
-                        'Es: https://corsproxy.io/?',
+                        'Su web, il browser blocca le chiamate dirette a OpenAI (CORS). '
+                        'Inserisci l\'URL del tuo Cloudflare Worker proxy.\n'
+                        'Es: https://prompt-master-proxy.tuoaccount.workers.dev',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                               height: 1.4,
@@ -274,44 +309,100 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
                       TextField(
                         controller: _corsProxyController,
                         decoration: InputDecoration(
-                          hintText: 'https://corsproxy.io/?',
+                          hintText:
+                              'https://prompt-master-proxy.tuoaccount.workers.dev',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
                           contentPadding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 12),
                         ),
+                        onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: 8),
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton.icon(
-                          onPressed: _corsProxyController.text.isNotEmpty
-                              ? () {
-                                  ApiService().impostaCorsProxy(
-                                      _corsProxyController.text.trim());
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: const Text(
-                                          'Proxy CORS salvato!'),
-                                      behavior: SnackBarBehavior.floating,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                  );
-                                }
-                              : null,
-                          icon: const Icon(Icons.save_outlined, size: 18),
-                          label: const Text('Salva Proxy'),
-                          style: OutlinedButton.styleFrom(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _corsProxyController.text.isNotEmpty
+                                  ? () {
+                                      ApiService().impostaCorsProxy(
+                                          _corsProxyController.text.trim());
+                                      setState(() {});
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: const Text(
+                                              'Proxy CORS salvato!'),
+                                          behavior: SnackBarBehavior.floating,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  : null,
+                              icon: const Icon(Icons.save_outlined, size: 18),
+                              label: const Text('Salva'),
+                              style: OutlinedButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: ApiService().proxyConfigurato &&
+                                      !_staTestandoProxy
+                                  ? _testaProxy
+                                  : null,
+                              icon: _staTestandoProxy
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                          strokeWidth: 2),
+                                    )
+                                  : const Icon(Icons.wifi_find, size: 18),
+                              label: Text(_staTestandoProxy
+                                  ? 'Testando...'
+                                  : 'Testa proxy'),
+                              style: OutlinedButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+                      // Risultato test proxy
+                      if (_risultatoTestProxy != null) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: _risultatoTestProxy!.contains('funzionante')
+                                ? Colors.green.withValues(alpha: 0.1)
+                                : Colors.red.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _risultatoTestProxy!,
+                            style:
+                                Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: _risultatoTestProxy!
+                                              .contains('funzionante')
+                                          ? Colors.green[700]
+                                          : Colors.red[700],
+                                    ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),

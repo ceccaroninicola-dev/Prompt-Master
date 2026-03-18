@@ -6,20 +6,21 @@ import 'package:http/http.dart' as http;
 /// La API key viene letta dalla configurazione — MAI hardcoded nel codice.
 ///
 /// Su Flutter Web, le chiamate dirette a api.openai.com sono bloccate
-/// dal browser (CORS). Il servizio usa un proxy CORS configurabile.
+/// dal browser (CORS). Il servizio usa automaticamente un proxy CORS
+/// configurabile (Cloudflare Worker) per aggirare il problema.
 class ApiService {
   /// Singleton del servizio
   static final ApiService _istanza = ApiService._interno();
   factory ApiService() => _istanza;
   ApiService._interno();
 
-  /// Endpoint API OpenAI
-  static const _endpointOpenAI = 'https://api.openai.com/v1/chat/completions';
+  /// Endpoint API OpenAI (usato su mobile/desktop)
+  static const _endpointOpenAI = 'https://api.openai.com';
 
-  /// Proxy CORS per Flutter Web — configurabile dall'utente.
-  /// Se vuoto, le chiamate vanno direttamente a OpenAI (funziona su mobile, non su web).
-  /// Formato: "https://mio-proxy.com/" — il proxy prefissa l'URL OpenAI.
-  String? _corsProxy;
+  /// Proxy CORS per Flutter Web — URL del Cloudflare Worker.
+  /// Su web è OBBLIGATORIO per evitare il blocco CORS del browser.
+  /// Formato: "https://prompt-master-proxy.TUOACCOUNT.workers.dev"
+  String _corsProxy = '';
 
   /// Modello da utilizzare
   static const _modello = 'gpt-4o-mini';
@@ -35,19 +36,27 @@ class ApiService {
 
   /// Imposta il proxy CORS (solo per Flutter Web)
   void impostaCorsProxy(String proxyUrl) {
-    _corsProxy = proxyUrl;
-    debugPrint('[ApiService] CORS proxy impostato: $proxyUrl');
+    // Rimuovi trailing slash per evitare doppie barre
+    _corsProxy = proxyUrl.endsWith('/')
+        ? proxyUrl.substring(0, proxyUrl.length - 1)
+        : proxyUrl;
+    debugPrint('[ApiService] CORS proxy impostato: $_corsProxy');
   }
+
+  /// Restituisce il proxy CORS attuale
+  String get corsProxy => _corsProxy;
 
   /// Verifica se la API key è configurata
   bool get apiKeyConfigurata => _apiKey != null && _apiKey!.isNotEmpty;
 
-  /// Restituisce l'URL effettivo per le chiamate API.
-  /// Su web usa il proxy CORS se configurato.
-  String get _urlEffettivo {
-    if (kIsWeb && _corsProxy != null && _corsProxy!.isNotEmpty) {
-      // Il proxy CORS prefissa l'URL di destinazione
-      return '$_corsProxy$_endpointOpenAI';
+  /// Verifica se il proxy CORS è configurato (necessario su web)
+  bool get proxyConfigurato => _corsProxy.isNotEmpty;
+
+  /// Restituisce l'URL base per le chiamate API.
+  /// Su web usa il proxy CORS, su mobile/desktop va diretto a OpenAI.
+  String get _urlBase {
+    if (kIsWeb && _corsProxy.isNotEmpty) {
+      return _corsProxy;
     }
     return _endpointOpenAI;
   }
@@ -66,7 +75,9 @@ class ApiService {
           'Imposta la variabile d\'ambiente OPENAI_API_KEY.');
     }
 
-    final url = _urlEffettivo;
+    _verificaProxy();
+
+    final url = '$_urlBase/v1/chat/completions';
     debugPrint('[ApiService] chiamaAI → $url');
 
     try {
@@ -108,12 +119,16 @@ class ApiService {
       rethrow;
     } catch (e) {
       debugPrint('[ApiService] Eccezione: $e');
-      // Su Flutter Web, l'errore CORS appare come XMLHttpRequest error
+      if (kIsWeb && !proxyConfigurato) {
+        throw ApiException(
+            'Errore CORS: configura il proxy nelle impostazioni. '
+            'Su Flutter Web è necessario un proxy CORS (Cloudflare Worker) '
+            'per comunicare con OpenAI.');
+      }
       if (kIsWeb) {
         throw ApiException(
-            'Errore CORS: il browser blocca le chiamate dirette a OpenAI. '
-            'Configura un proxy CORS nelle impostazioni, '
-            'oppure usa l\'app su mobile/desktop.');
+            'Errore di connessione al proxy CORS. '
+            'Verifica che l\'URL del proxy sia corretto: $_corsProxy');
       }
       throw ApiException(
           'Errore di connessione. Verifica la tua connessione internet.');
@@ -133,7 +148,9 @@ class ApiService {
           'Imposta la variabile d\'ambiente OPENAI_API_KEY.');
     }
 
-    final url = _urlEffettivo;
+    _verificaProxy();
+
+    final url = '$_urlBase/v1/chat/completions';
     debugPrint('[ApiService] chiamaAIJson → $url');
 
     try {
@@ -178,14 +195,68 @@ class ApiService {
       rethrow;
     } catch (e) {
       debugPrint('[ApiService] Eccezione JSON: $e');
+      if (kIsWeb && !proxyConfigurato) {
+        throw ApiException(
+            'Errore CORS: configura il proxy nelle impostazioni. '
+            'Su Flutter Web è necessario un proxy CORS (Cloudflare Worker) '
+            'per comunicare con OpenAI.');
+      }
       if (kIsWeb) {
         throw ApiException(
-            'Errore CORS: il browser blocca le chiamate dirette a OpenAI. '
-            'Configura un proxy CORS nelle impostazioni, '
-            'oppure usa l\'app su mobile/desktop.');
+            'Errore di connessione al proxy CORS. '
+            'Verifica che l\'URL del proxy sia corretto: $_corsProxy');
       }
       throw ApiException(
           'Errore di connessione. Verifica la tua connessione internet.');
+    }
+  }
+
+  /// Testa la connessione al proxy CORS (solo su web).
+  /// Restituisce un messaggio di successo o errore.
+  Future<String> testaProxy() async {
+    if (!kIsWeb) return 'Non necessario: non sei su web.';
+    if (!proxyConfigurato) return 'Proxy non configurato.';
+
+    try {
+      // Invia una richiesta OPTIONS al proxy per verificare i CORS
+      final url = '$_corsProxy/v1/chat/completions';
+      final risposta = await http
+          .post(
+            Uri.parse(url),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer test-connection',
+            },
+            body: jsonEncode({
+              'model': _modello,
+              'messages': [
+                {'role': 'user', 'content': 'test'},
+              ],
+              'max_tokens': 1,
+            }),
+          )
+          .timeout(const Duration(seconds: 10));
+
+      // 401 = il proxy funziona, ma la API key "test-connection" è invalida
+      // Questo è il risultato atteso: il proxy ha inoltrato correttamente
+      if (risposta.statusCode == 401) {
+        return 'Proxy CORS funzionante! La connessione è OK.';
+      }
+      if (risposta.statusCode == 200) {
+        return 'Proxy CORS funzionante! Connessione perfetta.';
+      }
+      return 'Proxy raggiungibile ma ha risposto con errore ${risposta.statusCode}.';
+    } catch (e) {
+      return 'Impossibile raggiungere il proxy: $e';
+    }
+  }
+
+  /// Verifica che il proxy sia configurato su web, altrimenti lancia eccezione.
+  void _verificaProxy() {
+    if (kIsWeb && !proxyConfigurato) {
+      throw ApiException(
+          'Su Flutter Web è necessario configurare il proxy CORS. '
+          'Vai nelle impostazioni e inserisci l\'URL del tuo Cloudflare Worker.');
     }
   }
 }

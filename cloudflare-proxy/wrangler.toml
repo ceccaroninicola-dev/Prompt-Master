@@ -1,0 +1,10 @@
+# Configurazione Cloudflare Worker per il proxy CORS di Prompt Master
+# Deploy: npx wrangler deploy
+# Docs: https://developers.cloudflare.com/workers/
+
+name = "prompt-master-proxy"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Piano gratuito: 100.000 richieste/giorno
+# Nessun costo aggiuntivo per il proxy
