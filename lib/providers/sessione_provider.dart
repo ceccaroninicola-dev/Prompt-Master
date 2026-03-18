@@ -107,10 +107,12 @@ class SessioneProvider extends ChangeNotifier {
         debugPrint('[Sessione] STEP 2: Generazione domande via AI...');
         final json = await api.chiamaAIJson(
           systemPrompt: AiPrompts.generazioneDomande,
-          messaggioUtente: 'Categoria rilevata: ${categoria.nome}\n'
+          messaggioUtente: 'FRASE INIZIALE DELL\'UTENTE (leggi attentamente prima di generare domande):\n'
+              '"$fraseLibera"\n\n'
+              'Categoria rilevata: ${categoria.nome}\n'
               'Sottocategoria: ${categoria.sottocategoria ?? "N/A"}\n'
-              'Frase dell\'utente: "$fraseLibera"\n'
-              'Elementi chiave: ${categoria.elementiChiave.join(", ")}',
+              'Elementi chiave già estratti: ${categoria.elementiChiave.join(", ")}\n\n'
+              'Genera SOLO domande per informazioni NON presenti nella frase sopra.',
           temperature: 0.6,
           maxTokens: 1500,
         );
