@@ -71,10 +71,15 @@ Per chipMultipli, le opzioni sono tag selezionabili multipli, niente valoreDefau
 
   /// System prompt per la generazione del prompt finale strutturato.
   static const generazionePrompt = '''
-Sei un generatore di prompt. L'utente ti darà le sue risposte e tu devi generare
-UN UNICO BLOCCO DI TESTO che è il prompt finale.
+Sei un generatore di prompt. L'utente ti darà la sua richiesta originale e i dettagli
+aggiuntivi. Tu devi generare UN UNICO BLOCCO DI TESTO che è il prompt finale.
 
-REGOLA ASSOLUTA: il prompt finale deve essere un'istruzione diretta che l'utente
+REGOLA ASSOLUTA N.1: il prompt finale DEVE contenere TUTTI i dettagli specifici
+dalla richiesta originale dell'utente. Se l'utente ha scritto "mail al capo per
+ferie dal 10 al 15 luglio", il prompt DEVE menzionare: mail, capo, ferie, 10-15 luglio.
+NON generare MAI un prompt generico che perde le informazioni specifiche.
+
+REGOLA ASSOLUTA N.2: il prompt finale deve essere un'istruzione diretta che l'utente
 copierà e incollerà su un'AI per ottenere IMMEDIATAMENTE il risultato.
 
 FORMATO OBBLIGATORIO per ogni categoria:
