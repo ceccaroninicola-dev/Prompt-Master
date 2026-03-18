@@ -104,39 +104,11 @@ class LibreriaProvider extends ChangeNotifier {
       tag: ['email', 'lavoro', 'formale', 'business'],
       sezioni: [
         SezionePrompt(
-          titolo: 'Ruolo',
-          icona: 'person',
+          titolo: 'Istruzione Email',
+          icona: 'email',
           contenuto:
-              'Sei un esperto di comunicazione aziendale con anni di esperienza nella redazione di email professionali efficaci.',
-          colore: 0xFF2196F3,
-        ),
-        SezionePrompt(
-          titolo: 'Contesto',
-          icona: 'info',
-          contenuto:
-              'L\'utente deve scrivere un\'email professionale per un contesto lavorativo. L\'email deve essere chiara, concisa e appropriata al tono aziendale.',
-          colore: 0xFF4CAF50,
-        ),
-        SezionePrompt(
-          titolo: 'Istruzioni',
-          icona: 'list',
-          contenuto:
-              'Scrivi un\'email professionale seguendo questa struttura:\n1. Oggetto chiaro e specifico\n2. Saluto appropriato\n3. Introduzione diretta allo scopo\n4. Corpo del messaggio con i dettagli\n5. Call-to-action chiara\n6. Chiusura professionale con firma',
-          colore: 0xFFFF9800,
-        ),
-        SezionePrompt(
-          titolo: 'Formato Output',
-          icona: 'format_align_left',
-          contenuto:
-              'Restituisci l\'email completa con oggetto separato. Usa un tono professionale ma accessibile. Lunghezza: 150-250 parole.',
-          colore: 0xFF9C27B0,
-        ),
-        SezionePrompt(
-          titolo: 'Vincoli',
-          icona: 'block',
-          contenuto:
-              'Evita gergo troppo tecnico. Non usare emoji. Mantieni frasi brevi e paragrafi di 2-3 frasi massimo.',
-          colore: 0xFFF44336,
+              'Scrivi un\'email professionale per un contesto lavorativo, con oggetto chiaro e specifico, saluto appropriato, introduzione diretta allo scopo, corpo del messaggio con i dettagli necessari, call-to-action chiara e chiusura professionale con firma. Usa un tono professionale ma accessibile e restituisci l\'email completa con oggetto separato, per una lunghezza di 150-250 parole. Mantieni frasi brevi e paragrafi di 2-3 frasi massimo, evitando gergo troppo tecnico e senza usare emoji.',
+          colore: 0xFF7C3AED,
         ),
       ],
     ),
@@ -153,39 +125,11 @@ class LibreriaProvider extends ChangeNotifier {
       tag: ['linkedin', 'social', 'networking', 'virale'],
       sezioni: [
         SezionePrompt(
-          titolo: 'Ruolo',
-          icona: 'person',
+          titolo: 'Istruzione Social',
+          icona: 'share',
           contenuto:
-              'Sei un social media strategist specializzato in LinkedIn con un track record di post virali nel settore professionale.',
-          colore: 0xFF2196F3,
-        ),
-        SezionePrompt(
-          titolo: 'Contesto',
-          icona: 'info',
-          contenuto:
-              'L\'utente vuole pubblicare un post su LinkedIn che generi engagement (like, commenti, condivisioni) e rafforzi il proprio personal brand.',
-          colore: 0xFF4CAF50,
-        ),
-        SezionePrompt(
-          titolo: 'Istruzioni',
-          icona: 'list',
-          contenuto:
-              'Crea un post LinkedIn seguendo la struttura:\n1. Hook potente nella prima riga (cattura l\'attenzione)\n2. Storia personale o insight professionale\n3. 3-5 punti chiave con emoji come bullet point\n4. Lezione o takeaway per il lettore\n5. Call-to-action finale (domanda al pubblico)\n6. 3-5 hashtag rilevanti',
-          colore: 0xFFFF9800,
-        ),
-        SezionePrompt(
-          titolo: 'Formato Output',
-          icona: 'format_align_left',
-          contenuto:
-              'Post di 150-200 parole. Usa paragrafi brevi (1-2 frasi). Lascia spazi tra i paragrafi per leggibilità mobile. Tono: professionale ma autentico.',
-          colore: 0xFF9C27B0,
-        ),
-        SezionePrompt(
-          titolo: 'Vincoli',
-          icona: 'block',
-          contenuto:
-              'No click-bait eccessivo. Non esagerare con le emoji. Evita contenuti controversi o polarizzanti.',
-          colore: 0xFFF44336,
+              'Crea un post LinkedIn di 150-200 parole che generi engagement e rafforzi il personal brand. Apri con un hook potente nella prima riga per catturare l\'attenzione, poi sviluppa una storia personale o un insight professionale. Includi 3-5 punti chiave con emoji come bullet point, una lezione o takeaway per il lettore, una call-to-action finale sotto forma di domanda al pubblico e 3-5 hashtag rilevanti. Usa paragrafi brevi di 1-2 frasi con spazi tra di essi per la leggibilità mobile, mantenendo un tono professionale ma autentico. Evita click-bait eccessivo, contenuti controversi e un uso esagerato delle emoji.',
+          colore: 0xFF7C3AED,
         ),
       ],
     ),
@@ -202,39 +146,11 @@ class LibreriaProvider extends ChangeNotifier {
       tag: ['python', 'codice', 'programmazione', 'funzione'],
       sezioni: [
         SezionePrompt(
-          titolo: 'Ruolo',
-          icona: 'person',
+          titolo: 'Istruzione Codice',
+          icona: 'code',
           contenuto:
-              'Sei un senior Python developer con esperienza in clean code, design patterns e best practices PEP 8.',
-          colore: 0xFF2196F3,
-        ),
-        SezionePrompt(
-          titolo: 'Contesto',
-          icona: 'info',
-          contenuto:
-              'L\'utente ha bisogno di una funzione Python ben strutturata, documentata e testata. Il codice deve essere production-ready.',
-          colore: 0xFF4CAF50,
-        ),
-        SezionePrompt(
-          titolo: 'Istruzioni',
-          icona: 'list',
-          contenuto:
-              'Scrivi una funzione Python che:\n1. Abbia un nome descrittivo in snake_case\n2. Includa type hints per parametri e return type\n3. Abbia una docstring completa (Google style)\n4. Gestisca i casi limite e gli errori\n5. Includa 2-3 test unitari con pytest\n6. Segua le convenzioni PEP 8',
-          colore: 0xFFFF9800,
-        ),
-        SezionePrompt(
-          titolo: 'Formato Output',
-          icona: 'format_align_left',
-          contenuto:
-              'Restituisci il codice in blocchi separati: prima la funzione, poi i test. Aggiungi commenti inline dove la logica non è ovvia.',
-          colore: 0xFF9C27B0,
-        ),
-        SezionePrompt(
-          titolo: 'Vincoli',
-          icona: 'block',
-          contenuto:
-              'Python 3.10+. No dipendenze esterne se non richieste. Preferisci list comprehension a loop dove possibile. Nessun import inutile.',
-          colore: 0xFFF44336,
+              'Scrivi una funzione Python 3.10+ production-ready con nome descrittivo in snake_case, type hints per parametri e return type, e una docstring completa in Google style. Gestisci i casi limite e gli errori, e includi 2-3 test unitari con pytest. Restituisci il codice in blocchi separati: prima la funzione, poi i test, aggiungendo commenti inline dove la logica non è ovvia. Segui le convenzioni PEP 8, preferisci le list comprehension ai loop dove possibile, ed evita dipendenze esterne e import inutili.',
+          colore: 0xFF7C3AED,
         ),
       ],
     ),
@@ -251,39 +167,11 @@ class LibreriaProvider extends ChangeNotifier {
       tag: ['immagine', 'midjourney', 'dall-e', 'fotorealismo'],
       sezioni: [
         SezionePrompt(
-          titolo: 'Ruolo',
-          icona: 'person',
+          titolo: 'Descrizione Immagine',
+          icona: 'image',
           contenuto:
-              'Sei un prompt engineer specializzato in generazione di immagini AI con Midjourney, DALL-E e Stable Diffusion.',
-          colore: 0xFF2196F3,
-        ),
-        SezionePrompt(
-          titolo: 'Contesto',
-          icona: 'info',
-          contenuto:
-              'L\'utente vuole generare un\'immagine fotorealistica di alta qualità tramite un modello AI di generazione immagini.',
-          colore: 0xFF4CAF50,
-        ),
-        SezionePrompt(
-          titolo: 'Istruzioni',
-          icona: 'list',
-          contenuto:
-              'Crea un prompt per immagine AI con questi elementi:\n1. Soggetto principale con dettagli specifici\n2. Ambientazione e sfondo\n3. Illuminazione (golden hour, studio, naturale)\n4. Stile fotografico (ritratto, paesaggio, macro)\n5. Parametri tecnici (fotocamera, lente, apertura)\n6. Mood e atmosfera',
-          colore: 0xFFFF9800,
-        ),
-        SezionePrompt(
-          titolo: 'Formato Output',
-          icona: 'format_align_left',
-          contenuto:
-              'Prompt in inglese, una riga continua. Separa i concetti con virgole. Includi parametri stilistici alla fine (--ar 16:9, --v 6, ecc.).',
-          colore: 0xFF9C27B0,
-        ),
-        SezionePrompt(
-          titolo: 'Vincoli',
-          icona: 'block',
-          contenuto:
-              'No contenuti inappropriati. Massimo 200 parole. Evita termini vaghi come "bello" o "carino" — sii specifico.',
-          colore: 0xFFF44336,
+              'Genera un\'immagine fotorealistica di alta qualità descrivendo il soggetto principale con dettagli specifici, l\'ambientazione e lo sfondo, il tipo di illuminazione (golden hour, studio, naturale), lo stile fotografico (ritratto, paesaggio, macro), i parametri tecnici (fotocamera, lente, apertura) e il mood o atmosfera desiderati. Scrivi il prompt in inglese su una riga continua, separando i concetti con virgole e includendo i parametri stilistici alla fine (--ar 16:9, --v 6, ecc.). Mantieni il testo entro 200 parole, evitando termini vaghi come "bello" o "carino" e contenuti inappropriati.',
+          colore: 0xFF7C3AED,
         ),
       ],
     ),
@@ -300,39 +188,11 @@ class LibreriaProvider extends ChangeNotifier {
       tag: ['analisi', 'dati', 'insight', 'business intelligence'],
       sezioni: [
         SezionePrompt(
-          titolo: 'Ruolo',
-          icona: 'person',
+          titolo: 'Istruzione Analisi',
+          icona: 'analytics',
           contenuto:
-              'Sei un data analyst senior con esperienza in business intelligence, visualizzazione dati e analisi predittiva.',
-          colore: 0xFF2196F3,
-        ),
-        SezionePrompt(
-          titolo: 'Contesto',
-          icona: 'info',
-          contenuto:
-              'L\'utente ha un dataset e ha bisogno di un\'analisi approfondita con insight pratici per prendere decisioni di business.',
-          colore: 0xFF4CAF50,
-        ),
-        SezionePrompt(
-          titolo: 'Istruzioni',
-          icona: 'list',
-          contenuto:
-              'Analizza i dati forniti seguendo questo approccio:\n1. Panoramica generale del dataset\n2. Statistiche descrittive principali\n3. Identificazione di trend e pattern\n4. Anomalie o outlier rilevanti\n5. 3-5 insight azionabili\n6. Raccomandazioni basate sui dati',
-          colore: 0xFFFF9800,
-        ),
-        SezionePrompt(
-          titolo: 'Formato Output',
-          icona: 'format_align_left',
-          contenuto:
-              'Report strutturato con sezioni numerate. Usa tabelle per i numeri chiave. Includi suggerimenti per grafici da creare.',
-          colore: 0xFF9C27B0,
-        ),
-        SezionePrompt(
-          titolo: 'Vincoli',
-          icona: 'block',
-          contenuto:
-              'Basa le conclusioni solo sui dati forniti. Indica il livello di confidenza delle previsioni. Non inventare numeri.',
-          colore: 0xFFF44336,
+              'Analizza il dataset fornito producendo un report strutturato con sezioni numerate che includa: una panoramica generale del dataset, le statistiche descrittive principali, l\'identificazione di trend e pattern, le anomalie o outlier rilevanti, 3-5 insight azionabili e raccomandazioni basate sui dati. Usa tabelle per i numeri chiave e includi suggerimenti per grafici da creare. Basa le conclusioni esclusivamente sui dati forniti, indica il livello di confidenza delle previsioni e non inventare numeri.',
+          colore: 0xFF7C3AED,
         ),
       ],
     ),
@@ -349,39 +209,11 @@ class LibreriaProvider extends ChangeNotifier {
       tag: ['marketing', 'strategia', 'piano', 'kpi'],
       sezioni: [
         SezionePrompt(
-          titolo: 'Ruolo',
-          icona: 'person',
+          titolo: 'Istruzione Marketing',
+          icona: 'campaign',
           contenuto:
-              'Sei un marketing strategist con 10+ anni di esperienza in digital marketing, growth hacking e brand positioning.',
-          colore: 0xFF2196F3,
-        ),
-        SezionePrompt(
-          titolo: 'Contesto',
-          icona: 'info',
-          contenuto:
-              'L\'utente sta lanciando un prodotto/servizio e ha bisogno di un piano marketing strutturato con obiettivi misurabili.',
-          colore: 0xFF4CAF50,
-        ),
-        SezionePrompt(
-          titolo: 'Istruzioni',
-          icona: 'list',
-          contenuto:
-              'Crea un piano marketing che includa:\n1. Analisi del target (persona, bisogni, pain points)\n2. Posizionamento e value proposition\n3. Canali di distribuzione (organico e paid)\n4. Calendario editoriale (prime 4 settimane)\n5. Budget stimato per canale\n6. KPI e metriche di successo',
-          colore: 0xFFFF9800,
-        ),
-        SezionePrompt(
-          titolo: 'Formato Output',
-          icona: 'format_align_left',
-          contenuto:
-              'Documento strutturato con sezioni chiare. Includi tabelle per budget e KPI. Usa bullet point per le azioni concrete.',
-          colore: 0xFF9C27B0,
-        ),
-        SezionePrompt(
-          titolo: 'Vincoli',
-          icona: 'block',
-          contenuto:
-              'Budget realistico per una startup/PMI. Focus su canali digitali. Prioritizza azioni a basso costo e alto impatto.',
-          colore: 0xFFF44336,
+              'Crea un piano marketing strutturato per il lancio di un prodotto o servizio, con obiettivi misurabili e un budget realistico per una startup/PMI. Includi: analisi del target (persona, bisogni, pain points), posizionamento e value proposition, canali di distribuzione organici e paid con focus sul digitale, un calendario editoriale per le prime 4 settimane, budget stimato per canale e KPI con metriche di successo. Presenta il tutto in un documento con sezioni chiare, tabelle per budget e KPI, e bullet point per le azioni concrete. Prioritizza azioni a basso costo e alto impatto.',
+          colore: 0xFF7C3AED,
         ),
       ],
     ),
@@ -398,39 +230,11 @@ class LibreriaProvider extends ChangeNotifier {
       tag: ['studio', 'riassunto', 'appunti', 'università'],
       sezioni: [
         SezionePrompt(
-          titolo: 'Ruolo',
-          icona: 'person',
+          titolo: 'Istruzione Studio',
+          icona: 'school',
           contenuto:
-              'Sei un tutor universitario esperto in tecniche di apprendimento efficace, mappe mentali e metodo Cornell.',
-          colore: 0xFF2196F3,
-        ),
-        SezionePrompt(
-          titolo: 'Contesto',
-          icona: 'info',
-          contenuto:
-              'Lo studente deve preparare un esame e ha bisogno di un riassunto efficace di un testo lungo, con concetti chiave evidenziati.',
-          colore: 0xFF4CAF50,
-        ),
-        SezionePrompt(
-          titolo: 'Istruzioni',
-          icona: 'list',
-          contenuto:
-              'Crea un riassunto strutturato del testo seguendo questo schema:\n1. Mappa dei concetti principali (max 5-7)\n2. Definizioni chiave in formato "termine: spiegazione semplice"\n3. Relazioni causa-effetto tra i concetti\n4. Esempi pratici per ogni concetto astratto\n5. 10 domande di autoverifica\n6. Mnemotecnica per i punti più difficili',
-          colore: 0xFFFF9800,
-        ),
-        SezionePrompt(
-          titolo: 'Formato Output',
-          icona: 'format_align_left',
-          contenuto:
-              'Appunti visivamente organizzati con titoli, sottotitoli e bullet point. Usa grassetto per i termini chiave. Max 500 parole.',
-          colore: 0xFF9C27B0,
-        ),
-        SezionePrompt(
-          titolo: 'Vincoli',
-          icona: 'block',
-          contenuto:
-              'Linguaggio semplice e diretto. Non omettere concetti fondamentali per brevità. Segnala se il testo è ambiguo.',
-          colore: 0xFFF44336,
+              'Crea un riassunto strutturato del testo fornito per la preparazione di un esame, utilizzando tecniche di apprendimento efficace come mappe mentali e metodo Cornell. Includi: una mappa dei concetti principali (max 5-7), definizioni chiave in formato "termine: spiegazione semplice", relazioni causa-effetto tra i concetti, esempi pratici per ogni concetto astratto, 10 domande di autoverifica e mnemotecniche per i punti più difficili. Organizza gli appunti con titoli, sottotitoli e bullet point, usando il grassetto per i termini chiave, in massimo 500 parole. Usa un linguaggio semplice e diretto, non omettere concetti fondamentali per brevità e segnala eventuali ambiguità nel testo.',
+          colore: 0xFF7C3AED,
         ),
       ],
     ),
@@ -447,39 +251,11 @@ class LibreriaProvider extends ChangeNotifier {
       tag: ['newsletter', 'email marketing', 'engagement'],
       sezioni: [
         SezionePrompt(
-          titolo: 'Ruolo',
-          icona: 'person',
+          titolo: 'Istruzione Email',
+          icona: 'email',
           contenuto:
-              'Sei un copywriter specializzato in email marketing con un tasso di apertura medio del 35% e un click-through rate del 12%.',
-          colore: 0xFF2196F3,
-        ),
-        SezionePrompt(
-          titolo: 'Contesto',
-          icona: 'info',
-          contenuto:
-              'L\'utente invia una newsletter settimanale/mensile e vuole aumentare l\'engagement dei lettori con contenuti di valore.',
-          colore: 0xFF4CAF50,
-        ),
-        SezionePrompt(
-          titolo: 'Istruzioni',
-          icona: 'list',
-          contenuto:
-              'Scrivi una newsletter seguendo questa struttura:\n1. Oggetto irresistibile (A/B: 2 opzioni)\n2. Preview text accattivante\n3. Saluto personalizzato\n4. Hook iniziale (storia o dato sorprendente)\n5. Contenuto principale con valore concreto\n6. CTA primaria e secondaria',
-          colore: 0xFFFF9800,
-        ),
-        SezionePrompt(
-          titolo: 'Formato Output',
-          icona: 'format_align_left',
-          contenuto:
-              'Email completa pronta per l\'invio. 300-500 parole. Paragrafi brevi (2-3 frasi). Include suggerimenti per immagini/GIF.',
-          colore: 0xFF9C27B0,
-        ),
-        SezionePrompt(
-          titolo: 'Vincoli',
-          icona: 'block',
-          contenuto:
-              'No spam trigger words nell\'oggetto. Rispetta il GDPR. Includi sempre il link di disiscrizione nel footer.',
-          colore: 0xFFF44336,
+              'Scrivi una newsletter settimanale/mensile ottimizzata per massimizzare aperture e click-through, seguendo questa struttura: oggetto irresistibile con 2 opzioni A/B, preview text accattivante, saluto personalizzato, hook iniziale con una storia o dato sorprendente, contenuto principale con valore concreto, e CTA primaria e secondaria. Restituisci l\'email completa pronta per l\'invio in 300-500 parole con paragrafi brevi di 2-3 frasi, includendo suggerimenti per immagini o GIF. Evita spam trigger words nell\'oggetto, rispetta il GDPR e includi sempre il link di disiscrizione nel footer.',
+          colore: 0xFF7C3AED,
         ),
       ],
     ),
@@ -496,39 +272,11 @@ class LibreriaProvider extends ChangeNotifier {
       tag: ['instagram', 'caption', 'hashtag', 'social'],
       sezioni: [
         SezionePrompt(
-          titolo: 'Ruolo',
-          icona: 'person',
+          titolo: 'Istruzione Social',
+          icona: 'share',
           contenuto:
-              'Sei un content creator Instagram con 100K+ follower, esperto in storytelling visivo e crescita organica.',
-          colore: 0xFF2196F3,
-        ),
-        SezionePrompt(
-          titolo: 'Contesto',
-          icona: 'info',
-          contenuto:
-              'L\'utente deve pubblicare un post Instagram e vuole una caption che massimizzi l\'engagement (like, commenti, salvataggi).',
-          colore: 0xFF4CAF50,
-        ),
-        SezionePrompt(
-          titolo: 'Istruzioni',
-          icona: 'list',
-          contenuto:
-              'Crea una caption Instagram con:\n1. Prima riga che cattura (hook o emoji potente)\n2. Microstoria o riflessione personale (3-4 righe)\n3. Valore per il follower (tip, insight, ispirazione)\n4. CTA conversazionale (domanda per i commenti)\n5. Blocco di 20-30 hashtag divisi per tier (5 grandi, 10 medi, 15 piccoli)',
-          colore: 0xFFFF9800,
-        ),
-        SezionePrompt(
-          titolo: 'Formato Output',
-          icona: 'format_align_left',
-          contenuto:
-              'Caption pronta per il copia-incolla. Usa interruzioni di riga per la leggibilità. Hashtag in un commento separato.',
-          colore: 0xFF9C27B0,
-        ),
-        SezionePrompt(
-          titolo: 'Vincoli',
-          icona: 'block',
-          contenuto:
-              'Max 2200 caratteri. Non abusare delle emoji. Hashtag pertinenti alla nicchia, non generici (#love, #instagood).',
-          colore: 0xFFF44336,
+              'Crea una caption Instagram che massimizzi l\'engagement (like, commenti, salvataggi) con: una prima riga hook che cattura l\'attenzione, una microstoria o riflessione personale di 3-4 righe, valore concreto per il follower (tip, insight o ispirazione), una CTA conversazionale sotto forma di domanda per stimolare i commenti, e un blocco di 20-30 hashtag divisi per tier (5 grandi, 10 medi, 15 piccoli) da inserire in un commento separato. Restituisci la caption pronta per il copia-incolla con interruzioni di riga per la leggibilità, in massimo 2200 caratteri. Non abusare delle emoji e usa solo hashtag pertinenti alla nicchia, evitando quelli generici come #love o #instagood.',
+          colore: 0xFF7C3AED,
         ),
       ],
     ),
@@ -545,39 +293,11 @@ class LibreriaProvider extends ChangeNotifier {
       tag: ['debug', 'bug', 'fix', 'errore', 'codice'],
       sezioni: [
         SezionePrompt(
-          titolo: 'Ruolo',
-          icona: 'person',
+          titolo: 'Istruzione Codice',
+          icona: 'code',
           contenuto:
-              'Sei un senior software engineer esperto in debugging, code review e problem solving. Lavori con molteplici linguaggi e framework.',
-          colore: 0xFF2196F3,
-        ),
-        SezionePrompt(
-          titolo: 'Contesto',
-          icona: 'info',
-          contenuto:
-              'L\'utente ha un bug nel codice e non riesce a trovarne la causa. Ha bisogno di un\'analisi sistematica del problema.',
-          colore: 0xFF4CAF50,
-        ),
-        SezionePrompt(
-          titolo: 'Istruzioni',
-          icona: 'list',
-          contenuto:
-              'Analizza il codice seguendo questo processo:\n1. Leggi il codice e identifica il comportamento atteso vs quello reale\n2. Individua la root cause del bug\n3. Spiega PERCHÉ il bug si verifica\n4. Fornisci la correzione con il codice aggiornato\n5. Suggerisci come prevenire bug simili in futuro\n6. Se possibile, aggiungi un test che copra il caso',
-          colore: 0xFFFF9800,
-        ),
-        SezionePrompt(
-          titolo: 'Formato Output',
-          icona: 'format_align_left',
-          contenuto:
-              'Struttura: Diagnosi → Causa → Fix → Prevenzione. Mostra il codice prima e dopo il fix con commenti che evidenziano le modifiche.',
-          colore: 0xFF9C27B0,
-        ),
-        SezionePrompt(
-          titolo: 'Vincoli',
-          icona: 'block',
-          contenuto:
-              'Non riscrivere tutto il codice — modifica solo il minimo necessario. Spiega ogni modifica. Non assumere il linguaggio, chiedi se non specificato.',
-          colore: 0xFFF44336,
+              'Analizza il codice fornito per individuare e risolvere il bug seguendo un processo sistematico: identifica il comportamento atteso rispetto a quello reale, individua la root cause del problema, spiega perché il bug si verifica, fornisci la correzione con il codice aggiornato e suggerisci come prevenire bug simili in futuro, aggiungendo se possibile un test che copra il caso. Presenta il risultato con la struttura Diagnosi, Causa, Fix, Prevenzione, mostrando il codice prima e dopo il fix con commenti che evidenziano le modifiche. Modifica solo il minimo necessario senza riscrivere tutto il codice, spiega ogni modifica e chiedi il linguaggio se non specificato.',
+          colore: 0xFF7C3AED,
         ),
       ],
     ),
