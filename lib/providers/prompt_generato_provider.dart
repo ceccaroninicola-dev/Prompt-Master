@@ -191,21 +191,27 @@ class PromptGeneratoProvider extends ChangeNotifier {
     Map<String, String> risposte,
   ) {
     final buffer = StringBuffer();
-    buffer.writeln('RICHIESTA ORIGINALE DELL\'UTENTE (la base del prompt):');
+    buffer.writeln('Ecco la richiesta originale dell\'utente:');
     buffer.writeln('"$fraseIniziale"');
     buffer.writeln('');
-    buffer.writeln('Categoria: $categoria');
-    buffer.writeln('');
     if (risposte.isNotEmpty) {
-      buffer.writeln('Dettagli aggiuntivi raccolti dalle domande:');
+      buffer.writeln('Ecco i dettagli aggiuntivi raccolti:');
       risposte.forEach((domanda, risposta) {
         buffer.writeln('- $domanda: $risposta');
       });
       buffer.writeln('');
     }
-    buffer.writeln('IMPORTANTE: il prompt finale DEVE includere TUTTI i dettagli '
-        'dalla richiesta originale dell\'utente sopra, più i dettagli aggiuntivi. '
-        'Non perdere nessuna informazione dalla frase iniziale.');
+    buffer.writeln('Ora scrivi il prompt finale che l\'utente copierà direttamente su un\'AI. Il prompt deve:');
+    buffer.writeln('1. INIZIARE con un verbo d\'azione (Scrivi, Genera, Crea, Analizza)');
+    buffer.writeln('2. INCLUDERE TUTTI i dettagli dalla richiesta originale '
+        '(esempio: se l\'utente ha scritto "mail al capo per ferie dal 10 al 15 luglio", '
+        'il prompt DEVE contenere: mail, capo, ferie, 10-15 luglio)');
+    buffer.writeln('3. INCLUDERE i dettagli aggiuntivi dalle domande');
+    buffer.writeln('4. Essere un\'istruzione diretta, NON un meta-prompt');
+    buffer.writeln('5. NON usare mai "Sei un..." o ruoli');
+    buffer.writeln('');
+    buffer.writeln('I DETTAGLI SPECIFICI della richiesta originale sono OBBLIGATORI nel prompt finale. '
+        'MAI generare un prompt generico che perde le informazioni specifiche dell\'utente.');
     return buffer.toString();
   }
 
@@ -287,13 +293,14 @@ class PromptGeneratoProvider extends ChangeNotifier {
     );
   }
 
-  /// Crea un prompt fittizio (fallback senza AI)
+  /// Crea un prompt fittizio (fallback senza AI).
+  /// Integra SEMPRE la frase iniziale nel prompt generato.
   PromptGenerato _creaPromptFittizio(
     String fraseIniziale,
     String categoria,
     Map<String, String> risposte,
   ) {
-    final sezioni = _generaSezioni(categoria, risposte);
+    final sezioni = _generaSezioni(fraseIniziale, categoria, risposte);
 
     return PromptGenerato(
       sezioni: sezioni,
@@ -309,85 +316,69 @@ class PromptGeneratoProvider extends ChangeNotifier {
     );
   }
 
-  /// Genera le sezioni del prompt in base alla categoria (fallback)
+  /// Genera le sezioni del prompt in base alla categoria (fallback).
+  /// Integra SEMPRE la frase iniziale dell'utente nel prompt.
   List<SezionePrompt> _generaSezioni(
+    String fraseIniziale,
     String categoria,
     Map<String, String> risposte,
   ) {
+    // Costruisci la parte dei dettagli aggiuntivi dalle risposte
+    final dettagliAggiuntivi = StringBuffer();
+    risposte.forEach((chiave, valore) {
+      if (valore.isNotEmpty) {
+        dettagliAggiuntivi.write(' $valore.');
+      }
+    });
+    final extra = dettagliAggiuntivi.toString().trim();
+
+    // Scegli titolo e icona in base alla categoria
+    final titolo = _titoloPerCategoria(categoria);
+    final icona = _iconaPerCategoria(categoria);
+
+    // Il prompt finale parte SEMPRE dalla frase iniziale dell'utente
+    // e aggiunge i dettagli raccolti dalle domande
+    String contenuto;
+
     switch (categoria) {
       case 'Coding':
-        final linguaggio = risposte['linguaggio'] ?? 'Python';
-        final tipoAiuto = risposte['tipo_aiuto'] ?? 'scrivere codice nuovo';
-        final contesto = risposte['contesto'] ?? '';
-        final contestoDesc =
-            contesto.isNotEmpty ? ' $contesto.' : '';
-        final requisiti = risposte['requisiti_extra'] ?? 'Performance, Sicurezza';
-        final dettaglio =
-            risposte['livello_dettaglio'] ?? 'Includi commenti esplicativi.';
-        return [
-          SezionePrompt(
-            titolo: 'Istruzione Codice',
-            icona: 'code',
-            contenuto:
-                'Scrivi codice $linguaggio per $tipoAiuto.$contestoDesc '
-                'Il codice deve essere pulito, ben documentato e seguire le '
-                'best practices di $linguaggio. $dettaglio '
-                'Gestisci i casi limite e gli errori. '
-                'Requisiti: $requisiti. '
-                'Usa solo librerie aggiornate e compatibili con le versioni '
-                'recenti di $linguaggio.',
-            colore: 0xFF7C3AED,
-          ),
-        ];
+        final linguaggio = risposte['linguaggio'] ?? '';
+        final linguaggioDesc = linguaggio.isNotEmpty ? ' in $linguaggio' : '';
+        contenuto = '$fraseIniziale.$linguaggioDesc '
+            'Il codice deve essere pulito, ben documentato e seguire le '
+            'best practices. Gestisci i casi limite e gli errori.';
+        if (extra.isNotEmpty) contenuto += ' $extra';
+        break;
 
       case 'Immagini':
-        final stile = risposte['stile'] ?? 'Fotorealistico';
-        final soggetto = risposte['soggetto'] ?? 'il soggetto richiesto';
-        final atmosfera = risposte['atmosfera'] ?? 'Luminosa';
-        final colori = risposte['colori'] ?? '';
-        final coloriDesc = colori.isNotEmpty ? ' Colori: $colori.' : '';
-        return [
-          SezionePrompt(
-            titolo: 'Descrizione Immagine',
-            icona: 'image',
-            contenuto:
-                'Genera un\'immagine in stile $stile: $soggetto. '
-                'Formato 16:9 landscape, atmosfera $atmosfera.$coloriDesc '
-                'Composizione ben bilanciata con punto focale chiaro, '
-                'illuminazione naturale e coerente con l\'atmosfera. '
-                'Alta risoluzione, senza elementi testuali nell\'immagine.',
-            colore: 0xFF7C3AED,
-          ),
-        ];
+        final stile = risposte['stile'] ?? '';
+        final stileDesc = stile.isNotEmpty ? ' Stile: $stile.' : '';
+        final atmosfera = risposte['atmosfera'] ?? '';
+        final atmosferaDesc = atmosfera.isNotEmpty ? ' Atmosfera: $atmosfera.' : '';
+        contenuto = 'Genera un\'immagine: $fraseIniziale.$stileDesc$atmosferaDesc '
+            'Composizione ben bilanciata con punto focale chiaro. '
+            'Alta risoluzione, senza elementi testuali nell\'immagine.';
+        if (extra.isNotEmpty) contenuto += ' $extra';
+        break;
 
       default:
-        final tono = risposte['tono'] ?? 'Informale';
-        final tipo = risposte['tipo_contenuto'] ?? 'post social media';
-        final pubblico = risposte['pubblico'] ?? 'Professionisti';
-        final lunghezza = risposte['lunghezza'] ?? 'Medio (3-5 paragrafi)';
-        final dettagli = risposte['dettagli_extra'] ?? '';
-        final dettagliDesc =
-            dettagli.isNotEmpty ? ' $dettagli.' : '';
-        // Scegli titolo e icona in base alla categoria
-        final titolo = _titoloPerCategoria(categoria);
-        final icona = _iconaPerCategoria(categoria);
-        return [
-          SezionePrompt(
-            titolo: titolo,
-            icona: icona,
-            contenuto:
-                'Scrivi un $tipo con tono $tono, rivolto a $pubblico. '
-                'Inizia con un hook che catturi l\'attenzione, '
-                'sviluppa il contenuto in modo coinvolgente e '
-                'concludi con una call-to-action efficace. '
-                'Lunghezza: $lunghezza. '
-                'Usa paragrafi brevi e formattazione adeguata al formato. '
-                'Il testo deve essere originale, diretto e senza jargon '
-                'tecnico non necessario.$dettagliDesc',
-            colore: 0xFF7C3AED,
-          ),
-        ];
+        final tono = risposte['tono'] ?? '';
+        final tonoDesc = tono.isNotEmpty ? ' Tono: $tono.' : '';
+        final lunghezza = risposte['lunghezza'] ?? '';
+        final lunghezzaDesc = lunghezza.isNotEmpty ? ' Lunghezza: $lunghezza.' : '';
+        contenuto = '$fraseIniziale.$tonoDesc$lunghezzaDesc';
+        if (extra.isNotEmpty) contenuto += ' $extra';
+        break;
     }
+
+    return [
+      SezionePrompt(
+        titolo: titolo,
+        icona: icona,
+        contenuto: contenuto,
+        colore: 0xFF7C3AED,
+      ),
+    ];
   }
 
   /// Restituisce il titolo della sezione in base alla categoria
