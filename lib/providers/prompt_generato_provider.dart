@@ -182,20 +182,30 @@ class PromptGeneratoProvider extends ChangeNotifier {
 
   // -- Metodi privati --
 
-  /// Costruisce il messaggio per l'AI con tutte le informazioni raccolte
+  /// Costruisce il messaggio per l'AI con tutte le informazioni raccolte.
+  /// La frase iniziale è messa in primo piano perché contiene i dettagli
+  /// principali della richiesta dell'utente.
   String _costruisciMessaggio(
     String fraseIniziale,
     String categoria,
     Map<String, String> risposte,
   ) {
     final buffer = StringBuffer();
-    buffer.writeln('Categoria: $categoria');
-    buffer.writeln('Frase iniziale dell\'utente: "$fraseIniziale"');
+    buffer.writeln('RICHIESTA ORIGINALE DELL\'UTENTE (la base del prompt):');
+    buffer.writeln('"$fraseIniziale"');
     buffer.writeln('');
-    buffer.writeln('Risposte alle domande:');
-    risposte.forEach((domanda, risposta) {
-      buffer.writeln('- $domanda: $risposta');
-    });
+    buffer.writeln('Categoria: $categoria');
+    buffer.writeln('');
+    if (risposte.isNotEmpty) {
+      buffer.writeln('Dettagli aggiuntivi raccolti dalle domande:');
+      risposte.forEach((domanda, risposta) {
+        buffer.writeln('- $domanda: $risposta');
+      });
+      buffer.writeln('');
+    }
+    buffer.writeln('IMPORTANTE: il prompt finale DEVE includere TUTTI i dettagli '
+        'dalla richiesta originale dell\'utente sopra, più i dettagli aggiuntivi. '
+        'Non perdere nessuna informazione dalla frase iniziale.');
     return buffer.toString();
   }
 
