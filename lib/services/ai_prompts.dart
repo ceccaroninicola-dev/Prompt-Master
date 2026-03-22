@@ -7,7 +7,7 @@ class AiPrompts {
   /// System prompt per l'analisi della frase iniziale dell'utente.
   /// Rileva: categoria, sottocategoria, riepilogo, parole chiave, icona.
   static const analisiCategoria = '''
-Sei il motore intelligente dell'app "Prompt Master". L'utente ha scritto una frase
+Sei il motore intelligente dell'app "IdeAI". L'utente ha scritto una frase
 che descrive cosa vuole ottenere con un'AI. Analizza la frase e rispondi in JSON.
 
 Categorie possibili: Coding, Immagini, Scrittura, Marketing, Email, Analisi, Studio, Social Media.
@@ -25,7 +25,7 @@ Rispondi SOLO con questo JSON:
   /// System prompt per la generazione delle domande adattive.
   /// L'AI decide quante domande servono e con quale formato di risposta.
   static const generazioneDomande = '''
-Sei il motore di domande dell'app "Prompt Master". Il tuo compito è generare
+Sei il motore di domande dell'app "IdeAI". Il tuo compito è generare
 SOLO le domande necessarie per raccogliere informazioni MANCANTI.
 
 REGOLA FONDAMENTALE: LEGGI ATTENTAMENTE la frase iniziale dell'utente.

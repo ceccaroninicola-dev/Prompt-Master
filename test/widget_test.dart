@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:prompt_master/main.dart';
+import 'package:ideai/main.dart';
 
-/// Test dei widget principali dell'app Prompt Master.
+/// Test dei widget principali dell'app IdeAI.
 void main() {
   // Verifica che la schermata Home si carichi correttamente
   testWidgets('La schermata Home mostra il titolo e i bottoni principali',
@@ -10,9 +10,9 @@ void main() {
     // Costruisce l'app e triggera un frame
     await tester.pumpWidget(const PromptMasterApp());
 
-    // Verifica che il titolo "Prompt Master" sia presente
+    // Verifica che il titolo "IdeAI" sia presente
     // (appare sia nella AppBar che nel corpo della pagina)
-    expect(find.text('Prompt Master'), findsWidgets);
+    expect(find.text('IdeAI'), findsWidgets);
 
     // Verifica che i bottoni principali siano presenti
     // (la bottom nav aggiunge ulteriori istanze di "Crea" e "Cronologia")

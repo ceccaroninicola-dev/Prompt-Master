@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:prompt_master/models/confronto_ai.dart';
-import 'package:prompt_master/models/prompt_generato.dart';
-import 'package:prompt_master/services/api_service.dart';
-import 'package:prompt_master/services/ai_prompts.dart';
+import 'package:ideai/models/confronto_ai.dart';
+import 'package:ideai/models/prompt_generato.dart';
+import 'package:ideai/services/api_service.dart';
+import 'package:ideai/services/ai_prompts.dart';
 
 /// Provider per la gestione del confronto multi-AI.
 /// Gestisce la selezione delle AI, la generazione delle risposte

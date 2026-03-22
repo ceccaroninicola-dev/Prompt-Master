@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:prompt_master/screens/home/home_screen.dart';
-import 'package:prompt_master/screens/prompt_creation/input_libero_screen.dart';
-import 'package:prompt_master/screens/prompt_creation/conferma_categoria_screen.dart';
-import 'package:prompt_master/screens/prompt_creation/domande_screen.dart';
-import 'package:prompt_master/screens/prompt_creation/post_generazione_screen.dart';
-import 'package:prompt_master/screens/cronologia/cronologia_screen.dart';
-import 'package:prompt_master/screens/libreria/libreria_screen.dart';
-import 'package:prompt_master/screens/libreria/dettaglio_template_screen.dart';
-import 'package:prompt_master/screens/confronto_ai/confronto_ai_screen.dart';
-import 'package:prompt_master/screens/profilo/profilo_screen.dart';
-import 'package:prompt_master/screens/community/community_screen.dart';
-import 'package:prompt_master/screens/community/dettaglio_prompt_pubblico_screen.dart';
-import 'package:prompt_master/screens/impostazioni/impostazioni_screen.dart';
+import 'package:ideai/screens/home/home_screen.dart';
+import 'package:ideai/screens/prompt_creation/input_libero_screen.dart';
+import 'package:ideai/screens/prompt_creation/conferma_categoria_screen.dart';
+import 'package:ideai/screens/prompt_creation/domande_screen.dart';
+import 'package:ideai/screens/prompt_creation/post_generazione_screen.dart';
+import 'package:ideai/screens/cronologia/cronologia_screen.dart';
+import 'package:ideai/screens/libreria/libreria_screen.dart';
+import 'package:ideai/screens/libreria/dettaglio_template_screen.dart';
+import 'package:ideai/screens/confronto_ai/confronto_ai_screen.dart';
+import 'package:ideai/screens/profilo/profilo_screen.dart';
+import 'package:ideai/screens/community/community_screen.dart';
+import 'package:ideai/screens/community/dettaglio_prompt_pubblico_screen.dart';
+import 'package:ideai/screens/impostazioni/impostazioni_screen.dart';
 
 /// Configurazione delle rotte dell'applicazione.
 /// Gestisce la navigazione tra le schermate.

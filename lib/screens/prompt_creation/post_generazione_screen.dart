@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:provider/provider.dart';
-import 'package:prompt_master/config/app_routes.dart';
-import 'package:prompt_master/models/prompt_generato.dart';
-import 'package:prompt_master/providers/prompt_generato_provider.dart';
-import 'package:prompt_master/providers/sessione_provider.dart';
-import 'package:prompt_master/providers/cronologia_provider.dart';
-import 'package:prompt_master/providers/confronto_ai_provider.dart';
-import 'package:prompt_master/providers/community_provider.dart';
-import 'package:prompt_master/models/prompt_pubblico.dart';
-import 'package:prompt_master/services/export_service.dart';
-import 'package:prompt_master/services/ad_service.dart';
+import 'package:ideai/config/app_routes.dart';
+import 'package:ideai/models/prompt_generato.dart';
+import 'package:ideai/providers/prompt_generato_provider.dart';
+import 'package:ideai/providers/sessione_provider.dart';
+import 'package:ideai/providers/cronologia_provider.dart';
+import 'package:ideai/providers/confronto_ai_provider.dart';
+import 'package:ideai/providers/community_provider.dart';
+import 'package:ideai/models/prompt_pubblico.dart';
+import 'package:ideai/services/export_service.dart';
+import 'package:ideai/services/ad_service.dart';
 
 /// Schermata post-generazione — mostra il prompt generato con:
 /// - Anteprima in due viste (semplice/strutturata)

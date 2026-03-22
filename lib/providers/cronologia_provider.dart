@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:prompt_master/models/prompt_generato.dart';
+import 'package:ideai/models/prompt_generato.dart';
 
 /// Elemento salvato nella cronologia — contiene il prompt e i metadati
 class ElementoCronologia {

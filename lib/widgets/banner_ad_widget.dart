@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:prompt_master/services/ad_service.dart';
+import 'package:ideai/services/ad_service.dart';
 
 /// Widget che mostra un banner pubblicitario AdMob.
 /// Su Flutter Web, non mostra nulla (AdMob non supporta web).

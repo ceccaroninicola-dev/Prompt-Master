@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:prompt_master/config/app_routes.dart';
-import 'package:prompt_master/providers/community_provider.dart';
-import 'package:prompt_master/models/prompt_pubblico.dart';
+import 'package:ideai/config/app_routes.dart';
+import 'package:ideai/providers/community_provider.dart';
+import 'package:ideai/models/prompt_pubblico.dart';
 
 /// Schermata Community / Esplora — mostra prompt trending, recenti, con ricerca e filtri.
 /// Design Apple-minimal con teal come accento.

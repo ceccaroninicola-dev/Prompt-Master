@@ -1,5 +1,5 @@
-import 'package:prompt_master/models/prompt_generato.dart';
-import 'package:prompt_master/models/commento.dart';
+import 'package:ideai/models/prompt_generato.dart';
+import 'package:ideai/models/commento.dart';
 
 /// Livelli di visibilità per un prompt condiviso
 enum Visibilita { privato, soloLink, pubblico }

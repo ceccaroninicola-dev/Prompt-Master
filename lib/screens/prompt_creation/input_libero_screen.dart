@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:prompt_master/config/app_routes.dart';
-import 'package:prompt_master/providers/sessione_provider.dart';
+import 'package:ideai/config/app_routes.dart';
+import 'package:ideai/providers/sessione_provider.dart';
 
 /// Schermata di input libero — prima fase del flusso di creazione prompt.
 /// Design minimal stile Apple: superfici pulite, teal come accento, ombre sottili.

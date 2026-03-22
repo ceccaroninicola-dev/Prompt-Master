@@ -1,4 +1,4 @@
-# Configurazione Cloudflare Worker per il proxy CORS di Prompt Master
+# Configurazione Cloudflare Worker per il proxy CORS di IdeAI
 # Deploy: npx wrangler deploy
 # Docs: https://developers.cloudflare.com/workers/
 

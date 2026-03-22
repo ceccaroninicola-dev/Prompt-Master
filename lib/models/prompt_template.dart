@@ -1,4 +1,4 @@
-import 'package:prompt_master/models/prompt_generato.dart';
+import 'package:ideai/models/prompt_generato.dart';
 
 /// Modello che rappresenta un template di prompt pronto all'uso.
 /// Ogni template ha una categoria, un punteggio di popolarità e sezioni strutturate.

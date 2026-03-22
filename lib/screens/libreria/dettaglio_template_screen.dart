@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:prompt_master/config/app_routes.dart';
-import 'package:prompt_master/models/prompt_template.dart';
-import 'package:prompt_master/models/prompt_generato.dart';
-import 'package:prompt_master/providers/prompt_generato_provider.dart';
-import 'package:prompt_master/providers/sessione_provider.dart';
+import 'package:ideai/config/app_routes.dart';
+import 'package:ideai/models/prompt_template.dart';
+import 'package:ideai/models/prompt_generato.dart';
+import 'package:ideai/providers/prompt_generato_provider.dart';
+import 'package:ideai/providers/sessione_provider.dart';
 
 /// Schermata dettaglio di un template — mostra il prompt completo
 /// in vista strutturata con azioni "Usa template" e "Personalizza".

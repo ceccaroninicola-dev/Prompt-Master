@@ -1,13 +1,13 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:prompt_master/config/app_routes.dart';
-import 'package:prompt_master/models/domanda.dart';
-import 'package:prompt_master/providers/sessione_provider.dart';
-import 'package:prompt_master/providers/prompt_generato_provider.dart';
-import 'package:prompt_master/widgets/barra_avanzamento.dart';
-import 'package:prompt_master/widgets/banner_ad_widget.dart';
-import 'package:prompt_master/services/ad_service.dart';
+import 'package:ideai/config/app_routes.dart';
+import 'package:ideai/models/domanda.dart';
+import 'package:ideai/providers/sessione_provider.dart';
+import 'package:ideai/providers/prompt_generato_provider.dart';
+import 'package:ideai/widgets/barra_avanzamento.dart';
+import 'package:ideai/widgets/banner_ad_widget.dart';
+import 'package:ideai/services/ad_service.dart';
 
 /// Schermata delle domande adattive — terza fase del flusso.
 /// Design minimal stile Apple: card pulite, teal accento, animazioni fluide.

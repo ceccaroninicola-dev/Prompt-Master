@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:prompt_master/config/app_routes.dart';
+import 'package:ideai/config/app_routes.dart';
 
 /// Barra di navigazione inferiore condivisa tra Home e Cronologia.
 /// Tre tab: Home, Crea (apre il flusso creazione), Cronologia.

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:prompt_master/models/prompt_template.dart';
-import 'package:prompt_master/models/prompt_generato.dart';
+import 'package:ideai/models/prompt_template.dart';
+import 'package:ideai/models/prompt_generato.dart';
 
 /// Provider per la gestione della libreria di template.
 /// Contiene i template fittizi, la logica di ricerca e filtro per categoria.

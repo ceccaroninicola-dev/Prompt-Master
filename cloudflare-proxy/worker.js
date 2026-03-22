@@ -1,5 +1,5 @@
 /**
- * Cloudflare Worker — Proxy CORS per Prompt Master.
+ * Cloudflare Worker — Proxy CORS per IdeAI.
  *
  * Inoltra le richieste dall'app Flutter Web a api.openai.com,
  * aggiungendo gli header CORS necessari per il browser.

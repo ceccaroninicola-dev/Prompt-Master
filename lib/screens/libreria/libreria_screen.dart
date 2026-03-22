@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:prompt_master/config/app_routes.dart';
-import 'package:prompt_master/models/prompt_template.dart';
-import 'package:prompt_master/providers/libreria_provider.dart';
+import 'package:ideai/config/app_routes.dart';
+import 'package:ideai/models/prompt_template.dart';
+import 'package:ideai/providers/libreria_provider.dart';
 
 /// Schermata Libreria — raccolta di template pronti all'uso.
 /// Griglia di card con ricerca, filtri per categoria e sezione "Più popolari".

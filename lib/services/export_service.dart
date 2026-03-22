@@ -1,8 +1,8 @@
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:prompt_master/models/prompt_generato.dart';
-import 'package:prompt_master/services/download_helper.dart' as download;
+import 'package:ideai/models/prompt_generato.dart';
+import 'package:ideai/services/download_helper.dart' as download;
 
 /// Servizio per l'esportazione dei prompt in vari formati.
 /// Su web usa il download diretto nel browser.
@@ -28,7 +28,7 @@ class ExportService {
     );
     await download.scaricaFile(
       bytes: pdfBytes,
-      nomeFile: 'prompt_master.pdf',
+      nomeFile: 'ideai.pdf',
       mimeType: 'application/pdf',
     );
   }
@@ -45,7 +45,7 @@ class ExportService {
     final bytes = Uint8List.fromList(contenuto.codeUnits);
     await download.scaricaFile(
       bytes: bytes,
-      nomeFile: 'prompt_master.txt',
+      nomeFile: 'ideai.txt',
       mimeType: 'text/plain',
     );
   }
@@ -71,7 +71,7 @@ class ExportService {
             pw.Header(
               level: 0,
               child: pw.Text(
-                'Prompt Master',
+                'IdeAI',
                 style: pw.TextStyle(
                   fontSize: 24,
                   fontWeight: pw.FontWeight.bold,
@@ -162,7 +162,7 @@ class ExportService {
             pw.Container(
               margin: const pw.EdgeInsets.only(top: 20),
               child: pw.Text(
-                'Generato con Prompt Master',
+                'Generato con IdeAI',
                 style: pw.TextStyle(
                   fontSize: 10,
                   color: PdfColors.grey600,
@@ -188,7 +188,7 @@ class ExportService {
     final buffer = StringBuffer();
 
     buffer.writeln('========================================');
-    buffer.writeln('  PROMPT MASTER');
+    buffer.writeln('  IdeAI');
     buffer.writeln('========================================');
     buffer.writeln();
 
@@ -212,7 +212,7 @@ class ExportService {
     }
 
     buffer.writeln('========================================');
-    buffer.writeln('  Generato con Prompt Master');
+    buffer.writeln('  Generato con IdeAI');
     buffer.writeln('========================================');
 
     return buffer.toString();
