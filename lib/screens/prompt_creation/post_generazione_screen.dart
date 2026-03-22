@@ -10,6 +10,7 @@ import 'package:prompt_master/providers/confronto_ai_provider.dart';
 import 'package:prompt_master/providers/community_provider.dart';
 import 'package:prompt_master/models/prompt_pubblico.dart';
 import 'package:prompt_master/services/export_service.dart';
+import 'package:prompt_master/services/ad_service.dart';
 
 /// Schermata post-generazione — mostra il prompt generato con:
 /// - Anteprima in due viste (semplice/strutturata)
@@ -36,6 +37,17 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
 
   /// AI di destinazione selezionata (null = non ancora scelta)
   String? _aiSelezionata;
+
+  /// Flag: i suggerimenti sono sbloccati per questa sessione.
+  /// Su web sono sempre sbloccati (AdMob non funziona su web).
+  bool _suggerimentiSbloccati = kIsWeb;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-carica il rewarded video per lo sblocco suggerimenti
+    AdService().precaricaRewarded();
+  }
 
   @override
   void dispose() {
@@ -155,7 +167,12 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 12),
-                      _buildSuggerimenti(prompt, colorScheme),
+                      // Se sbloccati, mostra i suggerimenti.
+                      // Altrimenti mostra il bottone per guardare il video.
+                      if (_suggerimentiSbloccati)
+                        _buildSuggerimenti(prompt, colorScheme)
+                      else
+                        _buildSbloccoSuggerimenti(colorScheme, isDark),
                     ],
                   ],
                 ),
@@ -473,6 +490,86 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
           ),
         );
       }).toList(),
+    );
+  }
+
+  /// Bottone per sbloccare i suggerimenti guardando un rewarded video.
+  /// Su web non appare mai (i suggerimenti sono sempre sbloccati).
+  Widget _buildSbloccoSuggerimenti(ColorScheme colorScheme, bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.lock_outline,
+            size: 32,
+            color: colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'I suggerimenti di miglioramento sono bloccati',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: colorScheme.onSurfaceVariant,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            onPressed: () async {
+              // Mostra il rewarded video
+              final ricompensa = await AdService().mostraRewarded();
+              if (ricompensa && mounted) {
+                setState(() => _suggerimentiSbloccati = true);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Row(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.white, size: 18),
+                          SizedBox(width: 8),
+                          Text('Suggerimenti sbloccati!'),
+                        ],
+                      ),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                  );
+                }
+              } else if (!ricompensa && mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text(
+                        'Video non disponibile. Riprova tra poco.'),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                );
+              }
+            },
+            icon: const Icon(Icons.play_circle_outline, size: 20),
+            label: const Text('Guarda un video per sbloccare suggerimenti'),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

@@ -10,10 +10,11 @@ import 'package:prompt_master/providers/libreria_provider.dart';
 import 'package:prompt_master/providers/confronto_ai_provider.dart';
 import 'package:prompt_master/providers/community_provider.dart';
 import 'package:prompt_master/services/api_service.dart';
+import 'package:prompt_master/services/ad_service.dart';
 
 /// Entry point dell'applicazione Prompt Master.
-/// Configura i provider globali, inizializza l'API key e avvia l'app.
-void main() {
+/// Configura i provider globali, inizializza l'API key, AdMob e avvia l'app.
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Inizializza la API key da variabile d'ambiente (se disponibile)
@@ -22,6 +23,13 @@ void main() {
   if (apiKey.isNotEmpty) {
     ApiService().impostaApiKey(apiKey);
   }
+
+  // Inizializza AdMob (su web è un no-op automatico)
+  await AdService().inizializza();
+
+  // Richiesta consenso GDPR (obbligatoria per l'Europa)
+  // Il form appare solo se necessario (utenti EU)
+  AdService().richiestaConsensoGDPR();
 
   runApp(const PromptMasterApp());
 }
