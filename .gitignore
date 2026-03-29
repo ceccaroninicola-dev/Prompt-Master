@@ -1,3 +1,7 @@
+# File con chiavi segrete
+.env
+.env.*
+
 # Miscellaneous
 *.class
 *.log

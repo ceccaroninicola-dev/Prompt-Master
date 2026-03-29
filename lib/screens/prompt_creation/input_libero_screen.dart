@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:prompt_master/config/app_routes.dart';
-import 'package:prompt_master/providers/sessione_provider.dart';
+import 'package:ideai/config/app_routes.dart';
+import 'package:ideai/providers/sessione_provider.dart';
 
 /// Schermata di input libero — prima fase del flusso di creazione prompt.
 /// Design minimal stile Apple: superfici pulite, teal come accento, ombre sottili.
@@ -49,6 +49,28 @@ class _InputLiberoScreenState extends State<InputLiberoScreen> {
 
     // Avvia la sessione con la frase dell'utente
     await provider.avviaSessione(_testoController.text.trim());
+
+    // Mostra eventuale errore API (il flusso continua con dati fallback)
+    if (mounted && provider.errore != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.info_outline, color: Colors.white, size: 18),
+              const SizedBox(width: 8),
+              Expanded(child: Text('Modalità offline: ${provider.errore}')),
+            ],
+          ),
+          duration: const Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Colors.orange[700],
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      );
+      provider.cancellaErrore();
+    }
 
     // Naviga alla schermata di conferma categoria
     if (mounted) {

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:prompt_master/models/prompt_generato.dart';
+import 'package:ideai/models/prompt_generato.dart';
+import 'package:ideai/models/prompt_template.dart';
+import 'package:ideai/services/api_service.dart';
+import 'package:ideai/services/ai_prompts.dart';
 
 /// Provider per la gestione del prompt generato.
-/// Si occupa di generare il prompt fittizio, gestire le modifiche per sezione
-/// e ricalcolare il punteggio quando il contenuto cambia.
+/// Usa GPT-4o-mini per la generazione, con fallback ai dati fittizi.
 class PromptGeneratoProvider extends ChangeNotifier {
   /// Il prompt generato corrente
   PromptGenerato? _prompt;
@@ -11,35 +13,108 @@ class PromptGeneratoProvider extends ChangeNotifier {
   /// Indica se la generazione è in corso
   bool _staGenerando = false;
 
+  /// Eventuale errore durante la generazione
+  String? _errore;
+
+  /// Prompt ottimizzato per un'AI specifica (cache)
+  String? _promptOttimizzato;
+
+  /// AI per cui è stato ottimizzato il prompt
+  String? _aiOttimizzata;
+
   // -- Getter --
 
   PromptGenerato? get prompt => _prompt;
   bool get staGenerando => _staGenerando;
+  String? get errore => _errore;
+  String? get promptOttimizzato => _promptOttimizzato;
+  String? get aiOttimizzata => _aiOttimizzata;
 
-  /// Genera un prompt fittizio a partire dalle risposte della sessione.
-  /// In futuro sarà sostituito da una vera chiamata AI.
+  /// Genera un prompt a partire dalle risposte della sessione.
+  /// Usa l'AI se disponibile, altrimenti crea dati fittizi.
   Future<void> generaPrompt({
     required String fraseIniziale,
     required String categoria,
     required Map<String, String> risposte,
   }) async {
     _staGenerando = true;
+    _errore = null;
+    _promptOttimizzato = null;
+    _aiOttimizzata = null;
     notifyListeners();
 
-    // Simula il tempo di generazione dell'AI
-    await Future.delayed(const Duration(milliseconds: 800));
+    final api = ApiService();
 
-    // Genera il prompt fittizio basato sulla categoria
-    _prompt = _creaPromptFittizio(fraseIniziale, categoria, risposte);
+    if (api.apiKeyConfigurata) {
+      try {
+        // Costruisci il messaggio con tutte le informazioni raccolte
+        final messaggioUtente = _costruisciMessaggio(
+            fraseIniziale, categoria, risposte);
+
+        final json = await api.chiamaAIJson(
+          systemPrompt: AiPrompts.generazionePrompt,
+          messaggioUtente: messaggioUtente,
+          temperature: 0.7,
+          maxTokens: 3000,
+        );
+
+        _prompt = _parsaPromptDaJson(json);
+      } on ApiException catch (e) {
+        _errore = e.messaggio;
+        // Fallback ai dati fittizi
+        _prompt = _creaPromptFittizio(fraseIniziale, categoria, risposte);
+      }
+    } else {
+      // Senza API key, usa i dati fittizi
+      await Future.delayed(const Duration(milliseconds: 800));
+      _prompt = _creaPromptFittizio(fraseIniziale, categoria, risposte);
+    }
+
     _staGenerando = false;
     notifyListeners();
+  }
+
+  /// Ottimizza il prompt per un'AI di destinazione specifica.
+  /// Restituisce il testo ottimizzato.
+  Future<String?> ottimizzaPerAI(String nomeAI) async {
+    if (_prompt == null) return null;
+
+    // Se è già ottimizzato per la stessa AI, usa la cache
+    if (_aiOttimizzata == nomeAI && _promptOttimizzato != null) {
+      return _promptOttimizzato;
+    }
+
+    final api = ApiService();
+
+    if (api.apiKeyConfigurata) {
+      try {
+        final risultato = await api.chiamaAI(
+          systemPrompt: AiPrompts.ottimizzazionePerAI,
+          messaggioUtente: 'AI di destinazione: $nomeAI\n\n'
+              'Prompt originale:\n${_prompt!.testoCompleto}',
+          temperature: 0.5,
+          maxTokens: 2000,
+        );
+        _promptOttimizzato = risultato;
+        _aiOttimizzata = nomeAI;
+        notifyListeners();
+        return risultato;
+      } on ApiException {
+        // Fallback: restituisci il prompt originale
+        return _prompt!.testoCompleto;
+      }
+    }
+
+    // Senza API key, restituisci il prompt originale
+    return _prompt!.testoCompleto;
   }
 
   /// Aggiorna il contenuto di una sezione specifica
   void aggiornaSezione(int indice, String nuovoContenuto) {
     if (_prompt == null) return;
     _prompt = _prompt!.conSezioneAggiornata(indice, nuovoContenuto);
-    // Ricalcola i punteggi (simulato)
+    _promptOttimizzato = null; // Invalida la cache
+    _aiOttimizzata = null;
     _ricalcolaPunteggi();
     notifyListeners();
   }
@@ -48,13 +123,11 @@ class PromptGeneratoProvider extends ChangeNotifier {
   void applicaSuggerimento(SuggerimentoMiglioramento suggerimento) {
     if (_prompt == null) return;
 
-    // Aggiorna la sezione con il testo migliorato
     _prompt = _prompt!.conSezioneAggiornata(
       suggerimento.sezioneIndice,
       suggerimento.testoDopo,
     );
 
-    // Rimuovi il suggerimento applicato e ricalcola i punteggi
     final nuoviSuggerimenti = List<SuggerimentoMiglioramento>.from(
       _prompt!.suggerimenti,
     )..removeWhere((s) => s.etichetta == suggerimento.etichetta);
@@ -62,7 +135,29 @@ class PromptGeneratoProvider extends ChangeNotifier {
     _prompt = _prompt!.conPunteggiAggiornati(
       suggerimenti: nuoviSuggerimenti,
     );
+    _promptOttimizzato = null;
+    _aiOttimizzata = null;
     _ricalcolaPunteggi();
+    notifyListeners();
+  }
+
+  /// Carica un prompt da un template della libreria
+  void caricaDaTemplate(PromptTemplate template) {
+    _prompt = PromptGenerato(
+      sezioni: template.sezioni,
+      punteggioGlobale: template.popolarita,
+      punteggiCriteri: {
+        'Chiarezza': (template.popolarita * 0.95).clamp(0.0, 5.0),
+        'Specificità': (template.popolarita * 0.90).clamp(0.0, 5.0),
+        'Completezza': (template.popolarita * 0.92).clamp(0.0, 5.0),
+        'Struttura': (template.popolarita * 0.98).clamp(0.0, 5.0),
+        'Coerenza': (template.popolarita * 0.96).clamp(0.0, 5.0),
+      },
+      suggerimenti: const [],
+    );
+    _staGenerando = false;
+    _promptOttimizzato = null;
+    _aiOttimizzata = null;
     notifyListeners();
   }
 
@@ -70,6 +165,8 @@ class PromptGeneratoProvider extends ChangeNotifier {
   void caricaPrompt(PromptGenerato prompt) {
     _prompt = prompt;
     _staGenerando = false;
+    _promptOttimizzato = null;
+    _aiOttimizzata = null;
     notifyListeners();
   }
 
@@ -77,20 +174,103 @@ class PromptGeneratoProvider extends ChangeNotifier {
   void reset() {
     _prompt = null;
     _staGenerando = false;
+    _errore = null;
+    _promptOttimizzato = null;
+    _aiOttimizzata = null;
     notifyListeners();
   }
 
   // -- Metodi privati --
 
+  /// Costruisce il messaggio per l'AI con tutte le informazioni raccolte.
+  /// La frase iniziale è messa in primo piano perché contiene i dettagli
+  /// principali della richiesta dell'utente.
+  String _costruisciMessaggio(
+    String fraseIniziale,
+    String categoria,
+    Map<String, String> risposte,
+  ) {
+    final buffer = StringBuffer();
+    buffer.writeln('Ecco la richiesta originale dell\'utente:');
+    buffer.writeln('"$fraseIniziale"');
+    buffer.writeln('');
+    if (risposte.isNotEmpty) {
+      buffer.writeln('Ecco i dettagli aggiuntivi raccolti:');
+      risposte.forEach((domanda, risposta) {
+        buffer.writeln('- $domanda: $risposta');
+      });
+      buffer.writeln('');
+    }
+    buffer.writeln('Ora scrivi il prompt finale che l\'utente copierà direttamente su un\'AI. Il prompt deve:');
+    buffer.writeln('1. INIZIARE con un verbo d\'azione (Scrivi, Genera, Crea, Analizza)');
+    buffer.writeln('2. INCLUDERE TUTTI i dettagli dalla richiesta originale '
+        '(esempio: se l\'utente ha scritto "mail al capo per ferie dal 10 al 15 luglio", '
+        'il prompt DEVE contenere: mail, capo, ferie, 10-15 luglio)');
+    buffer.writeln('3. INCLUDERE i dettagli aggiuntivi dalle domande');
+    buffer.writeln('4. Essere un\'istruzione diretta, NON un meta-prompt');
+    buffer.writeln('5. NON usare mai "Sei un..." o ruoli');
+    buffer.writeln('');
+    buffer.writeln('I DETTAGLI SPECIFICI della richiesta originale sono OBBLIGATORI nel prompt finale. '
+        'MAI generare un prompt generico che perde le informazioni specifiche dell\'utente.');
+    return buffer.toString();
+  }
+
+  /// Parsa il prompt dalla risposta JSON dell'AI
+  PromptGenerato _parsaPromptDaJson(Map<String, dynamic> json) {
+    // Parsa le sezioni
+    final sezioniJson = json['sezioni'] as List<dynamic>? ?? [];
+    final sezioni = sezioniJson.map((s) {
+      final mappa = s as Map<String, dynamic>;
+      return SezionePrompt(
+        titolo: mappa['titolo'] as String? ?? 'Sezione',
+        icona: mappa['icona'] as String? ?? 'article',
+        contenuto: mappa['contenuto'] as String? ?? '',
+        colore: (mappa['colore'] as num?)?.toInt() ?? 0xFF009688,
+      );
+    }).toList();
+
+    // Se non ci sono sezioni, usa fallback
+    if (sezioni.isEmpty) {
+      return _creaPromptFittizio('', 'Scrittura', {});
+    }
+
+    // Parsa i punteggi
+    final punteggioGlobale =
+        (json['punteggioGlobale'] as num?)?.toDouble() ?? 4.0;
+    final punteggiCriteriJson =
+        json['punteggiCriteri'] as Map<String, dynamic>? ?? {};
+    final punteggiCriteri = punteggiCriteriJson.map(
+        (k, v) => MapEntry(k, (v as num).toDouble()));
+
+    // Parsa i suggerimenti
+    final suggerimentiJson = json['suggerimenti'] as List<dynamic>? ?? [];
+    final suggerimenti = suggerimentiJson.map((s) {
+      final mappa = s as Map<String, dynamic>;
+      return SuggerimentoMiglioramento(
+        etichetta: mappa['etichetta'] as String? ?? 'Suggerimento',
+        icona: mappa['icona'] as String? ?? 'lightbulb',
+        sezioneIndice: (mappa['sezioneIndice'] as num?)?.toInt() ?? 0,
+        testoPrima: mappa['testoPrima'] as String? ?? '',
+        testoDopo: mappa['testoDopo'] as String? ?? '',
+        descrizione: mappa['descrizione'] as String? ?? '',
+      );
+    }).toList();
+
+    return PromptGenerato(
+      sezioni: sezioni,
+      punteggioGlobale: punteggioGlobale,
+      punteggiCriteri: punteggiCriteri,
+      suggerimenti: suggerimenti,
+    );
+  }
+
   /// Ricalcola i punteggi dopo una modifica (simulato)
   void _ricalcolaPunteggi() {
     if (_prompt == null) return;
 
-    // Calcola un punteggio basato sulla lunghezza totale del contenuto
     final lunghezzaTotale = _prompt!.sezioni
         .fold<int>(0, (sum, s) => sum + s.contenuto.length);
 
-    // Più contenuto = punteggio più alto (semplificazione)
     final fattore = (lunghezzaTotale / 800).clamp(0.5, 1.0);
     final base = 3.5;
 
@@ -99,23 +279,28 @@ class PromptGeneratoProvider extends ChangeNotifier {
         (base + (1.5 * fattore)).toStringAsFixed(1),
       ),
       punteggiCriteri: {
-        'Chiarezza': double.parse((3.8 + (1.2 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
-        'Specificità': double.parse((3.2 + (1.5 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
-        'Completezza': double.parse((3.5 + (1.3 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
-        'Struttura': double.parse((4.0 + (0.8 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
-        'Coerenza': double.parse((3.9 + (1.0 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
+        'Chiarezza': double.parse(
+            (3.8 + (1.2 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
+        'Specificità': double.parse(
+            (3.2 + (1.5 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
+        'Completezza': double.parse(
+            (3.5 + (1.3 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
+        'Struttura': double.parse(
+            (4.0 + (0.8 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
+        'Coerenza': double.parse(
+            (3.9 + (1.0 * fattore)).clamp(0.0, 5.0).toStringAsFixed(1)),
       },
     );
   }
 
-  /// Crea un prompt fittizio con sezioni e punteggi predefiniti
+  /// Crea un prompt fittizio (fallback senza AI).
+  /// Integra SEMPRE la frase iniziale nel prompt generato.
   PromptGenerato _creaPromptFittizio(
     String fraseIniziale,
     String categoria,
     Map<String, String> risposte,
   ) {
-    // Sezioni del prompt basate sulla categoria
-    final sezioni = _generaSezioni(categoria, risposte);
+    final sezioni = _generaSezioni(fraseIniziale, categoria, risposte);
 
     return PromptGenerato(
       sezioni: sezioni,
@@ -131,240 +316,197 @@ class PromptGeneratoProvider extends ChangeNotifier {
     );
   }
 
-  /// Genera le sezioni del prompt in base alla categoria
+  /// Genera le sezioni del prompt in base alla categoria (fallback).
+  /// Integra SEMPRE la frase iniziale dell'utente nel prompt.
   List<SezionePrompt> _generaSezioni(
+    String fraseIniziale,
     String categoria,
     Map<String, String> risposte,
   ) {
+    // Costruisci la parte dei dettagli aggiuntivi dalle risposte
+    final dettagliAggiuntivi = StringBuffer();
+    risposte.forEach((chiave, valore) {
+      if (valore.isNotEmpty) {
+        dettagliAggiuntivi.write(' $valore.');
+      }
+    });
+    final extra = dettagliAggiuntivi.toString().trim();
+
+    // Scegli titolo e icona in base alla categoria
+    final titolo = _titoloPerCategoria(categoria);
+    final icona = _iconaPerCategoria(categoria);
+
+    // Il prompt finale parte SEMPRE dalla frase iniziale dell'utente
+    // e aggiunge i dettagli raccolti dalle domande
+    String contenuto;
+
     switch (categoria) {
       case 'Coding':
-        final linguaggio = risposte['linguaggio'] ?? 'Python';
-        final tipoAiuto = risposte['tipo_aiuto'] ?? 'Scrivere codice nuovo';
-        return [
-          SezionePrompt(
-            titolo: 'Ruolo',
-            icona: 'person',
-            contenuto:
-                'Sei un esperto sviluppatore $linguaggio con oltre 10 anni di esperienza. '
-                'Scrivi codice pulito, ben documentato e seguendo le best practices.',
-            colore: 0xFF0D9488,
-          ),
-          SezionePrompt(
-            titolo: 'Contesto',
-            icona: 'info',
-            contenuto:
-                'L\'utente ha bisogno di aiuto per: $tipoAiuto. '
-                '${risposte['contesto'] ?? 'Il progetto è in fase di sviluppo.'}',
-            colore: 0xFF0891B2,
-          ),
-          SezionePrompt(
-            titolo: 'Istruzioni',
-            icona: 'list',
-            contenuto:
-                '1. Analizza attentamente la richiesta\n'
-                '2. Scrivi il codice $linguaggio richiesto\n'
-                '3. Aggiungi commenti esplicativi nel codice\n'
-                '4. Gestisci i casi limite e gli errori\n'
-                '5. Segui le convenzioni di naming del linguaggio',
-            colore: 0xFF7C3AED,
-          ),
-          SezionePrompt(
-            titolo: 'Formato Output',
-            icona: 'format_align_left',
-            contenuto:
-                'Fornisci il codice in un blocco formattato. '
-                '${risposte['livello_dettaglio'] ?? 'Includi commenti esplicativi.'} '
-                'Se necessario, aggiungi note sulle dipendenze richieste.',
-            colore: 0xFFEA580C,
-          ),
-          SezionePrompt(
-            titolo: 'Vincoli',
-            icona: 'block',
-            contenuto:
-                'Requisiti: ${risposte['requisiti_extra'] ?? 'Performance, Sicurezza'}. '
-                'Non usare librerie deprecate. '
-                'Assicurati che il codice sia compatibile con le versioni recenti di $linguaggio.',
-            colore: 0xFFDC2626,
-          ),
-          const SezionePrompt(
-            titolo: 'Esempi',
-            icona: 'lightbulb',
-            contenuto:
-                'Se la richiesta è ambigua, fornisci prima un esempio semplice '
-                'e poi una versione più avanzata.',
-            colore: 0xFFF59E0B,
-          ),
-        ];
+        final linguaggio = risposte['linguaggio'] ?? '';
+        final linguaggioDesc = linguaggio.isNotEmpty ? ' in $linguaggio' : '';
+        contenuto = '$fraseIniziale.$linguaggioDesc '
+            'Il codice deve essere pulito, ben documentato e seguire le '
+            'best practices. Gestisci i casi limite e gli errori.';
+        if (extra.isNotEmpty) contenuto += ' $extra';
+        break;
 
       case 'Immagini':
-        final stile = risposte['stile'] ?? 'Fotorealistico';
-        return [
-          SezionePrompt(
-            titolo: 'Ruolo',
-            icona: 'person',
-            contenuto:
-                'Sei un art director esperto nella creazione di prompt per immagini AI. '
-                'Conosci le tecniche di composizione, illuminazione e stile visivo.',
-            colore: 0xFF0D9488,
-          ),
-          SezionePrompt(
-            titolo: 'Contesto',
-            icona: 'info',
-            contenuto:
-                'L\'utente vuole generare un\'immagine in stile $stile. '
-                '${risposte['soggetto'] ?? 'Il soggetto verrà specificato.'}',
-            colore: 0xFF0891B2,
-          ),
-          SezionePrompt(
-            titolo: 'Istruzioni',
-            icona: 'list',
-            contenuto:
-                '1. Descrivi il soggetto principale con dettagli precisi\n'
-                '2. Specifica lo stile artistico: $stile\n'
-                '3. Indica l\'illuminazione e l\'atmosfera desiderata\n'
-                '4. Aggiungi dettagli sulla composizione e l\'inquadratura',
-            colore: 0xFF7C3AED,
-          ),
-          SezionePrompt(
-            titolo: 'Formato Output',
-            icona: 'format_align_left',
-            contenuto:
-                'Formato immagine: 16:9 landscape. '
-                'Risoluzione alta. Atmosfera: ${risposte['atmosfera'] ?? 'Luminosa'}.',
-            colore: 0xFFEA580C,
-          ),
-          SezionePrompt(
-            titolo: 'Vincoli',
-            icona: 'block',
-            contenuto:
-                'Colori dominanti: ${risposte['colori'] ?? 'Nessuna preferenza'}. '
-                'Evita elementi testuali nell\'immagine. '
-                'Mantieni uno stile coerente e professionale.',
-            colore: 0xFFDC2626,
-          ),
-          const SezionePrompt(
-            titolo: 'Esempi',
-            icona: 'lightbulb',
-            contenuto: '',
-            colore: 0xFFF59E0B,
-          ),
-        ];
+        final stile = risposte['stile'] ?? '';
+        final stileDesc = stile.isNotEmpty ? ' Stile: $stile.' : '';
+        final atmosfera = risposte['atmosfera'] ?? '';
+        final atmosferaDesc = atmosfera.isNotEmpty ? ' Atmosfera: $atmosfera.' : '';
+        contenuto = 'Genera un\'immagine: $fraseIniziale.$stileDesc$atmosferaDesc '
+            'Composizione ben bilanciata con punto focale chiaro. '
+            'Alta risoluzione, senza elementi testuali nell\'immagine.';
+        if (extra.isNotEmpty) contenuto += ' $extra';
+        break;
 
-      // Scrittura (default)
       default:
-        final tono = risposte['tono'] ?? 'Informale';
-        final tipo = risposte['tipo_contenuto'] ?? 'Post social media';
-        return [
-          SezionePrompt(
-            titolo: 'Ruolo',
-            icona: 'person',
-            contenuto:
-                'Sei un copywriter professionista specializzato in $tipo. '
-                'Hai esperienza nella creazione di contenuti coinvolgenti e persuasivi.',
-            colore: 0xFF0D9488,
-          ),
-          SezionePrompt(
-            titolo: 'Contesto',
-            icona: 'info',
-            contenuto:
-                'L\'utente vuole creare un $tipo con tono $tono. '
-                'Il pubblico target è: ${risposte['pubblico'] ?? 'Professionisti'}.',
-            colore: 0xFF0891B2,
-          ),
-          SezionePrompt(
-            titolo: 'Istruzioni',
-            icona: 'list',
-            contenuto:
-                '1. Scrivi un $tipo con tono $tono\n'
-                '2. Adatta il linguaggio al pubblico target\n'
-                '3. Includi un hook iniziale che catturi l\'attenzione\n'
-                '4. Concludi con una call-to-action efficace\n'
-                '5. Usa formattazione adeguata al formato scelto',
-            colore: 0xFF7C3AED,
-          ),
-          SezionePrompt(
-            titolo: 'Formato Output',
-            icona: 'format_align_left',
-            contenuto:
-                'Lunghezza: ${risposte['lunghezza'] ?? 'Medio (3-5 paragrafi)'}. '
-                'Usa paragrafi brevi e punti elenco dove appropriato. '
-                'Includi emoji solo se adatti al tono scelto.',
-            colore: 0xFFEA580C,
-          ),
-          SezionePrompt(
-            titolo: 'Vincoli',
-            icona: 'block',
-            contenuto:
-                'Mantieni un tono $tono coerente in tutto il testo. '
-                'Evita jargon tecnico non necessario. '
-                'Il testo deve essere originale e non generico.',
-            colore: 0xFFDC2626,
-          ),
-          SezionePrompt(
-            titolo: 'Esempi',
-            icona: 'lightbulb',
-            contenuto:
-                risposte['dettagli_extra'] ?? 'Nessun dettaglio aggiuntivo specificato.',
-            colore: 0xFFF59E0B,
-          ),
-        ];
+        final tono = risposte['tono'] ?? '';
+        final tonoDesc = tono.isNotEmpty ? ' Tono: $tono.' : '';
+        final lunghezza = risposte['lunghezza'] ?? '';
+        final lunghezzaDesc = lunghezza.isNotEmpty ? ' Lunghezza: $lunghezza.' : '';
+        contenuto = '$fraseIniziale.$tonoDesc$lunghezzaDesc';
+        if (extra.isNotEmpty) contenuto += ' $extra';
+        break;
+    }
+
+    return [
+      SezionePrompt(
+        titolo: titolo,
+        icona: icona,
+        contenuto: contenuto,
+        colore: 0xFF7C3AED,
+      ),
+    ];
+  }
+
+  /// Restituisce il titolo della sezione in base alla categoria
+  String _titoloPerCategoria(String categoria) {
+    switch (categoria) {
+      case 'Scrittura':
+        return 'Istruzione Testo';
+      case 'Marketing':
+        return 'Istruzione Marketing';
+      case 'Email':
+        return 'Istruzione Email';
+      case 'Analisi':
+        return 'Istruzione Analisi';
+      case 'Studio':
+        return 'Istruzione Studio';
+      case 'Social Media':
+        return 'Istruzione Social';
+      default:
+        return 'Istruzione';
     }
   }
 
-  /// Genera suggerimenti di miglioramento contestuali
+  /// Restituisce l'icona della sezione in base alla categoria
+  String _iconaPerCategoria(String categoria) {
+    switch (categoria) {
+      case 'Scrittura':
+        return 'edit_note';
+      case 'Marketing':
+        return 'campaign';
+      case 'Email':
+        return 'email';
+      case 'Analisi':
+        return 'analytics';
+      case 'Studio':
+        return 'school';
+      case 'Social Media':
+        return 'share';
+      default:
+        return 'list';
+    }
+  }
+
+  /// Genera suggerimenti di miglioramento contestuali (fallback).
+  /// Tutti i prompt sono ora a sezione unica (istruzione diretta).
   List<SuggerimentoMiglioramento> _generaSuggerimenti(
     List<SezionePrompt> sezioni,
   ) {
+    final contenuto = sezioni[0].contenuto;
+    final isImmagine = sezioni[0].titolo == 'Descrizione Immagine';
+
+    if (isImmagine) {
+      return [
+        SuggerimentoMiglioramento(
+          etichetta: 'Più dettagli visivi',
+          icona: 'lightbulb',
+          sezioneIndice: 0,
+          testoPrima: contenuto,
+          testoDopo:
+              '$contenuto '
+              'Dettagli aggiuntivi: texture realistiche, riflessi naturali, '
+              'micro-dettagli sulle superfici.',
+          descrizione:
+              'Aggiunge dettagli visivi specifici per un\'immagine '
+              'più ricca e realistica.',
+        ),
+        SuggerimentoMiglioramento(
+          etichetta: 'Migliora illuminazione',
+          icona: 'lightbulb',
+          sezioneIndice: 0,
+          testoPrima: contenuto,
+          testoDopo: contenuto.replaceFirst(
+              'illuminazione naturale',
+              'illuminazione cinematografica con rim light e ombre profonde'),
+          descrizione:
+              'Rende l\'illuminazione più drammatica e professionale.',
+        ),
+        SuggerimentoMiglioramento(
+          etichetta: 'Aggiungi qualità',
+          icona: 'add_circle',
+          sezioneIndice: 0,
+          testoPrima: contenuto,
+          testoDopo:
+              '$contenuto '
+              '8K, ultra detailed, award-winning, professional quality.',
+          descrizione:
+              'Aggiunge tag di qualità per risultati più '
+              'dettagliati e professionali.',
+        ),
+      ];
+    }
+
+    // Suggerimenti per tutte le altre categorie (sezione unica)
     return [
       SuggerimentoMiglioramento(
         etichetta: 'Aggiungi esempio',
         icona: 'lightbulb',
-        sezioneIndice: 5,
-        testoPrima: sezioni[5].contenuto,
+        sezioneIndice: 0,
+        testoPrima: contenuto,
         testoDopo:
-            '${sezioni[5].contenuto}\n\n'
-            'Esempio di output atteso:\n'
-            '- Versione breve e diretta per social media\n'
-            '- Versione estesa per blog o newsletter',
+            '$contenuto\n\n'
+            'Esempio di risultato atteso: [descrivi qui un esempio concreto '
+            'del risultato che vorresti ottenere].',
         descrizione:
             'Aggiunge un esempio concreto di output atteso '
             'per guidare meglio l\'AI nella generazione.',
       ),
       SuggerimentoMiglioramento(
-        etichetta: 'Specifica formato',
+        etichetta: 'Più specifico',
         icona: 'format_align_left',
-        sezioneIndice: 3,
-        testoPrima: sezioni[3].contenuto,
+        sezioneIndice: 0,
+        testoPrima: contenuto,
         testoDopo:
-            '${sezioni[3].contenuto}\n'
-            'Struttura il contenuto con: titolo, sottotitolo, '
-            'corpo principale diviso in sezioni, conclusione con CTA.',
+            '$contenuto '
+            'Struttura il risultato con: titolo, sottotitoli, '
+            'corpo principale diviso in sezioni chiare.',
         descrizione:
             'Aggiunge dettagli sulla struttura '
             'del formato di output per risultati più precisi.',
       ),
       SuggerimentoMiglioramento(
-        etichetta: 'Definisci tono',
-        icona: 'record_voice_over',
-        sezioneIndice: 0,
-        testoPrima: sezioni[0].contenuto,
-        testoDopo:
-            '${sezioni[0].contenuto} '
-            'Comunica con un tono autorevole ma accessibile, '
-            'come un mentore che guida con competenza e empatia.',
-        descrizione:
-            'Definisce meglio la personalità e il tono '
-            'di voce per una risposta più coerente.',
-      ),
-      SuggerimentoMiglioramento(
         etichetta: 'Aggiungi vincoli',
         icona: 'block',
-        sezioneIndice: 4,
-        testoPrima: sezioni[4].contenuto,
+        sezioneIndice: 0,
+        testoPrima: contenuto,
         testoDopo:
-            '${sezioni[4].contenuto} '
+            '$contenuto '
             'Limita la risposta a massimo 500 parole. '
-            'Non includere riferimenti a marchi specifici senza autorizzazione.',
+            'Non includere riferimenti generici o contenuti banali.',
         descrizione:
             'Aggiunge vincoli specifici per '
             'controllare meglio l\'output generato.',

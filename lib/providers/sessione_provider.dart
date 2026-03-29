@@ -1,22 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:prompt_master/models/categoria_rilevata.dart';
-import 'package:prompt_master/models/domanda.dart';
-import 'package:prompt_master/models/sessione_prompt.dart';
+import 'package:ideai/models/categoria_rilevata.dart';
+import 'package:ideai/models/domanda.dart';
+import 'package:ideai/models/sessione_prompt.dart';
+import 'package:ideai/services/api_service.dart';
+import 'package:ideai/services/ai_prompts.dart';
 
 /// Provider per la gestione della sessione di creazione prompt.
 /// Gestisce il flusso completo: frase iniziale → categoria → domande → risposte.
-/// Per ora usa dati fittizi; in futuro sarà collegato all'AI.
+/// Usa GPT-4o-mini per analisi e generazione domande, con fallback fittizio.
 class SessioneProvider extends ChangeNotifier {
   /// Sessione corrente di creazione prompt
   SessionePrompt _sessione = const SessionePrompt(fraseIniziale: '');
 
-  /// Indica se l'analisi della frase è in corso (simulazione caricamento)
+  /// Indica se l'analisi della frase è in corso
   bool _staAnalizzando = false;
+
+  /// Eventuale errore durante le chiamate API
+  String? _errore;
 
   // -- Getter --
 
   SessionePrompt get sessione => _sessione;
   bool get staAnalizzando => _staAnalizzando;
+  String? get errore => _errore;
 
   /// Restituisce la domanda corrente, o null se non ci sono domande
   Domanda? get domandaCorrente {
@@ -37,21 +43,95 @@ class SessioneProvider extends ChangeNotifier {
 
   // -- Azioni --
 
+  /// Resetta l'errore
+  void cancellaErrore() {
+    _errore = null;
+    notifyListeners();
+  }
+
   /// Avvia una nuova sessione con la frase libera dell'utente.
-  /// Simula l'analisi AI e rileva la categoria.
+  /// Chiama l'AI per rilevare la categoria, con fallback ai dati fittizi.
   Future<void> avviaSessione(String fraseLibera) async {
     _sessione = SessionePrompt(fraseIniziale: fraseLibera);
     _staAnalizzando = true;
+    _errore = null;
     notifyListeners();
 
-    // Simula il tempo di analisi dell'AI (in futuro sarà una vera chiamata API)
-    await Future.delayed(const Duration(milliseconds: 1200));
+    final api = ApiService();
+    debugPrint('[Sessione] Avvio sessione — API key configurata: ${api.apiKeyConfigurata}');
 
-    // Rileva la categoria in base alla frase (dati fittizi)
-    final categoria = _rilevaCategoria(fraseLibera);
+    // STEP 1: Rileva la categoria con l'AI (o fallback fittizio)
+    CategoriaRilevata categoria;
+    bool categoriaViaAI = false;
+    if (api.apiKeyConfigurata) {
+      try {
+        debugPrint('[Sessione] STEP 1: Analisi categoria via AI...');
+        final json = await api.chiamaAIJson(
+          systemPrompt: AiPrompts.analisiCategoria,
+          messaggioUtente: fraseLibera,
+          temperature: 0.3,
+          maxTokens: 500,
+        );
+        debugPrint('[Sessione] STEP 1: Categoria ricevuta: ${json['categoria']}');
+        categoria = CategoriaRilevata(
+          nome: json['categoria'] as String? ?? 'Scrittura',
+          icona: json['icona'] as String? ?? 'edit_note',
+          riepilogo: json['riepilogo'] as String? ??
+              'Vuoi creare un prompt personalizzato.',
+          sottocategoria: json['sottocategoria'] as String?,
+          elementiChiave: (json['elementiChiave'] as List<dynamic>?)
+                  ?.map((e) => e.toString())
+                  .toList() ??
+              _estraiElementiChiave(fraseLibera),
+        );
+        categoriaViaAI = true;
+      } on ApiException catch (e) {
+        debugPrint('[Sessione] STEP 1: Errore API → ${e.messaggio}');
+        _errore = e.messaggio;
+        // Fallback ai dati fittizi in caso di errore
+        categoria = _rilevaCategoria(fraseLibera);
+      }
+    } else {
+      debugPrint('[Sessione] STEP 1: Nessuna API key, uso fallback');
+      // Senza API key, usa i dati fittizi
+      await Future.delayed(const Duration(milliseconds: 1200));
+      categoria = _rilevaCategoria(fraseLibera);
+    }
 
-    // Genera le domande adattive in base alla categoria
-    final domande = _generaDomandeFittizie(categoria.nome);
+    // STEP 2: Genera le domande con l'AI (o fallback fittizie)
+    // Ogni chiamata è indipendente: se la categoria ha fallito,
+    // tenta comunque le domande (potrebbe essere un errore temporaneo)
+    List<Domanda> domande;
+    if (api.apiKeyConfigurata) {
+      try {
+        debugPrint('[Sessione] STEP 2: Generazione domande via AI...');
+        final json = await api.chiamaAIJson(
+          systemPrompt: AiPrompts.generazioneDomande,
+          messaggioUtente: 'FRASE INIZIALE DELL\'UTENTE (leggi attentamente prima di generare domande):\n'
+              '"$fraseLibera"\n\n'
+              'Categoria rilevata: ${categoria.nome}\n'
+              'Sottocategoria: ${categoria.sottocategoria ?? "N/A"}\n'
+              'Elementi chiave già estratti: ${categoria.elementiChiave.join(", ")}\n\n'
+              'Genera SOLO domande per informazioni NON presenti nella frase sopra.',
+          temperature: 0.6,
+          maxTokens: 1500,
+        );
+        domande = _parsaDomande(json);
+        debugPrint('[Sessione] STEP 2: ${domande.length} domande generate');
+        // Se le domande sono arrivate via AI, cancella l'eventuale errore
+        // della categoria (l'utente vedrà comunque la categoria fallback)
+        if (!categoriaViaAI && _errore != null) {
+          debugPrint('[Sessione] Domande OK ma categoria fallback — mostro avviso');
+        }
+      } on ApiException catch (e) {
+        debugPrint('[Sessione] STEP 2: Errore API → ${e.messaggio}');
+        // Salva solo l'errore più recente se non ce n'è già uno
+        _errore ??= e.messaggio;
+        domande = _generaDomandeFittizie(categoria.nome);
+      }
+    } else {
+      domande = _generaDomandeFittizie(categoria.nome);
+    }
 
     _sessione = _sessione.copyWith(
       categoria: categoria,
@@ -96,7 +176,6 @@ class SessioneProvider extends ChangeNotifier {
 
     _sessione = _sessione.copyWith(
       domandaCorrente: _sessione.domandaCorrente - 1,
-      // Ricalcola la percentuale
       percentualeCompletamento:
           ((_sessione.domandaCorrente - 1) / _sessione.domande.length)
               .clamp(0.0, 1.0),
@@ -108,17 +187,53 @@ class SessioneProvider extends ChangeNotifier {
   void resetSessione() {
     _sessione = const SessionePrompt(fraseIniziale: '');
     _staAnalizzando = false;
+    _errore = null;
     notifyListeners();
   }
 
-  // -- Metodi privati per i dati fittizi --
+  // -- Parsing risposta AI --
 
-  /// Simula il rilevamento della categoria dalla frase dell'utente.
-  /// In futuro questo sarà fatto dall'AI.
+  /// Parsa le domande dalla risposta JSON dell'AI
+  List<Domanda> _parsaDomande(Map<String, dynamic> json) {
+    final listaDomande = json['domande'] as List<dynamic>? ?? [];
+    if (listaDomande.isEmpty) return _generaDomandeFittizie('Scrittura');
+
+    return listaDomande.map((d) {
+      final mappa = d as Map<String, dynamic>;
+      return Domanda(
+        id: mappa['id'] as String? ?? 'q_${listaDomande.indexOf(d)}',
+        testo: mappa['testo'] as String? ?? 'Domanda',
+        tipoInput: _parsaTipoInput(mappa['tipoInput'] as String?),
+        opzioni: (mappa['opzioni'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [],
+        placeholder: mappa['placeholder'] as String?,
+        valoreDefault: mappa['valoreDefault'] as String?,
+      );
+    }).toList();
+  }
+
+  /// Converte la stringa del tipo input nel enum
+  TipoInput _parsaTipoInput(String? tipo) {
+    switch (tipo) {
+      case 'testoLibero':
+        return TipoInput.testoLibero;
+      case 'bottoniOpzioni':
+        return TipoInput.bottoniOpzioni;
+      case 'chipMultipli':
+        return TipoInput.chipMultipli;
+      default:
+        return TipoInput.testoLibero;
+    }
+  }
+
+  // -- Metodi di fallback con dati fittizi --
+
+  /// Rileva la categoria dalla frase (fallback senza AI)
   CategoriaRilevata _rilevaCategoria(String frase) {
     final fraseLower = frase.toLowerCase();
 
-    // Rilevamento semplice basato su parole chiave (dati fittizi)
     if (fraseLower.contains('codice') ||
         fraseLower.contains('programm') ||
         fraseLower.contains('funzione') ||
@@ -182,7 +297,6 @@ class SessioneProvider extends ChangeNotifier {
       );
     }
 
-    // Categoria generica di fallback
     return CategoriaRilevata(
       nome: 'Scrittura',
       icona: 'edit_note',
@@ -193,9 +307,8 @@ class SessioneProvider extends ChangeNotifier {
     );
   }
 
-  /// Estrae parole chiave dalla frase dell'utente (simulazione semplificata)
+  /// Estrae parole chiave dalla frase (fallback senza AI)
   List<String> _estraiElementiChiave(String frase) {
-    // Rimuovi parole comuni e restituisci le parole significative
     final paroleComuni = {
       'voglio', 'vorrei', 'creare', 'fare', 'un', 'una', 'il', 'la', 'lo',
       'le', 'gli', 'di', 'a', 'da', 'in', 'con', 'su', 'per', 'tra', 'fra',
@@ -213,8 +326,7 @@ class SessioneProvider extends ChangeNotifier {
         .toList();
   }
 
-  /// Genera domande fittizie in base alla categoria rilevata.
-  /// In futuro queste saranno generate dall'AI in tempo reale.
+  /// Genera domande fittizie (fallback senza AI)
   List<Domanda> _generaDomandeFittizie(String categoria) {
     switch (categoria) {
       case 'Coding':
@@ -320,7 +432,6 @@ class SessioneProvider extends ChangeNotifier {
           ),
         ];
 
-      // Categoria default: Scrittura
       default:
         return const [
           Domanda(
@@ -366,7 +477,11 @@ class SessioneProvider extends ChangeNotifier {
             id: 'lunghezza',
             testo: 'Quanto lungo deve essere il risultato?',
             tipoInput: TipoInput.bottoniOpzioni,
-            opzioni: ['Breve (1-2 paragrafi)', 'Medio (3-5 paragrafi)', 'Lungo (articolo completo)'],
+            opzioni: [
+              'Breve (1-2 paragrafi)',
+              'Medio (3-5 paragrafi)',
+              'Lungo (articolo completo)',
+            ],
             valoreDefault: 'Medio (3-5 paragrafi)',
           ),
           Domanda(

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:prompt_master/config/app_routes.dart';
-import 'package:prompt_master/providers/theme_provider.dart';
-import 'package:prompt_master/widgets/barra_navigazione.dart';
+import 'package:ideai/config/app_routes.dart';
+import 'package:ideai/providers/theme_provider.dart';
+import 'package:ideai/widgets/barra_navigazione.dart';
 import 'package:provider/provider.dart';
 
-/// Schermata principale (Home) dell'app Prompt Master.
+/// Schermata principale (Home) dell'app IdeAI.
 /// Design minimal ispirato ad Apple: superfici pulite, ombre sottili, teal come accento.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -20,9 +20,20 @@ class HomeScreen extends StatelessWidget {
       canPop: false,
       child: Scaffold(
       appBar: AppBar(
-        title: const Text('Prompt Master'),
+        title: const Text('IdeAI'),
         automaticallyImplyLeading: false,
         actions: [
+          // Icona profilo utente
+          IconButton(
+            icon: Icon(
+              Icons.person_outline,
+              color: colorScheme.onSurfaceVariant,
+            ),
+            tooltip: 'Il mio profilo',
+            onPressed: () {
+              Navigator.of(context).pushNamed(AppRoutes.profilo);
+            },
+          ),
           // Toggle tema chiaro/scuro
           IconButton(
             icon: Icon(
@@ -33,6 +44,17 @@ class HomeScreen extends StatelessWidget {
             ),
             tooltip: 'Cambia tema',
             onPressed: () => themeProvider.cambiaTema(),
+          ),
+          // Impostazioni (API key)
+          IconButton(
+            icon: Icon(
+              Icons.settings_outlined,
+              color: colorScheme.onSurfaceVariant,
+            ),
+            tooltip: 'Impostazioni',
+            onPressed: () {
+              Navigator.of(context).pushNamed(AppRoutes.impostazioni);
+            },
           ),
         ],
       ),
@@ -62,7 +84,7 @@ class HomeScreen extends StatelessWidget {
 
                 // Titolo principale
                 Text(
-                  'Prompt Master',
+                  'IdeAI',
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: colorScheme.onSurface,
@@ -99,15 +121,25 @@ class HomeScreen extends StatelessWidget {
                   context: context,
                   icona: Icons.library_books_outlined,
                   etichetta: 'Libreria',
-                  descrizione: 'Sfoglia i tuoi prompt salvati',
+                  descrizione: 'Template pronti all\'uso per ogni esigenza',
                   isDark: isDark,
                   colorScheme: colorScheme,
                   onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Funzionalità in arrivo!'),
-                      ),
-                    );
+                    Navigator.of(context).pushNamed(AppRoutes.libreria);
+                  },
+                ),
+                const SizedBox(height: 12),
+
+                // Card "Community"
+                _buildCardAzione(
+                  context: context,
+                  icona: Icons.people_outline,
+                  etichetta: 'Community',
+                  descrizione: 'Scopri e condividi prompt con altri utenti',
+                  isDark: isDark,
+                  colorScheme: colorScheme,
+                  onPressed: () {
+                    Navigator.of(context).pushNamed(AppRoutes.community);
                   },
                 ),
                 const SizedBox(height: 12),

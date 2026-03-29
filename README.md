@@ -1,2 +1,2 @@
-# Prompt-Master
-App mobile per la creazione di prompt AI perfetti
+# IdeAI
+IdeAI — Crea prompt perfetti per ogni AI

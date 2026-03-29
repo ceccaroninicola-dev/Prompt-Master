@@ -1,4 +1,4 @@
-package com.promptmaster.prompt_master
+package com.cortexlabs.ideai
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -1,5 +1,5 @@
-import 'package:prompt_master/models/categoria_rilevata.dart';
-import 'package:prompt_master/models/domanda.dart';
+import 'package:ideai/models/categoria_rilevata.dart';
+import 'package:ideai/models/domanda.dart';
 
 /// Modello che rappresenta una sessione di creazione prompt.
 /// Contiene la frase iniziale, la categoria rilevata,

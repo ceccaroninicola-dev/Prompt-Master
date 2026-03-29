@@ -1,15 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:prompt_master/config/app_theme.dart';
-import 'package:prompt_master/config/app_routes.dart';
-import 'package:prompt_master/providers/theme_provider.dart';
-import 'package:prompt_master/providers/sessione_provider.dart';
-import 'package:prompt_master/providers/prompt_generato_provider.dart';
-import 'package:prompt_master/providers/cronologia_provider.dart';
+import 'package:ideai/config/app_theme.dart';
+import 'package:ideai/config/app_routes.dart';
+import 'package:ideai/providers/theme_provider.dart';
+import 'package:ideai/providers/sessione_provider.dart';
+import 'package:ideai/providers/prompt_generato_provider.dart';
+import 'package:ideai/providers/cronologia_provider.dart';
+import 'package:ideai/providers/libreria_provider.dart';
+import 'package:ideai/providers/confronto_ai_provider.dart';
+import 'package:ideai/providers/community_provider.dart';
+import 'package:ideai/services/api_service.dart';
+import 'package:ideai/services/ad_service.dart';
 
-/// Entry point dell'applicazione Prompt Master.
-/// Configura i provider globali e avvia l'app.
-void main() {
+/// Entry point dell'applicazione IdeAI.
+/// Configura i provider globali, inizializza l'API key, AdMob e avvia l'app.
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Inizializza la API key da variabile d'ambiente (se disponibile)
+  // Su web, usa --dart-define=OPENAI_API_KEY=sk-xxx durante il build
+  const apiKey = String.fromEnvironment('OPENAI_API_KEY');
+  if (apiKey.isNotEmpty) {
+    ApiService().impostaApiKey(apiKey);
+  }
+
+  // Inizializza AdMob (su web è un no-op automatico)
+  await AdService().inizializza();
+
+  // Richiesta consenso GDPR (obbligatoria per l'Europa)
+  // Il form appare solo se necessario (utenti EU)
+  AdService().richiestaConsensoGDPR();
+
   runApp(const PromptMasterApp());
 }
 
@@ -28,11 +49,14 @@ class PromptMasterApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SessioneProvider()),
         ChangeNotifierProvider(create: (_) => PromptGeneratoProvider()),
         ChangeNotifierProvider(create: (_) => CronologiaProvider()),
+        ChangeNotifierProvider(create: (_) => LibreriaProvider()),
+        ChangeNotifierProvider(create: (_) => ConfrontoAIProvider()),
+        ChangeNotifierProvider(create: (_) => CommunityProvider()),
       ],
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
           return MaterialApp(
-            title: 'Prompt Master',
+            title: 'IdeAI',
             debugShowCheckedModeBanner: false,
 
             // Configurazione dei temi

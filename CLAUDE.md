@@ -1,10 +1,10 @@
-# PROMPT MASTER — Prompt di Progetto Completo
+# IdeAI — Prompt di Progetto Completo
 
 ---
 
 ## Contesto del Progetto
 
-Devi aiutarmi a progettare e sviluppare "Prompt Master", un'app mobile cross-platform (iOS e Android) che guida qualsiasi utente — dal principiante all'esperto — nella creazione di prompt perfetti per qualsiasi modello AI (ChatGPT, Claude, Gemini, Midjourney, Stable Diffusion, Copilot, ecc.).
+Devi aiutarmi a progettare e sviluppare "IdeAI", un'app mobile cross-platform (iOS e Android) che guida qualsiasi utente — dal principiante all'esperto — nella creazione di prompt perfetti per qualsiasi modello AI (ChatGPT, Claude, Gemini, Midjourney, Stable Diffusion, Copilot, ecc.).
 
 L'app funziona come un "Prompt Builder" intelligente e adattivo: attraverso una serie di domande mirate e progressive, raccoglie le intenzioni dell'utente e genera un prompt ottimizzato, pronto per essere copiato o inviato direttamente all'AI di destinazione tramite API.
 
@@ -241,7 +241,7 @@ L'utente può cambiare la visibilità in qualsiasi momento
 
 ### 8. Assistenti Vocali
 
-- **Siri (iOS)**: l'utente può avviare la creazione di un prompt dicendo "Ehi Siri, crea un prompt con Prompt Master"
+- **Siri (iOS)**: l'utente può avviare la creazione di un prompt dicendo "Ehi Siri, crea un prompt con IdeAI"
 - **Google Assistant (Android)**: equivalente funzionalità con comandi vocali
 - Supporto per Siri Shortcuts / Google Assistant Routines
 
@@ -357,7 +357,7 @@ Quando lavori con me su questo progetto:
 
 ---
 
-*Questo prompt è stato generato attraverso un processo di analisi guidata delle esigenze. Usalo come riferimento principale per tutto lo sviluppo del progetto "Prompt Master".*
+*Questo prompt è stato generato attraverso un processo di analisi guidata delle esigenze. Usalo come riferimento principale per tutto lo sviluppo del progetto "IdeAI".*
 
 ---
 
