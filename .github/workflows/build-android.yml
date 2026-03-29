@@ -1,0 +1,76 @@
+# Workflow per il build di rilascio Android (AAB + APK)
+# Si attiva manualmente da GitHub Actions → Run workflow
+name: Build Android Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build AAB e APK
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout del codice
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Setup Java (necessario per il build Android)
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      # 3. Setup Flutter
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.32.2'
+          channel: 'stable'
+          cache: true
+
+      # 4. Installa le dipendenze
+      - name: Flutter pub get
+        run: flutter pub get
+
+      # 5. Analisi statica del codice
+      - name: Flutter analyze
+        run: flutter analyze --no-fatal-infos
+
+      # 6. Build AAB (richiesto da Google Play)
+      - name: Build App Bundle (AAB)
+        run: flutter build appbundle --release
+
+      # 7. Build APK (per test diretti)
+      - name: Build APK
+        run: flutter build apk --release
+
+      # 8. Carica AAB come artifact scaricabile
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: ideai-release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: 30
+
+      # 9. Carica APK come artifact scaricabile
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ideai-release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+      # 10. Riepilogo del build
+      - name: Riepilogo
+        run: |
+          echo "## Build completato" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **AAB**: build/app/outputs/bundle/release/app-release.aab" >> $GITHUB_STEP_SUMMARY
+          echo "- **APK**: build/app/outputs/flutter-apk/app-release.apk" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          AAB_SIZE=$(du -h build/app/outputs/bundle/release/app-release.aab | cut -f1)
+          APK_SIZE=$(du -h build/app/outputs/flutter-apk/app-release.apk | cut -f1)
+          echo "- **Dimensione AAB**: $AAB_SIZE" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dimensione APK**: $APK_SIZE" >> $GITHUB_STEP_SUMMARY

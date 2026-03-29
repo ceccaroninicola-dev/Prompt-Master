@@ -5,8 +5,8 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-// Leggi il keystore di rilascio da key.properties (se presente)
-val keystorePropertiesFile = rootProject.file("key.properties")
+// Leggi il keystore di rilascio da keystore/key.properties (se presente)
+val keystorePropertiesFile = rootProject.file("keystore/key.properties")
 val keystoreProperties = java.util.Properties()
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(keystorePropertiesFile.inputStream())
