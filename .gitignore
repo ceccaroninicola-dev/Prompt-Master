@@ -1,6 +1,9 @@
 # File con chiavi segrete — MAI committare!
 .env
 .env.*
+android/key.properties
+android/*.jks
+android/*.keystore
 
 # Miscellaneous
 *.class
