@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:prompt_master/config/app_routes.dart';
-import 'package:prompt_master/providers/cronologia_provider.dart';
-import 'package:prompt_master/providers/prompt_generato_provider.dart';
-import 'package:prompt_master/services/export_service.dart';
-import 'package:prompt_master/widgets/barra_navigazione.dart';
+import 'package:ideai/config/app_routes.dart';
+import 'package:ideai/providers/cronologia_provider.dart';
+import 'package:ideai/providers/prompt_generato_provider.dart';
+import 'package:ideai/services/export_service.dart';
+import 'package:ideai/widgets/barra_navigazione.dart';
 
 /// Schermata Cronologia — mostra tutti i prompt salvati dall'utente.
 /// Include ricerca, filtri per categoria, swipe per eliminare e menu azioni.

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:prompt_master/models/prompt_generato.dart';
+import 'package:ideai/models/prompt_generato.dart';
 
 /// Modello che rappresenta un'AI disponibile per il confronto.
 class InfoAI {

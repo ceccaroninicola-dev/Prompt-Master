@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:prompt_master/models/prompt_generato.dart';
-import 'package:prompt_master/models/prompt_template.dart';
-import 'package:prompt_master/services/api_service.dart';
-import 'package:prompt_master/services/ai_prompts.dart';
+import 'package:ideai/models/prompt_generato.dart';
+import 'package:ideai/models/prompt_template.dart';
+import 'package:ideai/services/api_service.dart';
+import 'package:ideai/services/ai_prompts.dart';
 
 /// Provider per la gestione del prompt generato.
 /// Usa GPT-4o-mini per la generazione, con fallback ai dati fittizi.

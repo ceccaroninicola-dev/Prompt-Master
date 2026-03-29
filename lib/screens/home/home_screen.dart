@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:prompt_master/config/app_routes.dart';
-import 'package:prompt_master/providers/theme_provider.dart';
-import 'package:prompt_master/widgets/barra_navigazione.dart';
+import 'package:ideai/config/app_routes.dart';
+import 'package:ideai/providers/theme_provider.dart';
+import 'package:ideai/widgets/barra_navigazione.dart';
 import 'package:provider/provider.dart';
 
-/// Schermata principale (Home) dell'app Prompt Master.
+/// Schermata principale (Home) dell'app IdeAI.
 /// Design minimal ispirato ad Apple: superfici pulite, ombre sottili, teal come accento.
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -20,7 +20,7 @@ class HomeScreen extends StatelessWidget {
       canPop: false,
       child: Scaffold(
       appBar: AppBar(
-        title: const Text('Prompt Master'),
+        title: const Text('IdeAI'),
         automaticallyImplyLeading: false,
         actions: [
           // Icona profilo utente
@@ -84,7 +84,7 @@ class HomeScreen extends StatelessWidget {
 
                 // Titolo principale
                 Text(
-                  'Prompt Master',
+                  'IdeAI',
                   style: Theme.of(context).textTheme.headlineLarge?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: colorScheme.onSurface,

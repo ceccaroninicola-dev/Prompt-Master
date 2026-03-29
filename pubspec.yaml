@@ -1,5 +1,5 @@
-name: prompt_master
-description: "Prompt Master - Il tuo assistente per creare prompt perfetti."
+name: ideai
+description: "IdeAI — Crea prompt perfetti per ogni AI"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -39,17 +39,23 @@ dependencies:
   pdf: ^3.11.3
   web: ^1.1.1
   http: ^1.6.0
+  google_mobile_ads: ^5.3.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  # The "flutter_lints" package below contains a set of recommended lints to
-  # encourage good coding practices. The lint set provided by the package is
-  # activated in the `analysis_options.yaml` file located at the root of your
-  # package. See that file for information about deactivating specific lint
-  # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.3
+
+# Configurazione icona app — genera tutte le dimensioni necessarie
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"
+  adaptive_icon_background: "#0F172A"
+  adaptive_icon_foreground: "assets/icon.png"
+  min_sdk_android: 21
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Prompt Master</string>
+	<string>IdeAI</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>prompt_master</string>
+	<string>ideai</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -49,6 +49,20 @@
 	</dict>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- AdMob App ID per iOS — necessario per l'inizializzazione del SDK -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-7715514651566286~8348290777</string>
+	<!-- Descrizione per la richiesta di tracking (ATT - iOS 14+) -->
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Questa app usa il tracking per mostrare pubblicità pertinenti ai tuoi interessi.</string>
+	<key>SKAdNetworkItems</key>
+	<array>
+		<dict>
+			<!-- Google AdMob SKAdNetwork ID -->
+			<key>SKAdNetworkIdentifier</key>
+			<string>cstr6suwn9.skadnetwork</string>
+		</dict>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>

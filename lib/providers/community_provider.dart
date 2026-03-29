@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:prompt_master/models/utente.dart';
-import 'package:prompt_master/models/prompt_pubblico.dart';
-import 'package:prompt_master/models/prompt_generato.dart';
-import 'package:prompt_master/models/commento.dart';
+import 'package:ideai/models/utente.dart';
+import 'package:ideai/models/prompt_pubblico.dart';
+import 'package:ideai/models/prompt_generato.dart';
+import 'package:ideai/models/commento.dart';
 
 /// Provider per la gestione della community.
 /// Gestisce utenti, prompt pubblici, like, fork e commenti.

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:prompt_master/config/app_routes.dart';
-import 'package:prompt_master/models/confronto_ai.dart';
-import 'package:prompt_master/providers/confronto_ai_provider.dart';
-import 'package:prompt_master/providers/cronologia_provider.dart';
-import 'package:prompt_master/providers/sessione_provider.dart';
+import 'package:ideai/config/app_routes.dart';
+import 'package:ideai/models/confronto_ai.dart';
+import 'package:ideai/providers/confronto_ai_provider.dart';
+import 'package:ideai/providers/cronologia_provider.dart';
+import 'package:ideai/providers/sessione_provider.dart';
 
 /// Schermata di confronto risposte multi-AI.
 /// Mostra le risposte delle AI in card swipabili orizzontalmente

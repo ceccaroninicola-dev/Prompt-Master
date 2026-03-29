@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:prompt_master/services/api_service.dart';
+import 'package:ideai/services/api_service.dart';
 
 /// Schermata impostazioni — permette di configurare la API key OpenAI
 /// e il proxy CORS per Flutter Web.
@@ -529,7 +529,7 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
               // Info sull'app
               Center(
                 child: Text(
-                  'Prompt Master v1.0.0 — Powered by GPT-4o-mini',
+                  'IdeAI v1.0.0 — Powered by GPT-4o-mini',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),

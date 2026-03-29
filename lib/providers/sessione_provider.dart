@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:prompt_master/models/categoria_rilevata.dart';
-import 'package:prompt_master/models/domanda.dart';
-import 'package:prompt_master/models/sessione_prompt.dart';
-import 'package:prompt_master/services/api_service.dart';
-import 'package:prompt_master/services/ai_prompts.dart';
+import 'package:ideai/models/categoria_rilevata.dart';
+import 'package:ideai/models/domanda.dart';
+import 'package:ideai/models/sessione_prompt.dart';
+import 'package:ideai/services/api_service.dart';
+import 'package:ideai/services/ai_prompts.dart';
 
 /// Provider per la gestione della sessione di creazione prompt.
 /// Gestisce il flusso completo: frase iniziale → categoria → domande → risposte.

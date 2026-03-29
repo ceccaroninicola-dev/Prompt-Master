@@ -1,10 +1,13 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:prompt_master/config/app_routes.dart';
-import 'package:prompt_master/models/domanda.dart';
-import 'package:prompt_master/providers/sessione_provider.dart';
-import 'package:prompt_master/providers/prompt_generato_provider.dart';
-import 'package:prompt_master/widgets/barra_avanzamento.dart';
+import 'package:ideai/config/app_routes.dart';
+import 'package:ideai/models/domanda.dart';
+import 'package:ideai/providers/sessione_provider.dart';
+import 'package:ideai/providers/prompt_generato_provider.dart';
+import 'package:ideai/widgets/barra_avanzamento.dart';
+import 'package:ideai/widgets/banner_ad_widget.dart';
+import 'package:ideai/services/ad_service.dart';
 
 /// Schermata delle domande adattive — terza fase del flusso.
 /// Design minimal stile Apple: card pulite, teal accento, animazioni fluide.
@@ -30,6 +33,13 @@ class _DomandeScreenState extends State<DomandeScreen> {
 
   // Flag: l'utente è tornato indietro dalla post-generazione
   bool _ritornatoDaPostGenerazione = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Pre-carica l'interstitial all'inizio della sessione domande
+    AdService().precaricaInterstitial();
+  }
 
   @override
   void dispose() {
@@ -121,8 +131,9 @@ class _DomandeScreenState extends State<DomandeScreen> {
   }
 
   /// Avvia la generazione del prompt e naviga alla schermata post-generazione.
-  /// Il flag _haNavigato previene push multipli della stessa rotta.
-  void _navigaAPostGenerazione() {
+  /// Mostra un interstitial tra la sessione domande e la post-generazione
+  /// (massimo 1 ogni 3 minuti). Il flag _haNavigato previene push multipli.
+  Future<void> _navigaAPostGenerazione() async {
     if (_haNavigato) return;
     _haNavigato = true;
 
@@ -135,6 +146,13 @@ class _DomandeScreenState extends State<DomandeScreen> {
       categoria: sessione.categoria?.nome ?? 'Scrittura',
       risposte: sessione.risposte,
     );
+
+    // Mostra l'interstitial prima di navigare (se disponibile e non su web)
+    if (!kIsWeb) {
+      await AdService().mostraInterstitial();
+    }
+
+    if (!mounted) return;
 
     // Naviga alla schermata post-generazione
     Navigator.of(context).pushNamed(AppRoutes.postGenerazione).then((_) {
@@ -233,29 +251,38 @@ class _DomandeScreenState extends State<DomandeScreen> {
         ],
       ),
       body: SafeArea(
-        child: _DomandeBody(
-          domanda: domanda,
-          sessione: sessione,
-          provider: provider,
-          colorScheme: colorScheme,
-          testoController: _testoController,
-          opzioneSelezionata: _opzioneSelezionata,
-          chipSelezionati: _chipSelezionati,
-          onResetInput: _resetInput,
-          onOpzioneSelezionata: (val) =>
-              setState(() => _opzioneSelezionata = val),
-          onChipToggle: (chip) {
-            setState(() {
-              if (_chipSelezionati.contains(chip)) {
-                _chipSelezionati.remove(chip);
-              } else {
-                _chipSelezionati.add(chip);
-              }
-            });
-          },
-          onInviaRisposta: _inviRisposta,
-          onGeneraOra: _generaOra,
-          onTestoChanged: () => setState(() {}),
+        child: Column(
+          children: [
+            // Contenuto principale delle domande
+            Expanded(
+              child: _DomandeBody(
+                domanda: domanda,
+                sessione: sessione,
+                provider: provider,
+                colorScheme: colorScheme,
+                testoController: _testoController,
+                opzioneSelezionata: _opzioneSelezionata,
+                chipSelezionati: _chipSelezionati,
+                onResetInput: _resetInput,
+                onOpzioneSelezionata: (val) =>
+                    setState(() => _opzioneSelezionata = val),
+                onChipToggle: (chip) {
+                  setState(() {
+                    if (_chipSelezionati.contains(chip)) {
+                      _chipSelezionati.remove(chip);
+                    } else {
+                      _chipSelezionati.add(chip);
+                    }
+                  });
+                },
+                onInviaRisposta: _inviRisposta,
+                onGeneraOra: _generaOra,
+                onTestoChanged: () => setState(() {}),
+              ),
+            ),
+            // Banner pubblicitario in basso (solo su mobile, non su web)
+            const BannerAdWidget(),
+          ],
         ),
       ),
     );
