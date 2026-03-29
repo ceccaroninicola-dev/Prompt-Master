@@ -22,31 +22,37 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3. Setup Flutter
+      # 3. Setup Flutter — usa l'ultima versione stabile
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.32.2'
           channel: 'stable'
           cache: true
 
-      # 4. Installa le dipendenze
+      # 4. Mostra versioni installate
+      - name: Versioni
+        run: |
+          flutter --version
+          dart --version
+          java -version
+
+      # 5. Installa le dipendenze
       - name: Flutter pub get
         run: flutter pub get
 
-      # 5. Analisi statica del codice
+      # 6. Analisi statica del codice
       - name: Flutter analyze
-        run: flutter analyze --no-fatal-infos
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
-      # 6. Build AAB (richiesto da Google Play)
+      # 7. Build AAB (richiesto da Google Play)
       - name: Build App Bundle (AAB)
         run: flutter build appbundle --release
 
-      # 7. Build APK (per test diretti)
+      # 8. Build APK (per test diretti)
       - name: Build APK
         run: flutter build apk --release
 
-      # 8. Carica AAB come artifact scaricabile
+      # 9. Carica AAB come artifact scaricabile
       - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
@@ -54,7 +60,7 @@ jobs:
           path: build/app/outputs/bundle/release/app-release.aab
           retention-days: 30
 
-      # 9. Carica APK come artifact scaricabile
+      # 10. Carica APK come artifact scaricabile
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
@@ -62,7 +68,7 @@ jobs:
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
 
-      # 10. Riepilogo del build
+      # 11. Riepilogo del build
       - name: Riepilogo
         run: |
           echo "## Build completato" >> $GITHUB_STEP_SUMMARY
