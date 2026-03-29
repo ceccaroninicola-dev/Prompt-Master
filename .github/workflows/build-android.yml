@@ -22,10 +22,11 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      # 3. Setup Flutter — usa l'ultima versione stabile
+      # 3. Setup Flutter 3.41.6 (richiesto da SDK ^3.11.1)
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.41.6'
           channel: 'stable'
           cache: true
 
