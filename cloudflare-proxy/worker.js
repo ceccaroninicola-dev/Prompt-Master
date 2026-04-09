@@ -1,11 +1,16 @@
 /**
  * Cloudflare Worker — Proxy CORS per IdeAI.
  *
- * Inoltra le richieste dall'app Flutter Web a api.openai.com,
+ * Inoltra le richieste dall'app Flutter a api.openai.com,
  * aggiungendo gli header CORS necessari per il browser.
  *
- * La API key viene inviata dall'app (header Authorization),
- * il worker NON memorizza credenziali.
+ * API KEY:
+ * - Se la richiesta ha un header Authorization → usa quella dell'utente
+ * - Altrimenti → usa la API key di default (variabile d'ambiente OPENAI_API_KEY)
+ *   Questo permette ai beta tester di usare l'AI senza configurare nulla.
+ *
+ * Configura la key di default con:
+ *   npx wrangler secret put OPENAI_API_KEY
  *
  * Deploy:
  *   npx wrangler deploy
@@ -24,7 +29,7 @@ const ORIGINI_CONSENTITE = [
 const OPENAI_BASE = 'https://api.openai.com';
 
 export default {
-  async fetch(request) {
+  async fetch(request, env) {
     // Gestisci le richieste preflight CORS (OPTIONS)
     if (request.method === 'OPTIONS') {
       return rispostaCors(request, new Response(null, { status: 204 }));
@@ -47,15 +52,23 @@ export default {
     const headerInoltro = new Headers();
     headerInoltro.set('Content-Type', 'application/json');
 
-    // Copia l'header Authorization dall'app (contiene la API key dell'utente)
-    const auth = request.headers.get('Authorization');
-    if (!auth) {
+    // Determina quale API key usare:
+    // - Se l'utente ha inviato un Authorization header → usa quella (sua key personale)
+    // - Altrimenti → usa la key di default dal secret OPENAI_API_KEY del worker
+    //   (così i beta tester possono usare l'app senza configurare nulla)
+    const authUtente = request.headers.get('Authorization');
+    if (authUtente) {
+      headerInoltro.set('Authorization', authUtente);
+    } else if (env && env.OPENAI_API_KEY) {
+      headerInoltro.set('Authorization', `Bearer ${env.OPENAI_API_KEY}`);
+    } else {
       return rispostaCors(request, new Response(
-        JSON.stringify({ error: 'Header Authorization mancante.' }),
+        JSON.stringify({
+          error: 'API key non disponibile. Configura OPENAI_API_KEY come secret del worker o invia un header Authorization.'
+        }),
         { status: 401, headers: { 'Content-Type': 'application/json' } }
       ));
     }
-    headerInoltro.set('Authorization', auth);
 
     try {
       const rispostaOpenAI = await fetch(urlOpenAI, {
