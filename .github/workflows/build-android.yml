@@ -46,6 +46,8 @@ jobs:
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
       # 7. Build AAB (richiesto da Google Play)
+      # La API key non serve nel build: l'app parla con il Cloudflare
+      # Worker proxy che inietta automaticamente la key dal suo secret.
       - name: Build App Bundle (AAB)
         run: flutter build appbundle --release
 

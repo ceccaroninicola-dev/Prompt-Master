@@ -204,6 +204,9 @@ class _DomandeScreenState extends State<DomandeScreen> {
     }
 
     return Scaffold(
+      // Permette al contenuto di rimpicciolirsi quando appare la tastiera,
+      // così il campo di testo libero resta visibile sopra di essa
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(sessione.categoria?.nome ?? 'Domande'),
         leading: IconButton(
@@ -330,6 +333,13 @@ class _DomandeBodyState extends State<_DomandeBody> {
   // Tiene traccia dell'ultimo id domanda visualizzato per resettare l'input
   String? _ultimaDomandaId;
 
+  // FocusNode per il campo di testo libero — serve a scrollare automaticamente
+  // il campo sopra la tastiera quando riceve il focus
+  final _testoFocusNode = FocusNode();
+
+  // Chiave globale del TextField per Scrollable.ensureVisible
+  final _testoFieldKey = GlobalKey();
+
   @override
   void didUpdateWidget(covariant _DomandeBody oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -350,6 +360,33 @@ class _DomandeBodyState extends State<_DomandeBody> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.onResetInput(widget.domanda, rispostaPrecedente);
     });
+    // Quando il campo testo riceve il focus, scorri per renderlo visibile
+    _testoFocusNode.addListener(_onTestoFocusChange);
+  }
+
+  /// Porta il TextField in vista quando riceve il focus (dopo l'apertura tastiera)
+  void _onTestoFocusChange() {
+    if (_testoFocusNode.hasFocus) {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (!mounted) return;
+        final ctx = _testoFieldKey.currentContext;
+        if (ctx != null) {
+          Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            alignment: 0.1,
+          );
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _testoFocusNode.removeListener(_onTestoFocusChange);
+    _testoFocusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -380,6 +417,8 @@ class _DomandeBodyState extends State<_DomandeBody> {
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24),
+            // Chiude la tastiera quando si trascina la vista
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               transitionBuilder: (child, animation) {
@@ -434,7 +473,9 @@ class _DomandeBodyState extends State<_DomandeBody> {
   /// Input di tipo testo libero — campo di testo con bordi morbidi
   Widget _buildInputTestoLibero() {
     return TextField(
+      key: _testoFieldKey,
       controller: widget.testoController,
+      focusNode: _testoFocusNode,
       maxLines: 5,
       onChanged: (_) => widget.onTestoChanged(),
       decoration: InputDecoration(

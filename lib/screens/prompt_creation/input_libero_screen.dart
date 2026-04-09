@@ -19,6 +19,12 @@ class _InputLiberoScreenState extends State<InputLiberoScreen> {
   // Nodo di focus per gestire la tastiera
   final _focusNode = FocusNode();
 
+  // Controller dello scroll per portare il campo in vista all'apertura tastiera
+  final _scrollController = ScrollController();
+
+  // Chiave del campo di testo per Scrollable.ensureVisible
+  final _textFieldKey = GlobalKey();
+
   // Indica se il bottone di invio deve essere attivo
   bool _testoValido = false;
 
@@ -31,12 +37,36 @@ class _InputLiberoScreenState extends State<InputLiberoScreen> {
         _testoValido = _testoController.text.trim().length >= 5;
       });
     });
+    // Quando il campo riceve il focus, scorre automaticamente
+    // per renderlo visibile sopra la tastiera
+    _focusNode.addListener(_gestisciFocus);
+  }
+
+  /// Porta il campo di testo in vista quando riceve il focus
+  void _gestisciFocus() {
+    if (_focusNode.hasFocus) {
+      // Ritardo per attendere l'apertura della tastiera
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (!mounted) return;
+        final ctx = _textFieldKey.currentContext;
+        if (ctx != null) {
+          Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            alignment: 0.1,
+          );
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
+    _focusNode.removeListener(_gestisciFocus);
     _testoController.dispose();
     _focusNode.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -84,6 +114,9 @@ class _InputLiberoScreenState extends State<InputLiberoScreen> {
     final staAnalizzando = context.watch<SessioneProvider>().staAnalizzando;
 
     return Scaffold(
+      // Il body si ridimensiona quando appare la tastiera,
+      // permettendo al campo di testo di rimanere visibile
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: const Text('Nuovo Prompt'),
         actions: [
@@ -99,7 +132,10 @@ class _InputLiberoScreenState extends State<InputLiberoScreen> {
         ],
       ),
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          // Chiude la tastiera quando si trascina la vista
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           padding: const EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -120,41 +156,41 @@ class _InputLiberoScreenState extends State<InputLiberoScreen> {
               ),
               const SizedBox(height: 24),
 
-              // Campo di testo principale
-              Expanded(
-                child: TextField(
-                  controller: _testoController,
-                  focusNode: _focusNode,
-                  maxLines: null,
-                  expands: true,
-                  textAlignVertical: TextAlignVertical.top,
-                  enabled: !staAnalizzando,
-                  decoration: InputDecoration(
-                    hintText:
-                        'Es. "Voglio scrivere un post LinkedIn per lanciare '
-                        'il mio nuovo prodotto SaaS per piccole imprese"',
-                    hintMaxLines: 3,
-                    hintStyle: TextStyle(
-                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-                      fontSize: 15,
-                    ),
-                    filled: true,
-                    fillColor: colorScheme.surfaceContainerLow,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none,
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide(
-                        color: colorScheme.primary,
-                        width: 2,
-                      ),
-                    ),
-                    contentPadding: const EdgeInsets.all(20),
+              // Campo di testo principale — altezza fissa che si adatta
+              // al contenuto, senza Expanded così resta in un ScrollView
+              TextField(
+                key: _textFieldKey,
+                controller: _testoController,
+                focusNode: _focusNode,
+                maxLines: 10,
+                minLines: 6,
+                textAlignVertical: TextAlignVertical.top,
+                enabled: !staAnalizzando,
+                decoration: InputDecoration(
+                  hintText:
+                      'Es. "Voglio scrivere un post LinkedIn per lanciare '
+                      'il mio nuovo prodotto SaaS per piccole imprese"',
+                  hintMaxLines: 3,
+                  hintStyle: TextStyle(
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                    fontSize: 15,
                   ),
-                  style: Theme.of(context).textTheme.bodyLarge,
+                  filled: true,
+                  fillColor: colorScheme.surfaceContainerLow,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(
+                      color: colorScheme.primary,
+                      width: 2,
+                    ),
+                  ),
+                  contentPadding: const EdgeInsets.all(20),
                 ),
+                style: Theme.of(context).textTheme.bodyLarge,
               ),
               const SizedBox(height: 16),
 
