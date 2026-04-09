@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:ideai/config/app_routes.dart';
 import 'package:ideai/models/prompt_generato.dart';
@@ -10,7 +11,6 @@ import 'package:ideai/providers/confronto_ai_provider.dart';
 import 'package:ideai/providers/community_provider.dart';
 import 'package:ideai/models/prompt_pubblico.dart';
 import 'package:ideai/services/export_service.dart';
-import 'package:ideai/services/ad_service.dart';
 
 /// Schermata post-generazione — mostra il prompt generato con:
 /// - Anteprima in due viste (semplice/strutturata)
@@ -37,17 +37,6 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
 
   /// AI di destinazione selezionata (null = non ancora scelta)
   String? _aiSelezionata;
-
-  /// Flag: i suggerimenti sono sbloccati per questa sessione.
-  /// Su web sono sempre sbloccati (AdMob non funziona su web).
-  bool _suggerimentiSbloccati = kIsWeb;
-
-  @override
-  void initState() {
-    super.initState();
-    // Pre-carica il rewarded video per lo sblocco suggerimenti
-    AdService().precaricaRewarded();
-  }
 
   @override
   void dispose() {
@@ -167,12 +156,7 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 12),
-                      // Se sbloccati, mostra i suggerimenti.
-                      // Altrimenti mostra il bottone per guardare il video.
-                      if (_suggerimentiSbloccati)
-                        _buildSuggerimenti(prompt, colorScheme)
-                      else
-                        _buildSbloccoSuggerimenti(colorScheme, isDark),
+                      _buildSuggerimenti(prompt, colorScheme),
                     ],
                   ],
                 ),
@@ -378,52 +362,156 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
   }
 
   // ========== VISTA SEMPLICE ==========
+  //
+  // Mostra il prompt come testo unico, pulito, non modificabile,
+  // con un grande bottone "Copia prompt" in evidenza.
+  // È la vista "ready to use" — l'utente copia e incolla nella sua AI.
 
   Widget _buildVistaSemplice(
     PromptGenerato prompt,
     ColorScheme colorScheme,
     bool isDark,
   ) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          if (!isDark)
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Etichetta superiore: chiarisce che è "pronto da copiare"
+        Row(
+          children: [
+            Icon(
+              Icons.lock_outline,
+              size: 14,
+              color: colorScheme.onSurfaceVariant,
             ),
-        ],
-      ),
-      child: SelectableText(
-        prompt.testoCompleto,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              height: 1.6,
+            const SizedBox(width: 6),
+            Text(
+              'Solo lettura — pronto da copiare',
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurfaceVariant,
+                fontStyle: FontStyle.italic,
+              ),
             ),
-      ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        // Box con il testo del prompt (non modificabile)
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+              width: 1,
+            ),
+            boxShadow: [
+              if (!isDark)
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+            ],
+          ),
+          child: SelectableText(
+            prompt.testoCompleto,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  height: 1.6,
+                ),
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // Grande bottone "Copia prompt" in evidenza
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            icon: const Icon(Icons.copy_rounded, size: 22),
+            label: const Text(
+              'Copia prompt',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            onPressed: () async {
+              await Clipboard.setData(
+                ClipboardData(text: prompt.testoCompleto),
+              );
+              if (mounted) {
+                _mostraConferma(
+                  Icons.check_circle,
+                  'Prompt copiato negli appunti!',
+                );
+              }
+            },
+          ),
+        ),
+      ],
     );
   }
 
   // ========== VISTA STRUTTURATA ==========
+  //
+  // Mostra il prompt suddiviso nelle sue sezioni (Ruolo, Contesto,
+  // Istruzioni, Formato output, Vincoli, ecc.), ognuna modificabile
+  // separatamente e collassabile. Il prompt finale viene ricomposto
+  // dalle sezioni modificate.
 
   Widget _buildVistaStrutturata(
     PromptGenerato prompt,
     ColorScheme colorScheme,
     bool isDark,
   ) {
+    // Filtra solo le sezioni non vuote (indice originale preservato)
+    final sezioniConIndice = <MapEntry<int, SezionePrompt>>[];
+    for (var i = 0; i < prompt.sezioni.length; i++) {
+      if (prompt.sezioni[i].contenuto.isNotEmpty) {
+        sezioniConIndice.add(MapEntry(i, prompt.sezioni[i]));
+      }
+    }
+
     return Column(
-      children: List.generate(prompt.sezioni.length, (indice) {
-        final sezione = prompt.sezioni[indice];
-        if (sezione.contenuto.isEmpty) return const SizedBox.shrink();
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Etichetta superiore: chiarisce che ogni sezione è modificabile
+        Row(
+          children: [
+            Icon(
+              Icons.edit_note_rounded,
+              size: 16,
+              color: colorScheme.primary,
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                '${sezioniConIndice.length} sezioni modificabili — tocca l\'icona matita per modificare',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.primary,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
 
-        final inModifica = _sezioneInModifica == indice;
-        final coloreSezione = Color(sezione.colore);
+        // Card di ogni sezione
+        ...List.generate(prompt.sezioni.length, (indice) {
+          final sezione = prompt.sezioni[indice];
+          if (sezione.contenuto.isEmpty) return const SizedBox.shrink();
 
-        return Padding(
+          final inModifica = _sezioneInModifica == indice;
+          final coloreSezione = Color(sezione.colore);
+
+          return Padding(
           padding: const EdgeInsets.only(bottom: 10),
           child: _CardSezione(
             sezione: sezione,
@@ -455,7 +543,8 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
             },
           ),
         );
-      }),
+        }),
+      ],
     );
   }
 
@@ -490,86 +579,6 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
           ),
         );
       }).toList(),
-    );
-  }
-
-  /// Bottone per sbloccare i suggerimenti guardando un rewarded video.
-  /// Su web non appare mai (i suggerimenti sono sempre sbloccati).
-  Widget _buildSbloccoSuggerimenti(ColorScheme colorScheme, bool isDark) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.lock_outline,
-            size: 32,
-            color: colorScheme.onSurfaceVariant,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'I suggerimenti di miglioramento sono bloccati',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: colorScheme.onSurfaceVariant,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 16),
-          FilledButton.icon(
-            onPressed: () async {
-              // Mostra il rewarded video
-              final ricompensa = await AdService().mostraRewarded();
-              if (ricompensa && mounted) {
-                setState(() => _suggerimentiSbloccati = true);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: const Row(
-                        children: [
-                          Icon(Icons.check_circle, color: Colors.white, size: 18),
-                          SizedBox(width: 8),
-                          Text('Suggerimenti sbloccati!'),
-                        ],
-                      ),
-                      behavior: SnackBarBehavior.floating,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  );
-                }
-              } else if (!ricompensa && mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: const Text(
-                        'Video non disponibile. Riprova tra poco.'),
-                    behavior: SnackBarBehavior.floating,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                );
-              }
-            },
-            icon: const Icon(Icons.play_circle_outline, size: 20),
-            label: const Text('Guarda un video per sbloccare suggerimenti'),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
