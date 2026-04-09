@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:http/http.dart' as http;
 
 /// Servizio centralizzato per le chiamate all'API OpenAI (GPT-4o-mini).
-/// La API key viene letta dalla configurazione — MAI hardcoded nel codice.
 ///
 /// Su Flutter Web, le chiamate dirette a api.openai.com sono bloccate
 /// dal browser (CORS). Il servizio usa automaticamente un proxy CORS
@@ -25,8 +24,17 @@ class ApiService {
   /// Modello da utilizzare
   static const _modello = 'gpt-4o-mini';
 
-  /// API key — impostata dall'esterno (variabile d'ambiente o configurazione)
-  String? _apiKey;
+  /// API key di default letta a compile-time da --dart-define=OPENAI_API_KEY=...
+  /// Su GitHub Actions viene passata automaticamente dal secret OPENAI_API_KEY.
+  /// Se vuota, l'utente può inserirla manualmente dalle Impostazioni.
+  /// Permette all'AI di funzionare SENZA configurazione manuale per i beta
+  /// tester, senza mai esporre la key nel codice sorgente del repository.
+  static const _apiKeyDefault =
+      String.fromEnvironment('OPENAI_API_KEY', defaultValue: '');
+
+  /// API key attuale — inizializzata con la key di default da --dart-define,
+  /// può essere sovrascritta tramite impostaApiKey() dalle impostazioni.
+  String? _apiKey = _apiKeyDefault.isNotEmpty ? _apiKeyDefault : null;
 
   /// Imposta la API key
   void impostaApiKey(String key) {

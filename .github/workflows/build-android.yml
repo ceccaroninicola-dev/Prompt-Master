@@ -46,12 +46,15 @@ jobs:
         run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
       # 7. Build AAB (richiesto da Google Play)
+      # La API key viene letta dal secret OPENAI_API_KEY e iniettata
+      # a compile-time via --dart-define. Così l'AI funziona senza
+      # che gli utenti debbano configurare nulla manualmente.
       - name: Build App Bundle (AAB)
-        run: flutter build appbundle --release
+        run: flutter build appbundle --release --dart-define=OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
 
       # 8. Build APK (per test diretti)
       - name: Build APK
-        run: flutter build apk --release
+        run: flutter build apk --release --dart-define=OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
 
       # 9. Carica AAB come artifact scaricabile
       - name: Upload AAB
