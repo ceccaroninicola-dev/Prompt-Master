@@ -89,7 +89,8 @@ class ApiService {
     int maxTokens = 2000,
   }) async {
     final url = '$_urlBase/v1/chat/completions';
-    debugPrint('[ApiService] chiamaAI → $url (userKey: $apiKeyConfigurata)');
+    debugPrint('[ApiService] chiamaAI → POST $url');
+    debugPrint('[ApiService] userKey: $apiKeyConfigurata, proxy custom: $proxyConfigurato');
 
     try {
       final risposta = await http
@@ -108,25 +109,29 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 30));
 
-      debugPrint('[ApiService] Risposta: ${risposta.statusCode}');
+      debugPrint('[ApiService] chiamaAI ← ${risposta.statusCode} '
+          '(${risposta.bodyBytes.length} bytes)');
 
       if (risposta.statusCode == 200) {
         final json = jsonDecode(risposta.body);
         return json['choices'][0]['message']['content'] as String;
       } else if (risposta.statusCode == 401) {
+        debugPrint('[ApiService] 401 body: ${risposta.body}');
         throw ApiException('API key non valida. Verificala nelle impostazioni.');
       } else if (risposta.statusCode == 429) {
+        debugPrint('[ApiService] 429 body: ${risposta.body}');
         throw ApiException(
             'Troppe richieste. Riprova tra qualche secondo.');
       } else {
-        debugPrint('[ApiService] Errore body: ${risposta.body}');
+        debugPrint('[ApiService] Errore ${risposta.statusCode} body: ${risposta.body}');
         throw ApiException(
             'Errore dal server (${risposta.statusCode}). Riprova più tardi.');
       }
     } on ApiException {
       rethrow;
-    } catch (e) {
-      debugPrint('[ApiService] Eccezione: $e');
+    } catch (e, stack) {
+      debugPrint('[ApiService] Eccezione chiamaAI: $e');
+      debugPrint('[ApiService] Stack: $stack');
       throw ApiException(
           'Errore di connessione. Verifica la tua connessione internet '
           'e riprova.');
@@ -142,7 +147,8 @@ class ApiService {
     int maxTokens = 2000,
   }) async {
     final url = '$_urlBase/v1/chat/completions';
-    debugPrint('[ApiService] chiamaAIJson → $url (userKey: $apiKeyConfigurata)');
+    debugPrint('[ApiService] chiamaAIJson → POST $url');
+    debugPrint('[ApiService] userKey: $apiKeyConfigurata, proxy custom: $proxyConfigurato');
 
     try {
       final risposta = await http
@@ -162,27 +168,31 @@ class ApiService {
           )
           .timeout(const Duration(seconds: 30));
 
-      debugPrint('[ApiService] Risposta JSON: ${risposta.statusCode}');
+      debugPrint('[ApiService] chiamaAIJson ← ${risposta.statusCode} '
+          '(${risposta.bodyBytes.length} bytes)');
 
       if (risposta.statusCode == 200) {
         final json = jsonDecode(risposta.body);
         final contenuto = json['choices'][0]['message']['content'] as String;
-        debugPrint('[ApiService] Contenuto ricevuto: ${contenuto.length} chars');
+        debugPrint('[ApiService] Contenuto JSON ricevuto: ${contenuto.length} chars');
         return jsonDecode(contenuto) as Map<String, dynamic>;
       } else if (risposta.statusCode == 401) {
+        debugPrint('[ApiService] 401 body: ${risposta.body}');
         throw ApiException('API key non valida. Verificala nelle impostazioni.');
       } else if (risposta.statusCode == 429) {
+        debugPrint('[ApiService] 429 body: ${risposta.body}');
         throw ApiException(
             'Troppe richieste. Riprova tra qualche secondo.');
       } else {
-        debugPrint('[ApiService] Errore body: ${risposta.body}');
+        debugPrint('[ApiService] Errore ${risposta.statusCode} body: ${risposta.body}');
         throw ApiException(
             'Errore dal server (${risposta.statusCode}). Riprova più tardi.');
       }
     } on ApiException {
       rethrow;
-    } catch (e) {
-      debugPrint('[ApiService] Eccezione JSON: $e');
+    } catch (e, stack) {
+      debugPrint('[ApiService] Eccezione chiamaAIJson: $e');
+      debugPrint('[ApiService] Stack: $stack');
       throw ApiException(
           'Errore di connessione. Verifica la tua connessione internet '
           'e riprova.');

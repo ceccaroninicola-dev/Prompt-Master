@@ -31,7 +31,8 @@ class PromptGeneratoProvider extends ChangeNotifier {
   String? get aiOttimizzata => _aiOttimizzata;
 
   /// Genera un prompt a partire dalle risposte della sessione.
-  /// Usa l'AI se disponibile, altrimenti crea dati fittizi.
+  /// Chiama sempre l'AI via proxy (che inietta la key di default);
+  /// il fallback fittizio si attiva solo se la chiamata fallisce.
   Future<void> generaPrompt({
     required String fraseIniziale,
     required String categoria,
@@ -44,29 +45,32 @@ class PromptGeneratoProvider extends ChangeNotifier {
     notifyListeners();
 
     final api = ApiService();
+    debugPrint('[PromptGen] Avvio generazione — userKey: ${api.apiKeyConfigurata}');
 
-    if (api.apiKeyConfigurata) {
-      try {
-        // Costruisci il messaggio con tutte le informazioni raccolte
-        final messaggioUtente = _costruisciMessaggio(
-            fraseIniziale, categoria, risposte);
+    try {
+      // Costruisci il messaggio con tutte le informazioni raccolte
+      final messaggioUtente = _costruisciMessaggio(
+          fraseIniziale, categoria, risposte);
 
-        final json = await api.chiamaAIJson(
-          systemPrompt: AiPrompts.generazionePrompt,
-          messaggioUtente: messaggioUtente,
-          temperature: 0.7,
-          maxTokens: 3000,
-        );
+      debugPrint('[PromptGen] Chiamata AI in corso...');
+      final json = await api.chiamaAIJson(
+        systemPrompt: AiPrompts.generazionePrompt,
+        messaggioUtente: messaggioUtente,
+        temperature: 0.7,
+        maxTokens: 3000,
+      );
 
-        _prompt = _parsaPromptDaJson(json);
-      } on ApiException catch (e) {
-        _errore = e.messaggio;
-        // Fallback ai dati fittizi
-        _prompt = _creaPromptFittizio(fraseIniziale, categoria, risposte);
-      }
-    } else {
-      // Senza API key, usa i dati fittizi
-      await Future.delayed(const Duration(milliseconds: 800));
+      _prompt = _parsaPromptDaJson(json);
+      debugPrint('[PromptGen] Prompt generato: ${_prompt!.sezioni.length} sezioni');
+    } on ApiException catch (e) {
+      debugPrint('[PromptGen] Errore API → ${e.messaggio}');
+      _errore = e.messaggio;
+      // Fallback ai dati fittizi
+      _prompt = _creaPromptFittizio(fraseIniziale, categoria, risposte);
+    } catch (e, stack) {
+      debugPrint('[PromptGen] Eccezione inattesa → $e');
+      debugPrint('[PromptGen] Stack → $stack');
+      _errore = 'Errore inatteso durante la generazione.';
       _prompt = _creaPromptFittizio(fraseIniziale, categoria, risposte);
     }
 
@@ -86,27 +90,24 @@ class PromptGeneratoProvider extends ChangeNotifier {
 
     final api = ApiService();
 
-    if (api.apiKeyConfigurata) {
-      try {
-        final risultato = await api.chiamaAI(
-          systemPrompt: AiPrompts.ottimizzazionePerAI,
-          messaggioUtente: 'AI di destinazione: $nomeAI\n\n'
-              'Prompt originale:\n${_prompt!.testoCompleto}',
-          temperature: 0.5,
-          maxTokens: 2000,
-        );
-        _promptOttimizzato = risultato;
-        _aiOttimizzata = nomeAI;
-        notifyListeners();
-        return risultato;
-      } on ApiException {
-        // Fallback: restituisci il prompt originale
-        return _prompt!.testoCompleto;
-      }
+    try {
+      final risultato = await api.chiamaAI(
+        systemPrompt: AiPrompts.ottimizzazionePerAI,
+        messaggioUtente: 'AI di destinazione: $nomeAI\n\n'
+            'Prompt originale:\n${_prompt!.testoCompleto}',
+        temperature: 0.5,
+        maxTokens: 2000,
+      );
+      _promptOttimizzato = risultato;
+      _aiOttimizzata = nomeAI;
+      notifyListeners();
+      return risultato;
+    } on ApiException {
+      // Fallback: restituisci il prompt originale
+      return _prompt!.testoCompleto;
+    } catch (_) {
+      return _prompt!.testoCompleto;
     }
-
-    // Senza API key, restituisci il prompt originale
-    return _prompt!.testoCompleto;
   }
 
   /// Aggiorna il contenuto di una sezione specifica

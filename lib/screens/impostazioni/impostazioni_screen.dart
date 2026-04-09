@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:ideai/services/api_service.dart';
 
 /// Schermata impostazioni — permette di configurare la API key OpenAI
@@ -21,6 +22,11 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
   String? _risultatoTest;
   String? _risultatoTestProxy;
 
+  /// Versione dell'app letta dal pacchetto (es. "1.0.5+6").
+  /// Inizializzata in initState per aggiornarsi automaticamente
+  /// ad ogni release senza toccare il codice.
+  String _versioneApp = '';
+
   @override
   void initState() {
     super.initState();
@@ -31,6 +37,21 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
     // Pre-compila il proxy se già configurato
     if (ApiService().corsProxy.isNotEmpty) {
       _corsProxyController.text = ApiService().corsProxy;
+    }
+    // Carica la versione dell'app (asincrono)
+    _caricaVersione();
+  }
+
+  /// Legge la versione dell'app da package_info_plus.
+  /// Su errore o piattaforme non supportate, lascia il campo vuoto.
+  Future<void> _caricaVersione() async {
+    try {
+      final info = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() => _versioneApp = info.version);
+      }
+    } catch (_) {
+      // Silenzioso: mostreremo solo "IdeAI" senza versione
     }
   }
 
@@ -526,10 +547,13 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
               ),
               const SizedBox(height: 16),
 
-              // Info sull'app
+              // Info sull'app — la versione viene letta dinamicamente
+              // da package_info_plus (aggiornata ad ogni release)
               Center(
                 child: Text(
-                  'IdeAI v1.0.0 — Powered by GPT-4o-mini',
+                  _versioneApp.isEmpty
+                      ? 'IdeAI — Powered by GPT-4o-mini'
+                      : 'IdeAI v$_versioneApp — Powered by GPT-4o-mini',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),

@@ -104,52 +104,44 @@ class ConfrontoAIProvider extends ChangeNotifier {
     for (final nomeAi in _aiSelezionate) {
       final ai = aiDisponibili.firstWhere((a) => a.nome == nomeAi);
 
-      if (api.apiKeyConfigurata) {
-        try {
-          final json = await api.chiamaAIJson(
-            systemPrompt: AiPrompts.getConfrontoPerAI(nomeAi),
-            messaggioUtente:
-                'Ecco il prompt dell\'utente a cui devi rispondere come $nomeAi:\n\n'
-                '${prompt.testoCompleto}\n\n'
-                'Categoria: $categoria',
-            temperature: 0.9,
-            maxTokens: 2000,
-          );
+      try {
+        final json = await api.chiamaAIJson(
+          systemPrompt: AiPrompts.getConfrontoPerAI(nomeAi),
+          messaggioUtente:
+              'Ecco il prompt dell\'utente a cui devi rispondere come $nomeAi:\n\n'
+              '${prompt.testoCompleto}\n\n'
+              'Categoria: $categoria',
+          temperature: 0.9,
+          maxTokens: 2000,
+        );
 
-          final risposta = json['risposta'] as String? ?? 'Risposta generata.';
-          final punteggio =
-              (json['punteggio'] as num?)?.toDouble() ?? 4.0;
-          final dettaglioJson =
-              json['punteggiDettaglio'] as Map<String, dynamic>? ?? {};
-          final dettaglio = dettaglioJson.map(
-              (k, v) => MapEntry(k, (v as num).toDouble()));
+        final risposta = json['risposta'] as String? ?? 'Risposta generata.';
+        final punteggio =
+            (json['punteggio'] as num?)?.toDouble() ?? 4.0;
+        final dettaglioJson =
+            json['punteggiDettaglio'] as Map<String, dynamic>? ?? {};
+        final dettaglio = dettaglioJson.map(
+            (k, v) => MapEntry(k, (v as num).toDouble()));
 
-          risposte.add(RispostaAI(
-            ai: ai,
-            risposta: risposta,
-            punteggio: punteggio,
-            punteggiDettaglio: dettaglio.isNotEmpty
-                ? dettaglio
-                : {
-                    'Pertinenza': punteggio * 0.98,
-                    'Completezza': punteggio * 0.95,
-                    'Chiarezza': punteggio * 1.02,
-                    'Qualità': punteggio * 0.97,
-                  },
-          ));
-        } on ApiException {
-          // Fallback per questa AI specifica
-          risposte.add(_generaRispostaFittizia(ai, prompt, categoria));
-        }
-      } else {
-        // Senza API key, usa dati fittizi
+        risposte.add(RispostaAI(
+          ai: ai,
+          risposta: risposta,
+          punteggio: punteggio,
+          punteggiDettaglio: dettaglio.isNotEmpty
+              ? dettaglio
+              : {
+                  'Pertinenza': punteggio * 0.98,
+                  'Completezza': punteggio * 0.95,
+                  'Chiarezza': punteggio * 1.02,
+                  'Qualità': punteggio * 0.97,
+                },
+        ));
+      } on ApiException {
+        // Fallback per questa AI specifica
+        risposte.add(_generaRispostaFittizia(ai, prompt, categoria));
+      } catch (_) {
         risposte.add(_generaRispostaFittizia(ai, prompt, categoria));
       }
-    }
-
-    // Simula un piccolo ritardo se non si usa l'API (UX)
-    if (!api.apiKeyConfigurata) {
-      await Future.delayed(const Duration(milliseconds: 1500));
     }
 
     // Determina la risposta migliore
