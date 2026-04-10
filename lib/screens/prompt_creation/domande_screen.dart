@@ -591,7 +591,7 @@ class _DomandeBodyState extends State<_DomandeBody> {
     if (widget.domanda.id != _ultimaDomandaId) {
       _ultimaDomandaId = widget.domanda.id;
       final rispostaPrecedente =
-          widget.sessione.risposte[widget.domanda.id] as String?;
+          widget.sessione.risposte[widget.domanda.testo] as String?;
       widget.onResetInput(widget.domanda, rispostaPrecedente);
     }
   }
@@ -601,7 +601,7 @@ class _DomandeBodyState extends State<_DomandeBody> {
     super.initState();
     _ultimaDomandaId = widget.domanda.id;
     final rispostaPrecedente =
-        widget.sessione.risposte[widget.domanda.id] as String?;
+        widget.sessione.risposte[widget.domanda.testo] as String?;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.onResetInput(widget.domanda, rispostaPrecedente);
     });

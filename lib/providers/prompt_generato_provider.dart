@@ -184,35 +184,35 @@ class PromptGeneratoProvider extends ChangeNotifier {
   // -- Metodi privati --
 
   /// Costruisce il messaggio per l'AI con tutte le informazioni raccolte.
-  /// La frase iniziale è messa in primo piano perché contiene i dettagli
-  /// principali della richiesta dell'utente.
+  /// Le risposte sono presentate come coppie domanda→risposta per dare
+  /// all'AI il contesto necessario a rielaborarle in un prompt fluido.
   String _costruisciMessaggio(
     String fraseIniziale,
     String categoria,
     Map<String, String> risposte,
   ) {
     final buffer = StringBuffer();
-    buffer.writeln('Ecco la richiesta originale dell\'utente:');
+    buffer.writeln('RICHIESTA ORIGINALE DELL\'UTENTE:');
     buffer.writeln('"$fraseIniziale"');
     buffer.writeln('');
-    if (risposte.isNotEmpty) {
-      buffer.writeln('Ecco i dettagli aggiuntivi raccolti:');
-      risposte.forEach((domanda, risposta) {
-        buffer.writeln('- $domanda: $risposta');
-      });
-      buffer.writeln('');
-    }
-    buffer.writeln('Ora scrivi il prompt finale che l\'utente copierà direttamente su un\'AI. Il prompt deve:');
-    buffer.writeln('1. INIZIARE con un verbo d\'azione (Scrivi, Genera, Crea, Analizza)');
-    buffer.writeln('2. INCLUDERE TUTTI i dettagli dalla richiesta originale '
-        '(esempio: se l\'utente ha scritto "mail al capo per ferie dal 10 al 15 luglio", '
-        'il prompt DEVE contenere: mail, capo, ferie, 10-15 luglio)');
-    buffer.writeln('3. INCLUDERE i dettagli aggiuntivi dalle domande');
-    buffer.writeln('4. Essere un\'istruzione diretta, NON un meta-prompt');
-    buffer.writeln('5. NON usare mai "Sei un..." o ruoli');
+    buffer.writeln('CATEGORIA: $categoria');
     buffer.writeln('');
-    buffer.writeln('I DETTAGLI SPECIFICI della richiesta originale sono OBBLIGATORI nel prompt finale. '
-        'MAI generare un prompt generico che perde le informazioni specifiche dell\'utente.');
+    if (risposte.isNotEmpty) {
+      buffer.writeln('DATI RACCOLTI DALLE DOMANDE (risposte GREZZE da RIELABORARE):');
+      buffer.writeln('⚠️ Queste sono risposte brevi/abbreviate. NON copiarle, RISCRIVILE.');
+      buffer.writeln('');
+      risposte.forEach((domanda, risposta) {
+        buffer.writeln('• Domanda: "$domanda"');
+        buffer.writeln('  Risposta: "$risposta"');
+        buffer.writeln('');
+      });
+    }
+    buffer.writeln('ISTRUZIONI FINALI:');
+    buffer.writeln('Genera il prompt finale RIELABORANDO completamente i dati qui sopra.');
+    buffer.writeln('Le risposte sono dati GREZZI — NON copiarle, INTEGRALE in frasi fluide.');
+    buffer.writeln('Il prompt deve INIZIARE con un verbo d\'azione (Scrivi, Genera, Crea, Analizza).');
+    buffer.writeln('Deve essere un\'istruzione DIRETTA pronta da incollare su un\'AI.');
+    buffer.writeln('MAI includere "Sì", "No", numeri isolati o parole singole senza contesto.');
     return buffer.toString();
   }
 

@@ -184,7 +184,8 @@ class SessioneProvider extends ChangeNotifier {
     final domanda = domandaCorrente;
     if (domanda == null) return;
 
-    nuoveRisposte[domanda.id] = risposta;
+    // Usa il testo della domanda come chiave per dare contesto all'AI
+    nuoveRisposte[domanda.testo] = risposta;
 
     final nuovoIndice = _sessione.domandaCorrente + 1;
     final completatoTutteLeDomande = nuovoIndice >= _sessione.domande.length;
