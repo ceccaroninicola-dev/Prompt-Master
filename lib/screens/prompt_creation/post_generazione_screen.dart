@@ -38,6 +38,33 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
   /// AI di destinazione selezionata (null = non ancora scelta)
   String? _aiSelezionata;
 
+  /// Indice della sezione in fase di miglioramento AI (-1 = nessuna)
+  int _sezioneMigliorandosi = -1;
+
+  /// Template predefiniti per tipo di sezione
+  static const _templatePerSezione = {
+    'Ruolo': 'Agisci come un [esperto di X] con [Y anni di esperienza] '
+        'specializzato in [Z]. Hai una profonda conoscenza di [ambito] e '
+        'sei in grado di [competenza chiave].',
+    'Contesto': 'L\'utente è [descrizione del profilo] che ha bisogno di '
+        '[obiettivo principale]. Il contesto è [situazione specifica] con '
+        '[vincoli o requisiti particolari]. Il risultato verrà utilizzato per '
+        '[scopo finale].',
+    'Istruzioni': '1. [Primo step operativo]\n2. [Secondo step operativo]\n'
+        '3. [Terzo step operativo]\n4. [Quarto step operativo]\n\n'
+        'Per ogni step, fornisci [tipo di dettaglio richiesto]. '
+        'Assicurati di [requisito di qualità].',
+    'Formato output': 'Organizza la risposta in:\n'
+        '1) Sommario esecutivo (max 3 righe)\n'
+        '2) Corpo principale suddiviso in sezioni con intestazioni\n'
+        '3) Elenchi puntati per i punti chiave\n'
+        '4) Tabella comparativa (se applicabile)\n'
+        '5) Conclusione con prossimi passi',
+    'Vincoli': 'Lunghezza: [X] parole/caratteri.\nTono: [professionale/informale/'
+        'tecnico].\nLingua: [lingua target].\nNon includere: [elementi da evitare].\n'
+        'Formato: [markdown/testo semplice/HTML].',
+  };
+
   @override
   void dispose() {
     _editController.dispose();
@@ -361,6 +388,349 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
     );
   }
 
+  // ========== HELPER SCORING SEZIONE ==========
+
+  /// Calcola un punteggio locale (0.5-5.0) per una singola sezione
+  /// basandosi su lunghezza, specificità, struttura e dettaglio.
+  double _calcolaPunteggioSezione(SezionePrompt sezione) {
+    final c = sezione.contenuto;
+    if (c.isEmpty) return 0.0;
+    double score = 1.5;
+    if (c.length > 30) score += 0.5;
+    if (c.length > 80) score += 0.5;
+    if (c.length > 150) score += 0.5;
+    if (c.length > 300) score += 0.5;
+    if (RegExp(r'\d').hasMatch(c)) score += 0.3;
+    if (c.contains('\n')) score += 0.2;
+    if (c.split(' ').length > 20) score += 0.3;
+    if (c.length < 15) score -= 1.0;
+    return double.parse(score.clamp(0.5, 5.0).toStringAsFixed(1));
+  }
+
+  /// Restituisce un suggerimento testuale per migliorare una sezione debole.
+  /// null se la sezione è già buona (punteggio >= 4.0).
+  String? _suggerimentoPerSezione(SezionePrompt sezione, double punteggio) {
+    if (punteggio >= 4.0) return null;
+    final c = sezione.contenuto;
+    final titolo = sezione.titolo.toLowerCase();
+    if (c.length < 30) return 'Troppo breve — aggiungi più dettagli specifici';
+    if (!RegExp(r'\d').hasMatch(c) && (titolo.contains('vincol') || titolo.contains('formato'))) {
+      return 'Aggiungi numeri concreti (limiti, quantità, dimensioni)';
+    }
+    if (!c.contains('\n') && c.length > 100) {
+      return 'Suddividi in punti o paragrafi per maggiore chiarezza';
+    }
+    if (c.split(' ').length < 15) return 'Espandi con dettagli più specifici e contestuali';
+    if (punteggio < 3.0) return 'Sezione debole — usa "Migliora" per riscriverla con AI';
+    return 'Potrebbe essere più specifica — prova ad aggiungere esempi concreti';
+  }
+
+  /// Avvia il miglioramento AI di una sezione e mostra l'anteprima prima/dopo
+  Future<void> _miglioraSezione(int indice) async {
+    setState(() => _sezioneMigliorandosi = indice);
+    final provider = context.read<PromptGeneratoProvider>();
+    final risultato = await provider.miglioraSezione(indice);
+    if (!mounted) return;
+    setState(() => _sezioneMigliorandosi = -1);
+    if (risultato != null) {
+      _mostraAnteprimaMiglioramento(indice, risultato);
+    } else {
+      _mostraConferma(Icons.error_outline, 'Impossibile migliorare la sezione');
+    }
+  }
+
+  /// Bottom sheet con anteprima prima/dopo del miglioramento AI per una sezione
+  void _mostraAnteprimaMiglioramento(int indice, String testoMigliorato) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final provider = context.read<PromptGeneratoProvider>();
+    final sezione = provider.prompt!.sezioni[indice];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+          ),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildManiglia(colorScheme),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: Row(
+                  children: [
+                    Icon(Icons.auto_awesome, color: colorScheme.primary, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Miglioramento: ${sezione.titolo}',
+                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildEtichettaPrimaDopo('Prima', Colors.orange),
+                      const SizedBox(height: 8),
+                      _buildBoxTesto(sezione.contenuto, colorScheme, isDark),
+                      const SizedBox(height: 16),
+                      _buildEtichettaPrimaDopo('Dopo (migliorato)', colorScheme.primary),
+                      const SizedBox(height: 8),
+                      _buildBoxTesto(testoMigliorato, colorScheme, isDark),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: const Text('Scarta'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: FilledButton.icon(
+                        onPressed: () {
+                          provider.aggiornaSezione(indice, testoMigliorato);
+                          Navigator.of(ctx).pop();
+                          _mostraConferma(Icons.check_circle, 'Sezione migliorata!');
+                        },
+                        icon: const Icon(Icons.check_rounded, size: 20),
+                        label: const Text('Applica'),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Mostra un bottom sheet con il template predefinito per il tipo di sezione
+  void _mostraTemplate(int indice) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final provider = context.read<PromptGeneratoProvider>();
+    final sezione = provider.prompt!.sezioni[indice];
+    final template = _templatePerSezione[sezione.titolo];
+    if (template == null) {
+      _mostraConferma(Icons.info_outline, 'Nessun template disponibile per questa sezione');
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.7,
+          ),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildManiglia(colorScheme),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: Row(
+                  children: [
+                    Icon(Icons.dashboard_customize_outlined,
+                        color: colorScheme.primary, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Template: ${sezione.titolo}',
+                      style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
+                child: Text(
+                  'Usa questo template come base e personalizza i campi tra [parentesi]',
+                  style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildEtichettaPrimaDopo('Attuale', Colors.orange),
+                      const SizedBox(height: 8),
+                      _buildBoxTesto(sezione.contenuto, colorScheme, isDark),
+                      const SizedBox(height: 16),
+                      _buildEtichettaPrimaDopo('Template', colorScheme.primary),
+                      const SizedBox(height: 8),
+                      _buildBoxTesto(template, colorScheme, isDark),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(ctx).pop(),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: const Text('Chiudi'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      flex: 2,
+                      child: FilledButton.icon(
+                        onPressed: () {
+                          provider.aggiornaSezione(indice, template);
+                          Navigator.of(ctx).pop();
+                          _mostraConferma(Icons.check_circle, 'Template applicato! Personalizza i campi tra [parentesi]');
+                        },
+                        icon: const Icon(Icons.content_paste_rounded, size: 20),
+                        label: const Text('Usa template'),
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  /// Mostra un'anteprima del prompt ricomposto con opzione di copiare
+  void _mostraAnteprimaRicomponi(PromptGenerato prompt) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.8,
+          ),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1C1C1E) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildManiglia(colorScheme),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                child: Row(
+                  children: [
+                    Icon(Icons.preview_rounded, color: colorScheme.primary, size: 20),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'Anteprima prompt completo',
+                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    child: SelectableText(
+                      prompt.testoCompleto,
+                      style: TextStyle(
+                        fontSize: 14,
+                        height: 1.6,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.icon(
+                    onPressed: () async {
+                      await Clipboard.setData(
+                        ClipboardData(text: prompt.testoCompleto),
+                      );
+                      if (ctx.mounted) Navigator.of(ctx).pop();
+                      if (mounted) {
+                        _mostraConferma(Icons.check_circle, 'Prompt copiato negli appunti!');
+                      }
+                    },
+                    icon: const Icon(Icons.copy_rounded, size: 20),
+                    label: const Text('Copia prompt completo'),
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   // ========== VISTA SEMPLICE ==========
   //
   // Mostra il prompt come testo unico, pulito, non modificabile,
@@ -477,21 +847,64 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
       }
     }
 
+    // Calcola la percentuale di miglioramento rispetto al testo originale
+    final provider = context.read<PromptGeneratoProvider>();
+    final testoOriginale = provider.testoOriginale;
+    final testoAttuale = prompt.testoCompleto;
+    int? percentualeMiglioramento;
+    if (testoOriginale != null &&
+        testoOriginale.isNotEmpty &&
+        testoAttuale != testoOriginale) {
+      final diff = testoAttuale.length - testoOriginale.length;
+      percentualeMiglioramento =
+          ((diff / testoOriginale.length) * 100).round().abs();
+      if (percentualeMiglioramento == 0) percentualeMiglioramento = null;
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Etichetta superiore: chiarisce che ogni sezione è modificabile
+        // Banner miglioramento % (se il prompt è stato modificato)
+        if (percentualeMiglioramento != null) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFF10B981).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: const Color(0xFF10B981).withValues(alpha: 0.3),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.trending_up_rounded,
+                    size: 18, color: Color(0xFF10B981)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Prompt migliorato del $percentualeMiglioramento% rispetto all\'originale',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF10B981),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+
+        // Etichetta superiore
         Row(
           children: [
-            Icon(
-              Icons.edit_note_rounded,
-              size: 16,
-              color: colorScheme.primary,
-            ),
+            Icon(Icons.edit_note_rounded, size: 16, color: colorScheme.primary),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
-                '${sezioniConIndice.length} sezioni modificabili — tocca l\'icona matita per modificare',
+                '${sezioniConIndice.length} sezioni — migliora, modifica o usa template',
                 style: TextStyle(
                   fontSize: 12,
                   color: colorScheme.primary,
@@ -503,72 +916,74 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
         ),
         const SizedBox(height: 10),
 
-        // Card di ogni sezione
+        // Card di ogni sezione con punteggio e suggerimenti
         ...List.generate(prompt.sezioni.length, (indice) {
           final sezione = prompt.sezioni[indice];
           if (sezione.contenuto.isEmpty) return const SizedBox.shrink();
 
           final inModifica = _sezioneInModifica == indice;
           final coloreSezione = Color(sezione.colore);
+          final punteggio = _calcolaPunteggioSezione(sezione);
+          final suggerimento = _suggerimentoPerSezione(sezione, punteggio);
 
           return Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: _CardSezione(
-            sezione: sezione,
-            coloreSezione: coloreSezione,
-            isDark: isDark,
-            colorScheme: colorScheme,
-            inModifica: inModifica,
-            icona: _getIcona(sezione.icona),
-            onTapModifica: () {
-              setState(() {
-                if (inModifica) {
-                  _sezioneInModifica = -1;
-                } else {
-                  _sezioneInModifica = indice;
-                  _editController.text = sezione.contenuto;
-                }
-              });
-            },
-            editController: _editController,
-            onSalva: () {
-              context.read<PromptGeneratoProvider>().aggiornaSezione(
-                    indice,
-                    _editController.text,
-                  );
-              setState(() => _sezioneInModifica = -1);
-            },
-            onAnnulla: () {
-              setState(() => _sezioneInModifica = -1);
-            },
-          ),
-        );
+            padding: const EdgeInsets.only(bottom: 10),
+            child: _CardSezione(
+              sezione: sezione,
+              coloreSezione: coloreSezione,
+              isDark: isDark,
+              colorScheme: colorScheme,
+              inModifica: inModifica,
+              icona: _getIcona(sezione.icona),
+              punteggioSezione: punteggio,
+              suggerimentoDebolezza: suggerimento,
+              staMigliorando: _sezioneMigliorandosi == indice,
+              onMigliora: () => _miglioraSezione(indice),
+              onTemplate: _templatePerSezione.containsKey(sezione.titolo)
+                  ? () => _mostraTemplate(indice)
+                  : null,
+              onTapModifica: () {
+                setState(() {
+                  if (inModifica) {
+                    _sezioneInModifica = -1;
+                  } else {
+                    _sezioneInModifica = indice;
+                    _editController.text = sezione.contenuto;
+                  }
+                });
+              },
+              editController: _editController,
+              onSalva: () {
+                context.read<PromptGeneratoProvider>().aggiornaSezione(
+                      indice,
+                      _editController.text,
+                    );
+                setState(() => _sezioneInModifica = -1);
+              },
+              onAnnulla: () {
+                setState(() => _sezioneInModifica = -1);
+              },
+            ),
+          );
         }),
 
-        // Bottone "Ricomponi prompt" — unisce le sezioni in un testo unico
-        // e passa alla vista semplice per mostrare il risultato
+        // Bottone "Ricomponi e copia" — anteprima del testo finale e copia
         const SizedBox(height: 16),
         SizedBox(
           width: double.infinity,
-          child: OutlinedButton.icon(
-            icon: const Icon(Icons.merge_type_rounded, size: 20),
-            label: const Text('Ricomponi prompt'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
+          child: FilledButton.icon(
+            icon: const Icon(Icons.content_copy_rounded, size: 20),
+            label: const Text(
+              'Ricomponi e copia',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            ),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 16),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
             ),
-            onPressed: () {
-              setState(() {
-                _vistaStrutturata = false;
-                _sezioneInModifica = -1;
-              });
-              _mostraConferma(
-                Icons.check_circle,
-                'Prompt ricomposto dalle sezioni!',
-              );
-            },
+            onPressed: () => _mostraAnteprimaRicomponi(prompt),
           ),
         ),
       ],
@@ -1885,6 +2300,8 @@ class _AiOption {
 // ========== WIDGET CARD SEZIONE ==========
 
 /// Card collassabile per una singola sezione del prompt nella vista strutturata.
+/// Include: punteggio sezione, barra completezza, suggerimento debolezza,
+/// bottoni azione (Migliora AI, Template, Modifica).
 class _CardSezione extends StatefulWidget {
   final SezionePrompt sezione;
   final Color coloreSezione;
@@ -1892,6 +2309,11 @@ class _CardSezione extends StatefulWidget {
   final ColorScheme colorScheme;
   final bool inModifica;
   final IconData icona;
+  final double punteggioSezione;
+  final String? suggerimentoDebolezza;
+  final bool staMigliorando;
+  final VoidCallback onMigliora;
+  final VoidCallback? onTemplate;
   final VoidCallback onTapModifica;
   final TextEditingController editController;
   final VoidCallback onSalva;
@@ -1904,6 +2326,11 @@ class _CardSezione extends StatefulWidget {
     required this.colorScheme,
     required this.inModifica,
     required this.icona,
+    required this.punteggioSezione,
+    this.suggerimentoDebolezza,
+    required this.staMigliorando,
+    required this.onMigliora,
+    this.onTemplate,
     required this.onTapModifica,
     required this.editController,
     required this.onSalva,
@@ -1917,8 +2344,17 @@ class _CardSezione extends StatefulWidget {
 class _CardSezioneState extends State<_CardSezione> {
   bool _espansa = true;
 
+  /// Colore della barra di completezza basato sul punteggio
+  Color _coloreCompletezza(double punteggio) {
+    if (punteggio >= 4.0) return const Color(0xFF10B981); // verde
+    if (punteggio >= 2.5) return const Color(0xFFF59E0B); // giallo/arancio
+    return const Color(0xFFEF4444); // rosso
+  }
+
   @override
   Widget build(BuildContext context) {
+    final coloreBar = _coloreCompletezza(widget.punteggioSezione);
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
@@ -1939,13 +2375,14 @@ class _CardSezioneState extends State<_CardSezione> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header con icona, titolo, punteggio badge e freccia espandi
           InkWell(
             onTap: () => setState(() => _espansa = !_espansa),
             borderRadius: const BorderRadius.vertical(
               top: Radius.circular(14),
             ),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+              padding: const EdgeInsets.fromLTRB(16, 14, 12, 10),
               child: Row(
                 children: [
                   Container(
@@ -1971,16 +2408,24 @@ class _CardSezioneState extends State<_CardSezione> {
                       ),
                     ),
                   ),
-                  if (_espansa && !widget.inModifica)
-                    GestureDetector(
-                      onTap: widget.onTapModifica,
-                      child: Icon(
-                        Icons.edit_outlined,
-                        size: 18,
-                        color: widget.colorScheme.onSurfaceVariant,
+                  // Badge punteggio sezione
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: coloreBar.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      '${widget.punteggioSezione}/5',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: coloreBar,
                       ),
                     ),
-                  const SizedBox(width: 4),
+                  ),
+                  const SizedBox(width: 6),
                   AnimatedRotation(
                     turns: _espansa ? 0.5 : 0,
                     duration: const Duration(milliseconds: 200),
@@ -1994,19 +2439,142 @@ class _CardSezioneState extends State<_CardSezione> {
               ),
             ),
           ),
+
+          // Barra di completezza colorata (verde/giallo/rosso)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: LinearProgressIndicator(
+                value: (widget.punteggioSezione / 5).clamp(0.0, 1.0),
+                backgroundColor:
+                    widget.colorScheme.surfaceContainerHighest,
+                color: coloreBar,
+                minHeight: 3,
+              ),
+            ),
+          ),
+
+          // Contenuto espandibile
           AnimatedCrossFade(
             firstChild: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-              child: widget.inModifica
-                  ? _buildCampoModifica()
-                  : Text(
-                      widget.sezione.contenuto,
-                      style: TextStyle(
-                        fontSize: 14,
-                        height: 1.5,
-                        color: widget.colorScheme.onSurface,
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Suggerimento debolezza (se presente)
+                  if (widget.suggerimentoDebolezza != null &&
+                      !widget.inModifica) ...[
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: coloreBar.withValues(alpha: 0.06),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.tips_and_updates_outlined,
+                              size: 15, color: coloreBar),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              widget.suggerimentoDebolezza!,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: coloreBar,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                    const SizedBox(height: 10),
+                  ],
+
+                  // Contenuto sezione o campo modifica
+                  widget.inModifica
+                      ? _buildCampoModifica()
+                      : Text(
+                          widget.sezione.contenuto,
+                          style: TextStyle(
+                            fontSize: 14,
+                            height: 1.5,
+                            color: widget.colorScheme.onSurface,
+                          ),
+                        ),
+
+                  // Loading miglioramento
+                  if (widget.staMigliorando) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: widget.colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Miglioro con AI...',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: widget.colorScheme.primary,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+
+                  // Bottoni azione (solo se non in modifica e non in miglioramento)
+                  if (!widget.inModifica && !widget.staMigliorando) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        // Bottone Migliora (AI)
+                        Expanded(
+                          child: _buildBottoneAzioneCard(
+                            icona: Icons.auto_awesome,
+                            etichetta: 'Migliora',
+                            colore: widget.colorScheme.primary,
+                            onTap: widget.onMigliora,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        // Bottone Template (se disponibile)
+                        if (widget.onTemplate != null) ...[
+                          Expanded(
+                            child: _buildBottoneAzioneCard(
+                              icona: Icons.dashboard_customize_outlined,
+                              etichetta: 'Template',
+                              colore: widget.colorScheme.onSurfaceVariant,
+                              onTap: widget.onTemplate!,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        // Bottone Modifica
+                        Expanded(
+                          child: _buildBottoneAzioneCard(
+                            icona: Icons.edit_outlined,
+                            etichetta: 'Modifica',
+                            colore: widget.colorScheme.onSurfaceVariant,
+                            onTap: widget.onTapModifica,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
             ),
             secondChild: const SizedBox.shrink(),
             crossFadeState: _espansa
@@ -2015,6 +2583,41 @@ class _CardSezioneState extends State<_CardSezione> {
             duration: const Duration(milliseconds: 200),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Bottone azione piccolo sotto la sezione
+  Widget _buildBottoneAzioneCard({
+    required IconData icona,
+    required String etichetta,
+    required Color colore,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: colore.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icona, size: 14, color: colore),
+            const SizedBox(width: 4),
+            Text(
+              etichetta,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: colore,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

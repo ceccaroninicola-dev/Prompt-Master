@@ -22,6 +22,9 @@ class PromptGeneratoProvider extends ChangeNotifier {
   /// AI per cui è stato ottimizzato il prompt
   String? _aiOttimizzata;
 
+  /// Testo originale del prompt (prima di modifiche manuali)
+  String? _testoOriginale;
+
   // -- Getter --
 
   PromptGenerato? get prompt => _prompt;
@@ -29,6 +32,7 @@ class PromptGeneratoProvider extends ChangeNotifier {
   String? get errore => _errore;
   String? get promptOttimizzato => _promptOttimizzato;
   String? get aiOttimizzata => _aiOttimizzata;
+  String? get testoOriginale => _testoOriginale;
 
   /// Genera un prompt a partire dalle risposte della sessione.
   /// Chiama sempre l'AI via proxy (che inietta la key di default);
@@ -61,6 +65,7 @@ class PromptGeneratoProvider extends ChangeNotifier {
       );
 
       _prompt = _parsaPromptDaJson(json);
+      _testoOriginale = _prompt!.testoCompleto;
       debugPrint('[PromptGen] Prompt generato: ${_prompt!.sezioni.length} sezioni');
     } on ApiException catch (e) {
       debugPrint('[PromptGen] Errore API → ${e.messaggio}');
@@ -156,6 +161,7 @@ class PromptGeneratoProvider extends ChangeNotifier {
       },
       suggerimenti: const [],
     );
+    _testoOriginale = _prompt!.testoCompleto;
     _staGenerando = false;
     _promptOttimizzato = null;
     _aiOttimizzata = null;
@@ -165,6 +171,7 @@ class PromptGeneratoProvider extends ChangeNotifier {
   /// Carica un prompt già esistente (es. dalla cronologia)
   void caricaPrompt(PromptGenerato prompt) {
     _prompt = prompt;
+    _testoOriginale = prompt.testoCompleto;
     _staGenerando = false;
     _promptOttimizzato = null;
     _aiOttimizzata = null;
@@ -178,7 +185,29 @@ class PromptGeneratoProvider extends ChangeNotifier {
     _errore = null;
     _promptOttimizzato = null;
     _aiOttimizzata = null;
+    _testoOriginale = null;
     notifyListeners();
+  }
+
+  /// Migliora una singola sezione del prompt tramite AI.
+  /// Restituisce il testo migliorato o null in caso di errore.
+  Future<String?> miglioraSezione(int indice) async {
+    if (_prompt == null || indice >= _prompt!.sezioni.length) return null;
+    final sezione = _prompt!.sezioni[indice];
+    final api = ApiService();
+    try {
+      final risultato = await api.chiamaAI(
+        systemPrompt: AiPrompts.miglioramentoSezione,
+        messaggioUtente: 'TITOLO SEZIONE: ${sezione.titolo}\n\n'
+            'CONTENUTO ATTUALE:\n${sezione.contenuto}',
+        temperature: 0.6,
+        maxTokens: 1500,
+      );
+      return risultato.trim();
+    } catch (e) {
+      debugPrint('[PromptGen] Errore miglioramento sezione → $e');
+      return null;
+    }
   }
 
   // -- Metodi privati --

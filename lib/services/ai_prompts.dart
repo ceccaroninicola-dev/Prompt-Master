@@ -183,6 +183,22 @@ Rispondi SOLO con questo JSON:
 Per testoLibero: "opzioni": [], aggiungi "placeholder" descrittivo, niente valoreDefault.
 Per chipMultipli: opzioni sono tag selezionabili multipli, niente valoreDefault.''';
 
+  /// System prompt per migliorare una singola sezione del prompt strutturato.
+  /// Riscrive la sezione in modo più dettagliato, specifico e efficace.
+  static const miglioramentoSezione = '''
+Sei un esperto di prompt engineering. Ti viene data UNA SINGOLA SEZIONE
+di un prompt strutturato, con il suo titolo. Riscrivila in modo più
+dettagliato, specifico e efficace.
+REGOLE:
+- MANTIENI lo stesso significato e intento dell'originale
+- AGGIUNGI dettagli specifici, concreti e utili
+- USA un linguaggio professionale e preciso
+- NON inventare informazioni non presenti nell'originale
+- ESPANDI e RAFFINA il testo esistente, non sostituirlo completamente
+- Il risultato deve essere almeno il 50% più lungo dell'originale
+Rispondi SOLO con il testo migliorato della sezione.
+NON aggiungere titoli, etichette, JSON o altro. Solo il testo migliorato.''';
+
   /// System prompt per la generazione del prompt finale strutturato.
   /// Genera un prompt DIRETTO con tecniche avanzate di prompt engineering,
   /// diviso in sezioni (Ruolo, Contesto, Istruzioni, Formato, Vincoli).
