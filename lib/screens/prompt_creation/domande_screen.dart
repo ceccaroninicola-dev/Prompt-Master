@@ -140,7 +140,7 @@ class _DomandeScreenState extends State<DomandeScreen> {
     final sessione = context.read<SessioneProvider>().sessione;
     final promptProvider = context.read<PromptGeneratoProvider>();
 
-    // Avvia la generazione del prompt fittizio
+    // Avvia la generazione del prompt via AI
     promptProvider.generaPrompt(
       fraseIniziale: sessione.fraseIniziale,
       categoria: sessione.categoria?.nome ?? 'Scrittura',
