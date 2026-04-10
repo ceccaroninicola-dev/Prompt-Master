@@ -544,6 +544,33 @@ class _PostGenerazioneScreenState extends State<PostGenerazioneScreen> {
           ),
         );
         }),
+
+        // Bottone "Ricomponi prompt" — unisce le sezioni in un testo unico
+        // e passa alla vista semplice per mostrare il risultato
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.merge_type_rounded, size: 20),
+            label: const Text('Ricomponi prompt'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+            onPressed: () {
+              setState(() {
+                _vistaStrutturata = false;
+                _sezioneInModifica = -1;
+              });
+              _mostraConferma(
+                Icons.check_circle,
+                'Prompt ricomposto dalle sezioni!',
+              );
+            },
+          ),
+        ),
       ],
     );
   }

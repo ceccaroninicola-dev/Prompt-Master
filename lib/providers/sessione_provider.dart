@@ -102,19 +102,21 @@ class SessioneProvider extends ChangeNotifier {
     // STEP 2: Genera le domande con l'AI.
     // Ogni chiamata è indipendente: se la categoria ha fallito,
     // tenta comunque le domande (potrebbe essere un errore temporaneo).
+    final numDomande = _sessione.numeroDomande;
     List<Domanda> domande;
     try {
-      debugPrint('[Sessione] STEP 2: Generazione domande via AI...');
+      debugPrint('[Sessione] STEP 2: Generazione $numDomande domande via AI...');
       final json = await api.chiamaAIJson(
-        systemPrompt: AiPrompts.generazioneDomande,
+        systemPrompt: AiPrompts.generazioneDomande(numDomande),
         messaggioUtente: 'FRASE INIZIALE DELL\'UTENTE (leggi attentamente prima di generare domande):\n'
             '"$fraseLibera"\n\n'
             'Categoria rilevata: ${categoria.nome}\n'
             'Sottocategoria: ${categoria.sottocategoria ?? "N/A"}\n'
             'Elementi chiave già estratti: ${categoria.elementiChiave.join(", ")}\n\n'
-            'Genera SOLO domande per informazioni NON presenti nella frase sopra.',
+            'Genera SOLO domande per informazioni NON presenti nella frase sopra.\n'
+            'NUMERO DOMANDE RICHIESTO: $numDomande.',
         temperature: 0.6,
-        maxTokens: 1500,
+        maxTokens: 3000,
       );
       domande = _parsaDomande(json);
       debugPrint('[Sessione] STEP 2: ${domande.length} domande generate');
@@ -142,6 +144,12 @@ class SessioneProvider extends ChangeNotifier {
       percentualeCompletamento: 0.0,
     );
     _staAnalizzando = false;
+    notifyListeners();
+  }
+
+  /// Imposta il numero di domande scelto dall'utente
+  void impostaNumeroDomande(int numero) {
+    _sessione = _sessione.copyWith(numeroDomande: numero);
     notifyListeners();
   }
 

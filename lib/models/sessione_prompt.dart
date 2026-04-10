@@ -24,6 +24,9 @@ class SessionePrompt {
   /// Percentuale di completamento stimata (0.0 - 1.0)
   final double percentualeCompletamento;
 
+  /// Numero di domande scelto dall'utente (5, 10, 20). Default: 10.
+  final int numeroDomande;
+
   const SessionePrompt({
     required this.fraseIniziale,
     this.categoria,
@@ -31,6 +34,7 @@ class SessionePrompt {
     this.risposte = const {},
     this.domandaCorrente = 0,
     this.percentualeCompletamento = 0.0,
+    this.numeroDomande = 10,
   });
 
   /// Crea una copia della sessione con i campi modificati
@@ -41,6 +45,7 @@ class SessionePrompt {
     Map<String, String>? risposte,
     int? domandaCorrente,
     double? percentualeCompletamento,
+    int? numeroDomande,
   }) {
     return SessionePrompt(
       fraseIniziale: fraseIniziale ?? this.fraseIniziale,
@@ -50,6 +55,7 @@ class SessionePrompt {
       domandaCorrente: domandaCorrente ?? this.domandaCorrente,
       percentualeCompletamento:
           percentualeCompletamento ?? this.percentualeCompletamento,
+      numeroDomande: numeroDomande ?? this.numeroDomande,
     );
   }
 }
