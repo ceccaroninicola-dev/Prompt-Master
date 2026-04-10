@@ -183,6 +183,22 @@ Rispondi SOLO con questo JSON:
 Per testoLibero: "opzioni": [], aggiungi "placeholder" descrittivo, niente valoreDefault.
 Per chipMultipli: opzioni sono tag selezionabili multipli, niente valoreDefault.''';
 
+  /// System prompt per migliorare una singola sezione del prompt strutturato.
+  /// Riscrive la sezione in modo più dettagliato, specifico e efficace.
+  static const miglioramentoSezione = '''
+Sei un esperto di prompt engineering. Ti viene data UNA SINGOLA SEZIONE
+di un prompt strutturato, con il suo titolo. Riscrivila in modo più
+dettagliato, specifico e efficace.
+REGOLE:
+- MANTIENI lo stesso significato e intento dell'originale
+- AGGIUNGI dettagli specifici, concreti e utili
+- USA un linguaggio professionale e preciso
+- NON inventare informazioni non presenti nell'originale
+- ESPANDI e RAFFINA il testo esistente, non sostituirlo completamente
+- Il risultato deve essere almeno il 50% più lungo dell'originale
+Rispondi SOLO con il testo migliorato della sezione.
+NON aggiungere titoli, etichette, JSON o altro. Solo il testo migliorato.''';
+
   /// System prompt per la generazione del prompt finale strutturato.
   /// Genera un prompt DIRETTO con tecniche avanzate di prompt engineering,
   /// diviso in sezioni (Ruolo, Contesto, Istruzioni, Formato, Vincoli).
@@ -209,10 +225,33 @@ Esempio SBAGLIATO: "Ho bisogno di un prompt per creare una guida..."
 Esempio CORRETTO: "Progetta una capanna di legno di 2.5m x 3m con le seguenti specifiche..."
 
 ═══════════════════════════════════════════════
-REGOLA CRITICA N.2 — TUTTI I DETTAGLI
+REGOLA CRITICA N.2 — RIELABORA E INTEGRA TUTTI I DETTAGLI
 ═══════════════════════════════════════════════
-Il prompt DEVE contenere TUTTI i dettagli specifici della richiesta originale
-e delle risposte alle domande. NON generare MAI un prompt generico.
+Le risposte dell'utente sono DATI GREZZI da interpretare, NON testo da copiare.
+Il prompt DEVE contenere TUTTI i dettagli ma RIELABORATI in un testo fluido.
+
+⛔ VIETATO nel prompt finale:
+- Risposte secche copiate: "Sì", "No", "200", "Umoristico", "Colleghi"
+- Parole singole senza contesto: "Foto", "Hashtag", "Motivazionale"
+- Elenchi frammentati: "Motivazionale. Follower. Appassionati."
+- QUALSIASI frammento copiato direttamente dalle risposte dell'utente
+- Numeri senza spiegazione (es. "200" → "circa 200 parole")
+- "Sì/No" senza contesto (es. "Sì" per hashtag → "Includi hashtag pertinenti")
+
+✅ OBBLIGATORIO:
+- RISCRIVERE ogni risposta in frasi complete e contestualizzate
+- INTEGRARE tutte le informazioni in un testo fluido e professionale
+- Il prompt finale deve sembrare scritto da un esperto di prompt engineering
+- Ogni dettaglio dell'utente deve essere PRESENTE ma completamente RIELABORATO
+
+ESEMPIO DI TRASFORMAZIONE:
+Dati grezzi: Tono="Motivazionale", Pubblico="Colleghi", CTA="Sì", Lunghezza="200"
+→ SBAGLIATO: "Tono motivazionale. Per colleghi. CTA: sì. 200 parole."
+→ CORRETTO: "Usa un tono motivazionale e coinvolgente, rivolgendoti ai colleghi
+   di lavoro. Concludi con una call-to-action efficace che inviti i lettori
+   a interagire. Il testo deve essere di circa 200 parole."
+
+Il prompt deve essere fluido e leggibile DA CIMA A FONDO come un brief professionale.
 
 ═══════════════════════════════════════════════
 REGOLA CRITICA N.3 — VALORE AGGIUNTO CON TECNICHE AVANZATE
