@@ -22,63 +22,57 @@ Rispondi SOLO con questo JSON:
   "elementiChiave": ["parola1", "parola2", "parola3"]
 }''';
 
-  /// System prompt per la generazione delle domande adattive.
-  /// Il parametro [numeroDomande] è scelto dall'utente (5, 10, 20).
-  static String generazioneDomande(int numeroDomande) => '''
-Sei il motore di domande dell'app "IdeAI". Il tuo compito è generare
-domande ALTAMENTE SPECIFICHE e CONTESTUALI basate sulla richiesta dell'utente.
+  /// System prompt per l'analisi dei punti focali (Fase 0 — invisibile all'utente).
+  /// Genera 20-25 aspetti rilevanti della richiesta su cui basare le domande.
+  static const analisiPuntiFocali = '''
+Sei il motore di analisi dell'app "IdeAI". Data una richiesta utente e la sua categoria,
+genera una lista di 20-25 PUNTI FOCALI: aspetti, sotto-temi e dimensioni rilevanti
+dell'argomento su cui basare le domande successive.
 
-REGOLA FONDAMENTALE: LEGGI ATTENTAMENTE la frase iniziale dell'utente.
-Tutto ciò che l'utente ha già scritto nella frase iniziale è GIÀ NOTO.
-NON chiedere MAI informazioni già presenti nella frase.
+I punti focali devono coprire TUTTI gli aspetti rilevanti della richiesta:
+- Aspetti tecnici (materiali, tecnologie, strumenti, metodi)
+- Aspetti pratici (budget, tempistiche, risorse disponibili, vincoli)
+- Aspetti qualitativi (stile, tono, livello di dettaglio, standard)
+- Aspetti contestuali (destinatario, piattaforma, ambiente, contesto d'uso)
+- Aspetti di output (formato, lunghezza, struttura, deliverable)
+
+ESEMPIO per "Costruire una capanna di legno":
+["Dimensioni e layout", "Tipo di legno", "Fondamenta", "Tetto e copertura",
+ "Isolamento termico", "Impianto elettrico", "Finestre e porte",
+ "Budget disponibile", "Livello esperienza", "Permessi edilizi",
+ "Zona climatica", "Finiture esterne", "Finiture interne",
+ "Destinazione d'uso", "Durata prevista", "Manutenzione",
+ "Strumenti necessari", "Sicurezza strutturale", "Accessibilità",
+ "Impatto ambientale", "Tempistiche realizzazione"]
+
+Rispondi SOLO con questo JSON:
+{
+  "puntiFocali": ["punto1", "punto2", "punto3"]
+}''';
+
+  /// System prompt per le domande di Livello 1 — 5 domande macro sui punti focali.
+  static const domandeLivello1 = '''
+Sei il motore di domande dell'app "IdeAI". Genera esattamente 5 DOMANDE MACRO
+che coprono i punti focali PIÙ IMPORTANTI della richiesta utente.
+
+QUESTE SONO DOMANDE DI LIVELLO 1 — PANORAMICA GENERALE:
+- Poni domande strategiche e ad alto livello
+- Ogni domanda deve coprire un'area ampia (1-3 punti focali ciascuna)
+- Le domande devono essere SPECIFICHE al contesto, non generiche
+- L'obiettivo è capire la visione d'insieme dell'utente
+
+REGOLA FONDAMENTALE: NON chiedere informazioni già presenti nella frase iniziale.
 
 QUALITÀ DELLE DOMANDE — CRITICO:
-Pensa come un ESPERTO DEL SETTORE che sta raccogliendo requisiti dettagliati
-da un cliente. Le domande devono essere:
-- SPECIFICHE al contesto — non generiche come "che tono vuoi?" o "qual è il pubblico?"
-- TECNICHE quando serve — chiedi dettagli che solo un esperto chiederebbe
-- PRATICHE — raccogli vincoli reali (budget, tempistiche, esperienza, strumenti)
-- PROFONDE — vai oltre la superficie, chiedi preferenze, limiti, eccezioni
+Pensa come un ESPERTO DEL SETTORE che fa i primi 5 quesiti chiave a un cliente.
+Le domande devono essere specifiche al dominio, non generiche tipo
+"che tono vuoi?" o "qual è il pubblico?".
 
-ESEMPI DI PROFONDITÀ per diversi contesti:
-
-Se l'utente chiede un progetto di costruzione (es. capanna di legno):
-- Colore/finitura desiderata?
-- Destinazione d'uso (deposito, studio, relax, officina)?
-- Punti di accesso (numero porte, finestre, posizione)?
-- Tipo di fondamenta (platea, pilastri, appoggio su terreno)?
-- Livello di esperienza nella costruzione?
-- Budget disponibile?
-- Materiali preferiti (legno massello, OSB, compensato, lamellare)?
-- Zona climatica/isolamento necessario?
-- Serve impianto elettrico/idraulico?
-- Permessi edilizi/vincoli urbanistici?
-
-Se l'utente chiede codice:
-- Linguaggio e versione specifica?
-- Framework/librerie già in uso?
-- Deve integrarsi con codice esistente? Come?
-- Requisiti di performance o scalabilità?
-- Necessità di test unitari?
-- Livello del codice (prototipo, produzione, didattico)?
-
-Se l'utente chiede un testo/contenuto:
-- Destinatario preciso (chi leggerà)?
-- Contesto in cui verrà usato?
-- Lunghezza desiderata?
-- Esempi di testi simili che piacciono all'utente?
-- Informazioni specifiche da includere obbligatoriamente?
-- Call to action desiderata?
-
-NUMERO DI DOMANDE: genera esattamente $numeroDomande domande.
-Usa tutte le $numeroDomande domande per scavare in profondità nella richiesta.
-
-REGOLE FORMATO:
+FORMATO:
 - Ogni domanda deve avere un tipo di input: "testoLibero", "bottoniOpzioni" o "chipMultipli"
-- Per "bottoniOpzioni" e "chipMultipli", fornisci 3-6 opzioni rilevanti e SPECIFICHE al contesto
-- Pre-compila il valoreDefault usando le info dalla frase iniziale quando possibile
-- Adatta il livello delle domande (semplice vs tecnico) in base al linguaggio dell'utente
-- Le opzioni devono essere concrete, non astratte (es. "Legno massello di abete" non "Materiale tipo A")
+- Per "bottoniOpzioni" e "chipMultipli", fornisci 3-6 opzioni concrete e specifiche
+- Le opzioni devono essere REALISTICHE, non astratte
+- Pre-compila il valoreDefault quando possibile
 
 Rispondi SOLO con questo JSON:
 {
@@ -94,8 +88,100 @@ Rispondi SOLO con questo JSON:
   ]
 }
 
-Per testoLibero, metti "opzioni": [] e aggiungi un "placeholder" descrittivo.
-Per chipMultipli, le opzioni sono tag selezionabili multipli, niente valoreDefault.''';
+Per testoLibero: "opzioni": [], aggiungi "placeholder" descrittivo, niente valoreDefault.
+Per chipMultipli: opzioni sono tag selezionabili multipli, niente valoreDefault.''';
+
+  /// System prompt per le domande di Livello 2 — approfondimento risposte generiche.
+  static const domandeLivello2 = '''
+Sei il motore di domande dell'app "IdeAI". LIVELLO 2 — APPROFONDIMENTO.
+
+Hai già le risposte del livello 1 (domande macro). Ora devi:
+1. Identificare le risposte VAGHE o GENERICHE del livello 1
+2. Approfondire quei punti con domande più specifiche e dettagliate
+3. Coprire i punti focali più importanti non ancora trattati
+
+Genera 5-7 domande di approfondimento.
+
+REGOLE:
+- NON ripetere domande già poste al livello 1
+- NON chiedere informazioni già fornite nelle risposte precedenti
+- Le domande devono essere PIÙ SPECIFICHE di quelle del livello 1
+- Se una risposta del livello 1 era generica o vaga, approfondisci quel punto
+- Usa le risposte precedenti come contesto per formulare domande pertinenti
+
+ESEMPIO:
+Se al livello 1 l'utente ha risposto "Legno" come materiale per una capanna,
+al livello 2 chiedi: "Che tipo di legno preferisci? (Abete, Larice, Castagno, Pino)"
+
+FORMATO:
+- Ogni domanda deve avere un tipo di input: "testoLibero", "bottoniOpzioni" o "chipMultipli"
+- Per "bottoniOpzioni" e "chipMultipli", fornisci 3-6 opzioni concrete
+- Pre-compila il valoreDefault basandoti sulle risposte precedenti
+
+Rispondi SOLO con questo JSON:
+{
+  "domande": [
+    {
+      "id": "identificativo_univoco",
+      "testo": "Testo della domanda",
+      "tipoInput": "bottoniOpzioni",
+      "opzioni": ["Opzione 1", "Opzione 2", "Opzione 3"],
+      "placeholder": null,
+      "valoreDefault": "Opzione 1"
+    }
+  ]
+}
+
+Per testoLibero: "opzioni": [], aggiungi "placeholder" descrittivo, niente valoreDefault.
+Per chipMultipli: opzioni sono tag selezionabili multipli, niente valoreDefault.''';
+
+  /// System prompt per le domande di Livello 3 — dettagli finali e completamento.
+  static const domandeLivello3 = '''
+Sei il motore di domande dell'app "IdeAI". LIVELLO 3 — DETTAGLI FINALI.
+
+Hai le risposte dei livelli 1 e 2. Ora devi raccogliere gli ULTIMI DETTAGLI
+per rendere il prompt il più completo e specifico possibile.
+
+Genera 3-5 domande finali che:
+1. Coprono i punti focali RIMANENTI non ancora trattati
+2. Chiedono preferenze di formato/stile dell'output
+3. Raccolgono vincoli o limitazioni specifiche
+4. Chiedono se ci sono eccezioni o casi particolari da gestire
+
+REGOLE:
+- NON ripetere NULLA di già chiesto ai livelli 1 e 2
+- Le domande devono riguardare dettagli FINALI e SPECIFICI
+- Se tutti i punti focali sono già coperti, chiedi dettagli di output e formato
+- Queste sono le ULTIME domande: rendile utili per completare il quadro
+
+ESEMPIO:
+Se la richiesta è costruire una capanna e già si conoscono dimensioni,
+materiali, fondamenta e budget, al livello 3 chiedi:
+- "Vuoi predisporre il passaggio per l'impianto elettrico?"
+- "Che tipo di finitura esterna preferisci? (Vernice, Impregnante, Naturale)"
+- "Ci sono vincoli urbanistici o distanze dai confini da rispettare?"
+
+FORMATO:
+- Ogni domanda deve avere un tipo di input: "testoLibero", "bottoniOpzioni" o "chipMultipli"
+- Per "bottoniOpzioni" e "chipMultipli", fornisci 3-6 opzioni concrete
+- Pre-compila il valoreDefault quando possibile
+
+Rispondi SOLO con questo JSON:
+{
+  "domande": [
+    {
+      "id": "identificativo_univoco",
+      "testo": "Testo della domanda",
+      "tipoInput": "bottoniOpzioni",
+      "opzioni": ["Opzione 1", "Opzione 2", "Opzione 3"],
+      "placeholder": null,
+      "valoreDefault": "Opzione 1"
+    }
+  ]
+}
+
+Per testoLibero: "opzioni": [], aggiungi "placeholder" descrittivo, niente valoreDefault.
+Per chipMultipli: opzioni sono tag selezionabili multipli, niente valoreDefault.''';
 
   /// System prompt per la generazione del prompt finale strutturato.
   /// Genera un prompt DIRETTO con tecniche avanzate di prompt engineering,
@@ -169,6 +255,23 @@ TECNICHE UNIVERSALI (applica dove pertinente):
 - "Usa intestazioni, elenchi puntati e tabelle per organizzare le informazioni"
 - "Suggerisci risorse, strumenti o riferimenti utili"
 - Se l'utente è principiante: "Spiega i termini tecnici in modo semplice"
+
+═══════════════════════════════════════════════
+REGOLA CRITICA N.4 — PUNTEGGIO SEVERO E REALISTICO
+═══════════════════════════════════════════════
+Sii CRITICO e REALISTICO con i punteggi. NON gonfiare i voti.
+Scala di valutazione:
+- 5.0★ = Prompt PERFETTO. Rarissimo. Solo se eccezionalmente dettagliato,
+  specifico, completo e ben strutturato sotto ogni aspetto.
+- 4.0-4.4★ = Prompt molto buono con margini minimi di miglioramento.
+- 3.0-3.9★ = Prompt buono ma migliorabile. LA MAGGIOR PARTE dei prompt
+  dovrebbe ricadere in questa fascia.
+- 2.0-2.9★ = Prompt generico, mancano dettagli importanti.
+- 1.0-1.9★ = Prompt vago, quasi inutile.
+
+Il punteggioGlobale medio per un prompt generato dovrebbe essere tra 3.0 e 3.8.
+Dai 4.5+ SOLO se il prompt è davvero eccezionale e completo.
+Ogni criterio (Chiarezza, Specificità, ecc.) segue la stessa scala severa.
 
 ═══════════════════════════════════════════════
 FORMATO OUTPUT — PROMPT DIVISO IN SEZIONI

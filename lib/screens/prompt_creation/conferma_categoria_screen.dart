@@ -15,9 +15,6 @@ class ConfermaCategoriaScreen extends StatefulWidget {
 }
 
 class _ConfermaCategoriaScreenState extends State<ConfermaCategoriaScreen> {
-  /// Numero di domande selezionato dall'utente
-  int _numeroDomande = 10;
-
   /// Restituisce l'icona Material corrispondente al nome dell'icona della categoria
   IconData _getIcona(String nomeIcona) {
     switch (nomeIcona) {
@@ -236,10 +233,6 @@ class _ConfermaCategoriaScreenState extends State<ConfermaCategoriaScreen> {
                               .toList(),
                         ),
                       ],
-
-                      // Selettore numero domande
-                      const SizedBox(height: 24),
-                      _buildSelettoreNumeroDomande(colorScheme, isDark),
                     ],
                   ),
                 ),
@@ -276,7 +269,6 @@ class _ConfermaCategoriaScreenState extends State<ConfermaCategoriaScreen> {
                     child: ElevatedButton.icon(
                       onPressed: () {
                         final provider = context.read<SessioneProvider>();
-                        provider.impostaNumeroDomande(_numeroDomande);
                         provider.confermCategoria();
                         Navigator.of(context).pushNamed(AppRoutes.domande);
                       },
@@ -292,107 +284,6 @@ class _ConfermaCategoriaScreenState extends State<ConfermaCategoriaScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  /// Selettore con 3 opzioni per il numero di domande
-  Widget _buildSelettoreNumeroDomande(ColorScheme colorScheme, bool isDark) {
-    const opzioni = [
-      (valore: 5, etichetta: '5 domande', sotto: 'Veloce'),
-      (valore: 10, etichetta: '10 domande', sotto: 'Bilanciato'),
-      (valore: 20, etichetta: '20 domande', sotto: 'Dettagliato'),
-    ];
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          if (!isDark)
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.tune_rounded, size: 18, color: colorScheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                'Livello di dettaglio',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.primary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: opzioni.map((opt) {
-              final selezionato = _numeroDomande == opt.valore;
-              return Expanded(
-                child: Padding(
-                  padding: EdgeInsets.only(
-                    right: opt.valore == 20 ? 0 : 8,
-                  ),
-                  child: GestureDetector(
-                    onTap: () => setState(() => _numeroDomande = opt.valore),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: selezionato
-                            ? colorScheme.primary.withValues(alpha: 0.1)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: selezionato
-                              ? colorScheme.primary
-                              : colorScheme.outlineVariant,
-                          width: selezionato ? 1.5 : 1,
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(
-                            '${opt.valore}',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w700,
-                              color: selezionato
-                                  ? colorScheme.primary
-                                  : colorScheme.onSurface,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            opt.sotto,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: selezionato
-                                  ? colorScheme.primary
-                                  : colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
       ),
     );
   }
