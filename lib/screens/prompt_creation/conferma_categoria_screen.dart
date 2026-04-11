@@ -5,9 +5,16 @@ import 'package:ideai/providers/sessione_provider.dart';
 
 /// Schermata di conferma categoria — seconda fase del flusso.
 /// Design minimal stile Apple: card con ombre sottili, teal accento, padding generoso.
-class ConfermaCategoriaScreen extends StatelessWidget {
+/// Include un selettore per il numero di domande (5, 10, 20).
+class ConfermaCategoriaScreen extends StatefulWidget {
   const ConfermaCategoriaScreen({super.key});
 
+  @override
+  State<ConfermaCategoriaScreen> createState() =>
+      _ConfermaCategoriaScreenState();
+}
+
+class _ConfermaCategoriaScreenState extends State<ConfermaCategoriaScreen> {
   /// Restituisce l'icona Material corrispondente al nome dell'icona della categoria
   IconData _getIcona(String nomeIcona) {
     switch (nomeIcona) {
@@ -261,7 +268,8 @@ class ConfermaCategoriaScreen extends StatelessWidget {
                     flex: 2,
                     child: ElevatedButton.icon(
                       onPressed: () {
-                        context.read<SessioneProvider>().confermCategoria();
+                        final provider = context.read<SessioneProvider>();
+                        provider.confermCategoria();
                         Navigator.of(context).pushNamed(AppRoutes.domande);
                       },
                       icon: const Icon(Icons.arrow_forward_rounded, size: 20),

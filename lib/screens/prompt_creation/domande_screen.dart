@@ -118,9 +118,9 @@ class _DomandeScreenState extends State<DomandeScreen> {
 
     provider.rispondiDomanda(_getRisposta(domanda.tipoInput));
 
-    // Se abbiamo completato tutte le domande, naviga alla post-generazione.
-    // Non serve anche il check nel build() perché lo facciamo qui direttamente.
-    if (provider.domandaCorrente == null) {
+    // Se il livello è completato, non navigare automaticamente:
+    // il build() mostrerà la schermata di scelta Genera/Approfondisci.
+    if (provider.domandaCorrente == null && !provider.sessione.livelloCompletato) {
       _navigaAPostGenerazione();
     }
   }
@@ -140,11 +140,11 @@ class _DomandeScreenState extends State<DomandeScreen> {
     final sessione = context.read<SessioneProvider>().sessione;
     final promptProvider = context.read<PromptGeneratoProvider>();
 
-    // Avvia la generazione del prompt fittizio
+    // Avvia la generazione del prompt via AI
     promptProvider.generaPrompt(
       fraseIniziale: sessione.fraseIniziale,
       categoria: sessione.categoria?.nome ?? 'Scrittura',
-      risposte: sessione.risposte,
+      risposte: sessione.tutteLeRisposte,
     );
 
     // Mostra l'interstitial prima di navigare (se disponibile e non su web)
@@ -165,25 +165,270 @@ class _DomandeScreenState extends State<DomandeScreen> {
     });
   }
 
+  /// Schermata di completamento livello — scelta tra Genera e Approfondisci
+  Widget _buildLivelloCompletato(
+    dynamic sessione,
+    SessioneProvider provider,
+    ColorScheme colorScheme,
+  ) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final livello = sessione.livello as int;
+    final puoApprofondire = provider.puoApprofondire;
+
+    // Titoli e descrizioni per ogni livello
+    String titoloLivello;
+    String descrizione;
+    IconData icona;
+    switch (livello) {
+      case 1:
+        titoloLivello = 'Panoramica completata';
+        descrizione =
+            'Ho raccolto le informazioni generali sulla tua richiesta. '
+            'Puoi generare il prompt ora o approfondire per un risultato più dettagliato.';
+        icona = Icons.check_circle_outline;
+        break;
+      case 2:
+        titoloLivello = 'Approfondimento completato';
+        descrizione =
+            'Ho approfondito i dettagli della tua richiesta. '
+            'Puoi generare il prompt o aggiungere gli ultimi dettagli specifici.';
+        icona = Icons.zoom_in;
+        break;
+      default:
+        titoloLivello = 'Dettagli completati';
+        descrizione =
+            'Ho raccolto tutti i dettagli possibili. '
+            'Il prompt sarà il più completo possibile.';
+        icona = Icons.done_all;
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(sessione.categoria?.nome ?? 'Domande'),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          tooltip: 'Annulla sessione',
+          onPressed: () {
+            context.read<SessioneProvider>().resetSessione();
+            Navigator.of(context).pushNamedAndRemoveUntil(
+              AppRoutes.home,
+              (route) => false,
+            );
+          },
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home_outlined),
+            tooltip: 'Torna alla Home',
+            onPressed: () => Navigator.of(context).pushNamedAndRemoveUntil(
+              AppRoutes.home,
+              (route) => false,
+            ),
+          ),
+        ],
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            children: [
+              // Barra di avanzamento
+              BarraAvanzamento(
+                percentuale: sessione.percentualeCompletamento as double,
+                domandaCorrente: sessione.domande.length as int,
+                totaleDomande: sessione.domande.length as int,
+                onTapDomanda: (_) {},
+              ),
+              const SizedBox(height: 12),
+
+              // Badge livello
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  'Livello $livello/3',
+                  style: TextStyle(
+                    color: colorScheme.primary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+
+              // Contenuto centrale
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Icona grande
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primary.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        icona,
+                        size: 48,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Titolo
+                    Text(
+                      titoloLivello,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Descrizione
+                    Text(
+                      descrizione,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.onSurfaceVariant,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Contatore risposte
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          if (!isDark)
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.03),
+                              blurRadius: 8,
+                              offset: const Offset(0, 1),
+                            ),
+                        ],
+                      ),
+                      child: Text(
+                        '${sessione.risposte.length} risposte raccolte in questo livello',
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Bottoni azione
+              Column(
+                children: [
+                  // Bottone primario: Genera ora
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: () => _navigaAPostGenerazione(),
+                      icon: const Icon(Icons.auto_awesome, size: 20),
+                      label: const Text('Genera ora'),
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                      ),
+                    ),
+                  ),
+                  // Bottone secondario: Approfondisci (solo se livello < 3)
+                  if (puoApprofondire) ...[
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => provider.approfondisci(),
+                        icon: const Icon(Icons.search_rounded, size: 20),
+                        label: Text(
+                          livello == 1
+                              ? 'Approfondisci le risposte'
+                              : 'Ultimi dettagli',
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 8),
+              // Banner pubblicitario
+              const BannerAdWidget(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final provider = context.watch<SessioneProvider>();
     final sessione = provider.sessione;
+
+    // Se sta caricando domande di approfondimento
+    if (provider.staApprofondendo) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text(sessione.categoria?.nome ?? 'Domande'),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              CircularProgressIndicator(color: colorScheme.primary),
+              const SizedBox(height: 20),
+              Text(
+                'Preparo le domande di approfondimento...',
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Se il livello è completato, mostra la scelta Genera/Approfondisci
+    if (sessione.livelloCompletato && sessione.domande.isNotEmpty) {
+      if (_ritornatoDaPostGenerazione) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          }
+        });
+        return Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(color: colorScheme.primary),
+          ),
+        );
+      }
+      return _buildLivelloCompletato(sessione, provider, colorScheme);
+    }
+
     final domanda = provider.domandaCorrente;
 
-    // Se tutte le domande sono completate:
+    // Se tutte le domande sono completate (edge case):
     if (domanda == null && sessione.domande.isNotEmpty) {
       if (_ritornatoDaPostGenerazione) {
-        // L'utente è tornato dalla post-generazione: torna alla Home
-        // per evitare il loop infinito di ri-navigazione
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
             Navigator.of(context).popUntil((route) => route.isFirst);
           }
         });
       } else if (!_haNavigato) {
-        // Prima volta: naviga alla post-generazione
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) _navigaAPostGenerazione();
         });
@@ -204,6 +449,9 @@ class _DomandeScreenState extends State<DomandeScreen> {
     }
 
     return Scaffold(
+      // Permette al contenuto di rimpicciolirsi quando appare la tastiera,
+      // così il campo di testo libero resta visibile sopra di essa
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         title: Text(sessione.categoria?.nome ?? 'Domande'),
         leading: IconButton(
@@ -330,13 +578,20 @@ class _DomandeBodyState extends State<_DomandeBody> {
   // Tiene traccia dell'ultimo id domanda visualizzato per resettare l'input
   String? _ultimaDomandaId;
 
+  // FocusNode per il campo di testo libero — serve a scrollare automaticamente
+  // il campo sopra la tastiera quando riceve il focus
+  final _testoFocusNode = FocusNode();
+
+  // Chiave globale del TextField per Scrollable.ensureVisible
+  final _testoFieldKey = GlobalKey();
+
   @override
   void didUpdateWidget(covariant _DomandeBody oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.domanda.id != _ultimaDomandaId) {
       _ultimaDomandaId = widget.domanda.id;
       final rispostaPrecedente =
-          widget.sessione.risposte[widget.domanda.id] as String?;
+          widget.sessione.risposte[widget.domanda.testo] as String?;
       widget.onResetInput(widget.domanda, rispostaPrecedente);
     }
   }
@@ -346,10 +601,37 @@ class _DomandeBodyState extends State<_DomandeBody> {
     super.initState();
     _ultimaDomandaId = widget.domanda.id;
     final rispostaPrecedente =
-        widget.sessione.risposte[widget.domanda.id] as String?;
+        widget.sessione.risposte[widget.domanda.testo] as String?;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       widget.onResetInput(widget.domanda, rispostaPrecedente);
     });
+    // Quando il campo testo riceve il focus, scorri per renderlo visibile
+    _testoFocusNode.addListener(_onTestoFocusChange);
+  }
+
+  /// Porta il TextField in vista quando riceve il focus (dopo l'apertura tastiera)
+  void _onTestoFocusChange() {
+    if (_testoFocusNode.hasFocus) {
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (!mounted) return;
+        final ctx = _testoFieldKey.currentContext;
+        if (ctx != null) {
+          Scrollable.ensureVisible(
+            ctx,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            alignment: 0.1,
+          );
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _testoFocusNode.removeListener(_onTestoFocusChange);
+    _testoFocusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -374,12 +656,48 @@ class _DomandeBodyState extends State<_DomandeBody> {
             },
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 8),
+
+        // Indicatore livello corrente
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Row(
+            children: [
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: widget.colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  'Livello ${widget.sessione.livello}/3',
+                  style: TextStyle(
+                    color: widget.colorScheme.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _etichettaLivello(widget.sessione.livello as int),
+                style: TextStyle(
+                  color: widget.colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
 
         // Contenuto principale — domanda e input
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 24),
+            // Chiude la tastiera quando si trascina la vista
+            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               transitionBuilder: (child, animation) {
@@ -434,7 +752,9 @@ class _DomandeBodyState extends State<_DomandeBody> {
   /// Input di tipo testo libero — campo di testo con bordi morbidi
   Widget _buildInputTestoLibero() {
     return TextField(
+      key: _testoFieldKey,
       controller: widget.testoController,
+      focusNode: _testoFocusNode,
       maxLines: 5,
       onChanged: (_) => widget.onTestoChanged(),
       decoration: InputDecoration(
@@ -713,6 +1033,20 @@ class _DomandeBodyState extends State<_DomandeBody> {
         ],
       ),
     );
+  }
+
+  /// Restituisce l'etichetta descrittiva per il livello corrente
+  String _etichettaLivello(int livello) {
+    switch (livello) {
+      case 1:
+        return 'Domande generali';
+      case 2:
+        return 'Approfondimento';
+      case 3:
+        return 'Dettagli finali';
+      default:
+        return '';
+    }
   }
 
   /// Verifica se la risposta corrente è valida

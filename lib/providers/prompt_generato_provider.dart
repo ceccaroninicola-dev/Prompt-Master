@@ -22,6 +22,9 @@ class PromptGeneratoProvider extends ChangeNotifier {
   /// AI per cui è stato ottimizzato il prompt
   String? _aiOttimizzata;
 
+  /// Testo originale del prompt (prima di modifiche manuali)
+  String? _testoOriginale;
+
   // -- Getter --
 
   PromptGenerato? get prompt => _prompt;
@@ -29,9 +32,11 @@ class PromptGeneratoProvider extends ChangeNotifier {
   String? get errore => _errore;
   String? get promptOttimizzato => _promptOttimizzato;
   String? get aiOttimizzata => _aiOttimizzata;
+  String? get testoOriginale => _testoOriginale;
 
   /// Genera un prompt a partire dalle risposte della sessione.
-  /// Usa l'AI se disponibile, altrimenti crea dati fittizi.
+  /// Chiama sempre l'AI via proxy (che inietta la key di default);
+  /// il fallback fittizio si attiva solo se la chiamata fallisce.
   Future<void> generaPrompt({
     required String fraseIniziale,
     required String categoria,
@@ -44,29 +49,33 @@ class PromptGeneratoProvider extends ChangeNotifier {
     notifyListeners();
 
     final api = ApiService();
+    debugPrint('[PromptGen] Avvio generazione — userKey: ${api.apiKeyConfigurata}');
 
-    if (api.apiKeyConfigurata) {
-      try {
-        // Costruisci il messaggio con tutte le informazioni raccolte
-        final messaggioUtente = _costruisciMessaggio(
-            fraseIniziale, categoria, risposte);
+    try {
+      // Costruisci il messaggio con tutte le informazioni raccolte
+      final messaggioUtente = _costruisciMessaggio(
+          fraseIniziale, categoria, risposte);
 
-        final json = await api.chiamaAIJson(
-          systemPrompt: AiPrompts.generazionePrompt,
-          messaggioUtente: messaggioUtente,
-          temperature: 0.7,
-          maxTokens: 3000,
-        );
+      debugPrint('[PromptGen] Chiamata AI in corso...');
+      final json = await api.chiamaAIJson(
+        systemPrompt: AiPrompts.generazionePrompt,
+        messaggioUtente: messaggioUtente,
+        temperature: 0.7,
+        maxTokens: 3000,
+      );
 
-        _prompt = _parsaPromptDaJson(json);
-      } on ApiException catch (e) {
-        _errore = e.messaggio;
-        // Fallback ai dati fittizi
-        _prompt = _creaPromptFittizio(fraseIniziale, categoria, risposte);
-      }
-    } else {
-      // Senza API key, usa i dati fittizi
-      await Future.delayed(const Duration(milliseconds: 800));
+      _prompt = _parsaPromptDaJson(json);
+      _testoOriginale = _prompt!.testoCompleto;
+      debugPrint('[PromptGen] Prompt generato: ${_prompt!.sezioni.length} sezioni');
+    } on ApiException catch (e) {
+      debugPrint('[PromptGen] Errore API → ${e.messaggio}');
+      _errore = e.messaggio;
+      // Fallback ai dati fittizi
+      _prompt = _creaPromptFittizio(fraseIniziale, categoria, risposte);
+    } catch (e, stack) {
+      debugPrint('[PromptGen] Eccezione inattesa → $e');
+      debugPrint('[PromptGen] Stack → $stack');
+      _errore = 'Errore inatteso durante la generazione.';
       _prompt = _creaPromptFittizio(fraseIniziale, categoria, risposte);
     }
 
@@ -86,27 +95,24 @@ class PromptGeneratoProvider extends ChangeNotifier {
 
     final api = ApiService();
 
-    if (api.apiKeyConfigurata) {
-      try {
-        final risultato = await api.chiamaAI(
-          systemPrompt: AiPrompts.ottimizzazionePerAI,
-          messaggioUtente: 'AI di destinazione: $nomeAI\n\n'
-              'Prompt originale:\n${_prompt!.testoCompleto}',
-          temperature: 0.5,
-          maxTokens: 2000,
-        );
-        _promptOttimizzato = risultato;
-        _aiOttimizzata = nomeAI;
-        notifyListeners();
-        return risultato;
-      } on ApiException {
-        // Fallback: restituisci il prompt originale
-        return _prompt!.testoCompleto;
-      }
+    try {
+      final risultato = await api.chiamaAI(
+        systemPrompt: AiPrompts.ottimizzazionePerAI,
+        messaggioUtente: 'AI di destinazione: $nomeAI\n\n'
+            'Prompt originale:\n${_prompt!.testoCompleto}',
+        temperature: 0.5,
+        maxTokens: 2000,
+      );
+      _promptOttimizzato = risultato;
+      _aiOttimizzata = nomeAI;
+      notifyListeners();
+      return risultato;
+    } on ApiException {
+      // Fallback: restituisci il prompt originale
+      return _prompt!.testoCompleto;
+    } catch (_) {
+      return _prompt!.testoCompleto;
     }
-
-    // Senza API key, restituisci il prompt originale
-    return _prompt!.testoCompleto;
   }
 
   /// Aggiorna il contenuto di una sezione specifica
@@ -155,6 +161,7 @@ class PromptGeneratoProvider extends ChangeNotifier {
       },
       suggerimenti: const [],
     );
+    _testoOriginale = _prompt!.testoCompleto;
     _staGenerando = false;
     _promptOttimizzato = null;
     _aiOttimizzata = null;
@@ -164,6 +171,7 @@ class PromptGeneratoProvider extends ChangeNotifier {
   /// Carica un prompt già esistente (es. dalla cronologia)
   void caricaPrompt(PromptGenerato prompt) {
     _prompt = prompt;
+    _testoOriginale = prompt.testoCompleto;
     _staGenerando = false;
     _promptOttimizzato = null;
     _aiOttimizzata = null;
@@ -177,41 +185,63 @@ class PromptGeneratoProvider extends ChangeNotifier {
     _errore = null;
     _promptOttimizzato = null;
     _aiOttimizzata = null;
+    _testoOriginale = null;
     notifyListeners();
+  }
+
+  /// Migliora una singola sezione del prompt tramite AI.
+  /// Restituisce il testo migliorato o null in caso di errore.
+  Future<String?> miglioraSezione(int indice) async {
+    if (_prompt == null || indice >= _prompt!.sezioni.length) return null;
+    final sezione = _prompt!.sezioni[indice];
+    final api = ApiService();
+    try {
+      final risultato = await api.chiamaAI(
+        systemPrompt: AiPrompts.miglioramentoSezione,
+        messaggioUtente: 'TITOLO SEZIONE: ${sezione.titolo}\n\n'
+            'CONTENUTO ATTUALE:\n${sezione.contenuto}',
+        temperature: 0.6,
+        maxTokens: 1500,
+      );
+      return risultato.trim();
+    } catch (e) {
+      debugPrint('[PromptGen] Errore miglioramento sezione → $e');
+      return null;
+    }
   }
 
   // -- Metodi privati --
 
   /// Costruisce il messaggio per l'AI con tutte le informazioni raccolte.
-  /// La frase iniziale è messa in primo piano perché contiene i dettagli
-  /// principali della richiesta dell'utente.
+  /// Le risposte sono presentate come coppie domanda→risposta per dare
+  /// all'AI il contesto necessario a rielaborarle in un prompt fluido.
   String _costruisciMessaggio(
     String fraseIniziale,
     String categoria,
     Map<String, String> risposte,
   ) {
     final buffer = StringBuffer();
-    buffer.writeln('Ecco la richiesta originale dell\'utente:');
+    buffer.writeln('RICHIESTA ORIGINALE DELL\'UTENTE:');
     buffer.writeln('"$fraseIniziale"');
     buffer.writeln('');
-    if (risposte.isNotEmpty) {
-      buffer.writeln('Ecco i dettagli aggiuntivi raccolti:');
-      risposte.forEach((domanda, risposta) {
-        buffer.writeln('- $domanda: $risposta');
-      });
-      buffer.writeln('');
-    }
-    buffer.writeln('Ora scrivi il prompt finale che l\'utente copierà direttamente su un\'AI. Il prompt deve:');
-    buffer.writeln('1. INIZIARE con un verbo d\'azione (Scrivi, Genera, Crea, Analizza)');
-    buffer.writeln('2. INCLUDERE TUTTI i dettagli dalla richiesta originale '
-        '(esempio: se l\'utente ha scritto "mail al capo per ferie dal 10 al 15 luglio", '
-        'il prompt DEVE contenere: mail, capo, ferie, 10-15 luglio)');
-    buffer.writeln('3. INCLUDERE i dettagli aggiuntivi dalle domande');
-    buffer.writeln('4. Essere un\'istruzione diretta, NON un meta-prompt');
-    buffer.writeln('5. NON usare mai "Sei un..." o ruoli');
+    buffer.writeln('CATEGORIA: $categoria');
     buffer.writeln('');
-    buffer.writeln('I DETTAGLI SPECIFICI della richiesta originale sono OBBLIGATORI nel prompt finale. '
-        'MAI generare un prompt generico che perde le informazioni specifiche dell\'utente.');
+    if (risposte.isNotEmpty) {
+      buffer.writeln('DATI RACCOLTI DALLE DOMANDE (risposte GREZZE da RIELABORARE):');
+      buffer.writeln('⚠️ Queste sono risposte brevi/abbreviate. NON copiarle, RISCRIVILE.');
+      buffer.writeln('');
+      risposte.forEach((domanda, risposta) {
+        buffer.writeln('• Domanda: "$domanda"');
+        buffer.writeln('  Risposta: "$risposta"');
+        buffer.writeln('');
+      });
+    }
+    buffer.writeln('ISTRUZIONI FINALI:');
+    buffer.writeln('Genera il prompt finale RIELABORANDO completamente i dati qui sopra.');
+    buffer.writeln('Le risposte sono dati GREZZI — NON copiarle, INTEGRALE in frasi fluide.');
+    buffer.writeln('Il prompt deve INIZIARE con un verbo d\'azione (Scrivi, Genera, Crea, Analizza).');
+    buffer.writeln('Deve essere un\'istruzione DIRETTA pronta da incollare su un\'AI.');
+    buffer.writeln('MAI includere "Sì", "No", numeri isolati o parole singole senza contesto.');
     return buffer.toString();
   }
 
